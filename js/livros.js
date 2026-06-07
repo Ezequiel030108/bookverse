@@ -22,7 +22,12 @@
    genero  -> Categoria onde o livro aparece no site. Use um destes:
               "Finanças & Negócios"
               "Autoajuda & Desenvolvimento Pessoal"
+              "Ciência & Curiosidades"
+              "Clássicos da Literatura"
               "Romance & Literatura"
+              (Pode criar um gênero novo: basta escrever aqui e,
+               se quiser controlar a ordem, adicioná-lo também na
+               lista ORDEM_GENEROS dentro do arquivo js/main.js)
    preco   -> Preço com R$ (ex: "R$ 32,00")
    estoque -> Quantidade que você tem em casa
               0 = esgotado (some do site)
@@ -45,7 +50,7 @@ const LIVROS = [
     autor: "Napoleon Hill",
     genero: "Finanças & Negócios",
     preco: "R$ 20,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Seminovo",
     sinopse: "Baseado no estudo de centenas de pessoas bem-sucedidas, Napoleon Hill revela os 13 princípios que conduzem à riqueza e à realização pessoal. Um dos maiores clássicos do desenvolvimento financeiro de todos os tempos.",
     imagem: "img/quem-pensa-enriquece.jpg"
@@ -56,7 +61,7 @@ const LIVROS = [
     autor: "George S. Clason",
     genero: "Finanças & Negócios",
     preco: "R$ 16,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Usado",
     sinopse: "Através de parábolas ambientadas na antiga Babilônia, o autor ensina princípios atemporais sobre como economizar, investir e construir riqueza de forma simples e duradoura.",
     imagem: "img/o-homem-mais-rico-da-babilonia.jpg"
@@ -78,7 +83,7 @@ const LIVROS = [
     autor: "Philip Kotler",
     genero: "Finanças & Negócios",
     preco: "R$ 36,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Novo",
     sinopse: "Philip Kotler, o pai do marketing moderno, apresenta a transição do marketing tradicional para o digital, mostrando como conquistar clientes na era da conectividade integrando o online e o offline.",
     imagem: "img/marketing-4-0.jpg"
@@ -91,7 +96,7 @@ const LIVROS = [
     autor: "Dr. Joseph Murphy",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 25,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Usado",
     sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
     imagem: "img/o-poder-do-subconsciente.jpg"
@@ -102,7 +107,7 @@ const LIVROS = [
     autor: "Dale Carnegie",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 25,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Seminovo",
     sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
     imagem: "img/como-fazer-amigos.jpg"
@@ -113,7 +118,7 @@ const LIVROS = [
     autor: "Nicholas Boothman",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 30,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Seminovo",
     sinopse: "Nicholas Boothman apresenta técnicas de comunicação e linguagem corporal para criar conexões instantâneas e causar uma primeira impressão marcante em qualquer situação.",
     imagem: "img/como-convencer-90-segundos.jpg"
@@ -124,10 +129,69 @@ const LIVROS = [
     autor: "Júnior Q9",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 30,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Seminovo",
     sinopse: "Uma mensagem motivacional direta sobre atitude, foco e ação. Um chamado para sair da zona de conforto e correr atrás dos seus objetivos e sonhos.",
     imagem: "img/quer-levanta-e-pega.jpg"
+  },
+
+  /* ===================== CIÊNCIA & CURIOSIDADES ===================== */
+
+  {
+    titulo: "Do Átomo ao Buraco Negro",
+    autor: "Schwarza",
+    genero: "Ciência & Curiosidades",
+    preco: "R$ 50,00",
+    estoque: 1,
+    estado: "Seminovo",
+    sinopse: "Do criador do canal Poligonautas, uma viagem descomplicada pela astronomia — do menor dos átomos aos misteriosos buracos negros — explicando os segredos do universo de forma simples e divertida.",
+    imagem: "img/do-atomo-ao-buraco-negro.jpg"
+  },
+
+  {
+    titulo: "A História do Universo Para Quem Tem Pressa",
+    autor: "Colin Stuart",
+    genero: "Ciência & Curiosidades",
+    preco: "R$ 40,00",
+    estoque: 1,
+    estado: "Seminovo",
+    sinopse: "Um guia rápido e acessível que percorre as mais recentes descobertas da astronomia, do Big Bang aos confins do cosmos. Perfeito para quem quer entender o universo sem complicação.",
+    imagem: "img/a-historia-do-universo.jpg"
+  },
+
+  /* ===================== CLÁSSICOS DA LITERATURA ===================== */
+
+  {
+    titulo: "Oliver Twist",
+    autor: "Charles Dickens",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Seminovo",
+    sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebres de Charles Dickens.",
+    imagem: "img/oliver-twist.jpg"
+  },
+
+  {
+    titulo: "A Volta ao Mundo em 80 Dias",
+    autor: "Júlio Verne",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 40,00",
+    estoque: 1,
+    estado: "Seminovo",
+    sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quatro cantos do planeta.",
+    imagem: "img/a-volta-ao-mundo-em-80-dias.jpg"
+  },
+
+  {
+    titulo: "Fahrenheit 451",
+    autor: "Ray Bradbury",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 35,00",
+    estoque: 1,
+    estado: "Usado",
+    sinopse: "Em uma sociedade onde os livros são proibidos e queimados por bombeiros, o bombeiro Guy Montag começa a questionar seu papel. Um clássico distópico sobre censura, conhecimento e liberdade de pensamento.",
+    imagem: "img/fahrenheit-451.jpg"
   },
 
   /* ===================== ROMANCE & LITERATURA ===================== */
@@ -137,7 +201,7 @@ const LIVROS = [
     autor: "Mitch Albom",
     genero: "Romance & Literatura",
     preco: "R$ 20,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Usado",
     sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
     imagem: "img/o-guardiao-do-tempo.jpg"
@@ -148,21 +212,21 @@ const LIVROS = [
     autor: "Jô Soares",
     genero: "Romance & Literatura",
     preco: "R$ 30,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Usado",
     sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
     imagem: "img/o-xango-de-baker-street.jpg"
   },
 
   {
-    titulo: "Oliver Twist",
-    autor: "Charles Dickens",
+    titulo: "Memórias Quase Póstumas de Machado de Assis",
+    autor: "Álvaro Cardoso Gomes",
     genero: "Romance & Literatura",
-    preco: "R$ 30,00",
-    estoque: 2,
+    preco: "R$ 40,00",
+    estoque: 1,
     estado: "Seminovo",
-    sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebres de Charles Dickens.",
-    imagem: "img/oliver-twist.jpg"
+    sinopse: "Uma recriação literária inspirada no universo de Machado de Assis e seu célebre Brás Cubas, revisitando com bom humor a obra do maior escritor brasileiro.",
+    imagem: "img/memorias-quase-postumas-machado.jpg"
   },
 
   {
@@ -170,7 +234,7 @@ const LIVROS = [
     autor: "Tiago Marinho",
     genero: "Romance & Literatura",
     preco: "R$ 40,00",
-    estoque: 2,
+    estoque: 1,
     estado: "Novo",
     sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
     imagem: "img/paredes-da-memoria.jpg"

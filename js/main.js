@@ -18,6 +18,8 @@ const INSTAGRAM_USUARIO = "mybookverse.pb";
 const ORDEM_GENEROS = [
   "Finanças & Negócios",
   "Autoajuda & Desenvolvimento Pessoal",
+  "Ciência & Curiosidades",
+  "Clássicos da Literatura",
   "Romance & Literatura"
 ];
 
