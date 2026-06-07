@@ -147,20 +147,11 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   gap: 12px;
 }
 
-/* Logo (gatinho-fantasma) */
+/* Logo (fantasma) */
 .logo-wrap {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
   flex-shrink: 0;
-  border-radius: 50%;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,.15), transparent 60%),
-    linear-gradient(135deg, var(--indigo-claro), var(--noite));
-  box-shadow:
-    0 0 0 2px rgba(184,158,255,.4),
-    0 0 20px rgba(184,158,255,.45),
-    0 6px 16px rgba(0,0,0,.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,7 +160,8 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
 .logo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(184,158,255,.5));
 }
 /* Se a imagem da logo não existir, mostra um fantasminha decorativo */
 .logo.logo-erro {
@@ -191,7 +183,7 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
 .nome-livraria {
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 700;
-  font-size: clamp(1.6rem, 6.5vw, 2.4rem);
+  font-size: clamp(2rem, 8vw, 3.2rem);
   margin: 0;
   letter-spacing: 1px;
   line-height: 1.05;
@@ -708,8 +700,7 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   .grade-livros { gap: 32px 18px; }
   .info-titulo  { font-size: 1rem; }
   .info-autor   { font-size: .82rem; }
-  .logo-wrap    { width: 64px; height: 64px; }
-  .logo-wrap::before { font-size: 2rem; }
+  .logo-wrap    { width: 72px; height: 72px; }
 }
 
 @media (min-width: 640px) {
@@ -736,9 +727,7 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
 @media (min-width: 720px) {
   .grade-livros { grid-template-columns: repeat(3, 1fr); gap: 36px 22px; }
   .nome-livraria { font-size: 2.6rem; }
-  .boas-vindas   { font-size: 1rem; }
-  .logo-wrap { width: 72px; height: 72px; }
-  .logo-wrap::before { font-size: 2.3rem; }
+  .logo-wrap { width: 80px; height: 80px; }
 }
 
 @media (min-width: 1000px) {
