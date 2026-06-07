@@ -55,20 +55,6 @@ function linkInstagram() {
   return `https://ig.me/m/${INSTAGRAM_USUARIO}`;
 }
 
-/** Exibe uma notificação temporária na tela. */
-function mostrarToast(mensagem) {
-  let toast = document.getElementById("toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = mensagem;
-  toast.classList.add("toast-visivel");
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => toast.classList.remove("toast-visivel"), 3000);
-}
-
 /* ---------- Renderização dos cards ---------- */
 
 function criarCard(livro, indice) {
@@ -158,13 +144,7 @@ function abrirModal(livro) {
     botaoIG.classList.remove("desativado");
     if (textoBtn) textoBtn.textContent = "Pedir pelo Instagram";
     botaoIG.href = linkInstagram();
-    botaoIG.onclick = (e) => {
-      e.preventDefault();
-      const msg = mensagemInstagram(livro);
-      navigator.clipboard.writeText(msg).catch(() => {});
-      mostrarToast("Mensagem copiada! Cole no Instagram 📋");
-      setTimeout(() => window.open(linkInstagram(), "_blank", "noopener"), 300);
-    };
+    botaoIG.onclick = null;
   }
 
   modal.hidden = false;
