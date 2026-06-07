@@ -110,7 +110,7 @@ const LIVROS = [
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 25,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Bom estado, porém grifado",
     sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
     imagem: "img/como-fazer-amigos.jpg"
   },
@@ -180,7 +180,7 @@ const LIVROS = [
     genero: "Clássicos da Literatura",
     preco: "R$ 40,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Estado perfeito",
     sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quatro cantos do planeta.",
     imagem: "img/a-volta-ao-mundo-em-80-dias.jpg"
   },
@@ -191,7 +191,7 @@ const LIVROS = [
     genero: "Clássicos da Literatura",
     preco: "R$ 35,00",
     estoque: 1,
-    estado: "Usado",
+    estado: "Com marcas de uso",
     sinopse: "Em uma sociedade onde os livros são proibidos e queimados por bombeiros, o bombeiro Guy Montag começa a questionar seu papel. Um clássico distópico sobre censura, conhecimento e liberdade de pensamento.",
     imagem: "img/fahrenheit-451.jpg"
   },
@@ -226,7 +226,7 @@ const LIVROS = [
     genero: "Romance & Literatura",
     preco: "R$ 40,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Estado perfeito",
     sinopse: "Uma recriação literária inspirada no universo de Machado de Assis e seu célebre Brás Cubas, revisitando com bom humor a obra do maior escritor brasileiro.",
     imagem: "img/memorias-quase-postumas-machado.jpg"
   },
