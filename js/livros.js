@@ -15,86 +15,165 @@
    4. Salve o arquivo e atualize a página no navegador (F5)
 
    --------------------------------------------------------------
-   COMO EDITAR UM LIVRO:
-   --------------------------------------------------------------
-   Basta mudar o texto entre as aspas " " do campo que quiser.
-   Atenção: NÃO apague as aspas, nem a vírgula no final da linha.
-
-   --------------------------------------------------------------
-   COMO REMOVER UM LIVRO:
-   --------------------------------------------------------------
-   Apague o bloco inteiro do livro, das chaves { até a },
-   incluindo a vírgula do final.
-
-   --------------------------------------------------------------
    SIGNIFICADO DE CADA CAMPO:
    --------------------------------------------------------------
    titulo  -> Nome do livro (ex: "O Alquimista")
    autor   -> Nome do autor (ex: "Paulo Coelho")
+   genero  -> Categoria onde o livro aparece no site. Use um destes:
+              "Finanças & Negócios"
+              "Autoajuda & Desenvolvimento Pessoal"
+              "Romance & Literatura"
    preco   -> Preço com R$ (ex: "R$ 32,00")
    estoque -> Quantidade que você tem em casa
-              0 = esgotado (selo vermelho, botão desativado)
+              0 = esgotado (some do site)
               1 = "Último!" (selo âmbar)
-              2 ou mais = "Disponível" (selo verde)
+              2 ou mais = "Disponível" (selo azul)
    estado  -> "Novo", "Seminovo" ou "Usado"
-   sinopse -> Um resumo curto do livro (1 a 3 frases)
+   sinopse -> Um resumo curto do livro
    imagem  -> Caminho da capa dentro da pasta /img/
-              Ex: "img/o-alquimista.jpg"
-              Se você ainda não tem a capa, deixe assim: ""
-              (o site vai mostrar uma capa bonita automática)
+              Ex: "img/oliver-twist.jpg"
+              Se não tiver capa, deixe assim: ""
 
    ============================================================ */
 
 const LIVROS = [
 
-  {
-    titulo: "O Alquimista",
-    autor: "Paulo Coelho",
-    preco: "R$ 32,00",
-    estoque: 3,
-    estado: "Novo",
-    sinopse: "Santiago, um jovem pastor andaluz, parte em busca de um tesouro escondido nas pirâmides do Egito e, no caminho, descobre sua Lenda Pessoal.",
-    imagem: ""
-  },
+  /* ===================== FINANÇAS & NEGÓCIOS ===================== */
 
   {
-    titulo: "Dom Casmurro",
-    autor: "Machado de Assis",
-    preco: "R$ 24,90",
-    estoque: 1,
+    titulo: "Quem Pensa Enriquece",
+    autor: "Napoleon Hill",
+    genero: "Finanças & Negócios",
+    preco: "R$ 20,00",
+    estoque: 2,
     estado: "Seminovo",
-    sinopse: "Bentinho relembra sua infância, o amor por Capitu e a dúvida que atravessa toda a sua vida adulta. Um clássico absoluto da literatura brasileira.",
-    imagem: ""
+    sinopse: "Baseado no estudo de centenas de pessoas bem-sucedidas, Napoleon Hill revela os 13 princípios que conduzem à riqueza e à realização pessoal. Um dos maiores clássicos do desenvolvimento financeiro de todos os tempos.",
+    imagem: "img/quem-pensa-enriquece.jpg"
   },
 
   {
-    titulo: "A Hora da Estrela",
-    autor: "Clarice Lispector",
-    preco: "R$ 28,00",
+    titulo: "O Homem Mais Rico da Babilônia",
+    autor: "George S. Clason",
+    genero: "Finanças & Negócios",
+    preco: "R$ 16,00",
+    estoque: 2,
+    estado: "Usado",
+    sinopse: "Através de parábolas ambientadas na antiga Babilônia, o autor ensina princípios atemporais sobre como economizar, investir e construir riqueza de forma simples e duradoura.",
+    imagem: "img/o-homem-mais-rico-da-babilonia.jpg"
+  },
+
+  {
+    titulo: "Os Segredos da Mente Milionária",
+    autor: "T. Harv Eker",
+    genero: "Finanças & Negócios",
+    preco: "R$ 30,00",
+    estoque: 2,
+    estado: "Seminovo",
+    sinopse: "T. Harv Eker mostra como o 'modelo de dinheiro' que carregamos desde a infância determina nossa vida financeira — e ensina a reprogramar a mente para a prosperidade e a riqueza.",
+    imagem: "img/os-segredos-da-mente-milionaria.jpg"
+  },
+
+  {
+    titulo: "Marketing 4.0",
+    autor: "Philip Kotler",
+    genero: "Finanças & Negócios",
+    preco: "R$ 36,00",
     estoque: 2,
     estado: "Novo",
-    sinopse: "A história de Macabéa, uma jovem nordestina que vive no Rio de Janeiro, narrada com a sensibilidade única de Clarice em sua última obra publicada em vida.",
-    imagem: ""
+    sinopse: "Philip Kotler, o pai do marketing moderno, apresenta a transição do marketing tradicional para o digital, mostrando como conquistar clientes na era da conectividade integrando o online e o offline.",
+    imagem: "img/marketing-4-0.jpg"
   },
 
-  {
-    titulo: "1984",
-    autor: "George Orwell",
-    preco: "R$ 39,90",
-    estoque: 0,
-    estado: "Novo",
-    sinopse: "Em um futuro sombrio, Winston Smith tenta resistir ao controle total do Partido e do Grande Irmão. Um dos romances mais importantes do século XX.",
-    imagem: ""
-  },
+  /* ============= AUTOAJUDA & DESENVOLVIMENTO PESSOAL ============= */
 
   {
-    titulo: "Memórias Póstumas de Brás Cubas",
-    autor: "Machado de Assis",
-    preco: "R$ 26,50",
-    estoque: 4,
+    titulo: "O Poder do Subconsciente",
+    autor: "Dr. Joseph Murphy",
+    genero: "Autoajuda & Desenvolvimento Pessoal",
+    preco: "R$ 25,00",
+    estoque: 2,
     estado: "Usado",
-    sinopse: "Um defunto-autor escreve, do além-túmulo, as memórias irônicas e provocadoras de sua vida medíocre. Marco do realismo na literatura brasileira.",
-    imagem: ""
+    sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
+    imagem: "img/o-poder-do-subconsciente.jpg"
+  },
+
+  {
+    titulo: "Como Fazer Amigos e Influenciar Pessoas",
+    autor: "Dale Carnegie",
+    genero: "Autoajuda & Desenvolvimento Pessoal",
+    preco: "R$ 25,00",
+    estoque: 2,
+    estado: "Seminovo",
+    sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
+    imagem: "img/como-fazer-amigos.jpg"
+  },
+
+  {
+    titulo: "Como Convencer Alguém em 90 Segundos",
+    autor: "Nicholas Boothman",
+    genero: "Autoajuda & Desenvolvimento Pessoal",
+    preco: "R$ 30,00",
+    estoque: 2,
+    estado: "Seminovo",
+    sinopse: "Nicholas Boothman apresenta técnicas de comunicação e linguagem corporal para criar conexões instantâneas e causar uma primeira impressão marcante em qualquer situação.",
+    imagem: "img/como-convencer-90-segundos.jpg"
+  },
+
+  {
+    titulo: "Quer? Levanta e Pega!",
+    autor: "Júnior Q9",
+    genero: "Autoajuda & Desenvolvimento Pessoal",
+    preco: "R$ 30,00",
+    estoque: 2,
+    estado: "Seminovo",
+    sinopse: "Uma mensagem motivacional direta sobre atitude, foco e ação. Um chamado para sair da zona de conforto e correr atrás dos seus objetivos e sonhos.",
+    imagem: "img/quer-levanta-e-pega.jpg"
+  },
+
+  /* ===================== ROMANCE & LITERATURA ===================== */
+
+  {
+    titulo: "O Guardião do Tempo",
+    autor: "Mitch Albom",
+    genero: "Romance & Literatura",
+    preco: "R$ 20,00",
+    estoque: 2,
+    estado: "Usado",
+    sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
+    imagem: "img/o-guardiao-do-tempo.jpg"
+  },
+
+  {
+    titulo: "O Xangô de Baker Street",
+    autor: "Jô Soares",
+    genero: "Romance & Literatura",
+    preco: "R$ 30,00",
+    estoque: 2,
+    estado: "Usado",
+    sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
+    imagem: "img/o-xango-de-baker-street.jpg"
+  },
+
+  {
+    titulo: "Oliver Twist",
+    autor: "Charles Dickens",
+    genero: "Romance & Literatura",
+    preco: "R$ 30,00",
+    estoque: 2,
+    estado: "Seminovo",
+    sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebres de Charles Dickens.",
+    imagem: "img/oliver-twist.jpg"
+  },
+
+  {
+    titulo: "Paredes da Memória",
+    autor: "Tiago Marinho",
+    genero: "Romance & Literatura",
+    preco: "R$ 40,00",
+    estoque: 2,
+    estado: "Novo",
+    sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
+    imagem: "img/paredes-da-memoria.jpg"
   }
 
 ];

@@ -13,8 +13,16 @@
    se mudar aqui, lembre de mudar no index.html também. */
 const INSTAGRAM_USUARIO = "mybookverse.pb";
 
+/* Ordem em que as seções de gênero aparecem no site.
+   Todo gênero usado em livros.js deve estar listado aqui. */
+const ORDEM_GENEROS = [
+  "Finanças & Negócios",
+  "Autoajuda & Desenvolvimento Pessoal",
+  "Romance & Literatura"
+];
+
 /* ---------- Referências de elementos ---------- */
-const grade        = document.getElementById("grade-livros");
+const catalogo     = document.getElementById("catalogo");
 const semResultados= document.getElementById("sem-resultados");
 const campoBusca   = document.getElementById("campo-busca");
 const modal        = document.getElementById("modal");
@@ -101,19 +109,49 @@ function criarCard(livro, indice) {
 function renderizar() {
   const termo = normalizar(campoBusca.value.trim());
 
-  // O site mostra SEMPRE só os livros disponíveis (estoque > 0).
-  // Livros esgotados continuam no arquivo livros.js, mas ficam ocultos.
-  const filtrados = LIVROS.filter((livro) => {
+  // Filtro base: só livros disponíveis (estoque > 0) e que batem com a busca.
+  // Livros esgotados continuam em livros.js, mas ficam ocultos.
+  function combina(livro) {
     if (livro.estoque <= 0) return false;
     if (!termo) return true;
     const alvo = normalizar(livro.titulo + " " + livro.autor);
     return alvo.includes(termo);
+  }
+
+  // Monta a lista de gêneros: os da ordem definida + qualquer outro que apareça.
+  const generos = [...ORDEM_GENEROS];
+  LIVROS.forEach((livro) => {
+    const g = livro.genero || "Outros";
+    if (!generos.includes(g)) generos.push(g);
   });
 
-  grade.innerHTML = "";
-  filtrados.forEach((livro, i) => grade.appendChild(criarCard(livro, i)));
+  catalogo.innerHTML = "";
+  let total = 0;
 
-  semResultados.hidden = filtrados.length !== 0;
+  generos.forEach((genero) => {
+    const doGenero = LIVROS.filter(
+      (livro) => (livro.genero || "Outros") === genero && combina(livro)
+    );
+    if (doGenero.length === 0) return;
+    total += doGenero.length;
+
+    const secao = document.createElement("section");
+    secao.className = "genero-secao";
+
+    const titulo = document.createElement("h2");
+    titulo.className = "genero-titulo";
+    titulo.textContent = genero;
+    secao.appendChild(titulo);
+
+    const grade = document.createElement("div");
+    grade.className = "grade-livros";
+    doGenero.forEach((livro, i) => grade.appendChild(criarCard(livro, i)));
+    secao.appendChild(grade);
+
+    catalogo.appendChild(secao);
+  });
+
+  semResultados.hidden = total !== 0;
 }
 
 /* ---------- Modal ---------- */

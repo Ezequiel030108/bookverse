@@ -333,6 +333,29 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   gap: 28px 16px;
 }
 
+/* Seções por gênero */
+.genero-secao { margin-bottom: 10px; }
+.genero-secao + .genero-secao { margin-top: 14px; }
+.genero-titulo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 5.5vw, 2rem);
+  color: var(--texto-claro);
+  margin: 30px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(184, 158, 255, .22);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 0 16px rgba(184, 158, 255, .4);
+}
+.genero-titulo::before {
+  content: "✦";
+  color: var(--estrela);
+  font-size: .75em;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .6);
+}
+
 /* Card */
 .card-livro {
   position: relative;
