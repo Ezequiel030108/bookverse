@@ -1,0 +1,739 @@
+/* ============================================================
+   BOOKVERSE — TEMA CÓSMICO ROXO (MOBILE-FIRST)
+   Paleta inspirada na logo: roxo profundo do espaço,
+   estrelas douradas e brancas, branco/lavanda no texto.
+   Tipografia: Playfair Display (títulos) + Inter (texto)
+   ============================================================ */
+
+:root {
+  /* roxos do espaço (do mais escuro ao mais claro) */
+  --noite-profunda: #0a0524;
+  --noite: #14093a;
+  --indigo: #1f1466;
+  --indigo-claro: #2e1f8a;
+  --violeta: #4a2bb5;
+  --lavanda: #b89eff;
+  --lavanda-clara: #d8caff;
+
+  /* acentos estelares */
+  --estrela: #ffd966;
+  --estrela-clara: #fff3a8;
+  --aurora-rosa: #ff7ad9;
+  --aurora-ciano: #7adfff;
+
+  /* texto */
+  --texto-claro: #f3edff;
+  --texto-suave: rgba(243, 237, 255, 0.78);
+  --texto-discreto: rgba(243, 237, 255, 0.55);
+
+  /* utilitários */
+  --vidro: rgba(30, 18, 80, 0.45);
+  --vidro-borda: rgba(184, 158, 255, 0.25);
+  --brilho-livro: 0 14px 28px rgba(0,0,0,.55), 0 4px 10px rgba(74,43,181,.35);
+
+  --raio: 8px;
+  --alvo-toque: 44px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* -------- Reset -------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+img { max-width: 100%; display: block; }
+button { font: inherit; cursor: pointer; color: inherit; }
+a { color: inherit; }
+
+/* ============================================================
+   FUNDO CÓSMICO — duas camadas:
+   1) gradiente roxo profundo (a "noite")
+   2) estrelas em CSS puro (radial-gradients pequenas que se repetem)
+   ============================================================ */
+body {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--texto-claro);
+  min-height: 100vh;
+  background-color: var(--noite);
+  background-image:
+    /* nebulosa rosa no canto superior direito */
+    radial-gradient(ellipse 800px 500px at 90% -10%, rgba(255,122,217,.18), transparent 60%),
+    /* nebulosa violeta no canto inferior esquerdo */
+    radial-gradient(ellipse 700px 500px at 5% 110%, rgba(122,223,255,.12), transparent 60%),
+    /* gradiente principal vertical */
+    linear-gradient(180deg, var(--noite-profunda) 0%, var(--noite) 35%, var(--indigo) 100%);
+  background-attachment: fixed;
+  line-height: 1.5;
+  overscroll-behavior-y: none;
+  position: relative;
+}
+
+/* Camada de estrelas — fixa em viewport para não rolar com a página */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    /* estrelas grandes douradas (poucas) */
+    radial-gradient(1.5px 1.5px at 12% 18%, var(--estrela), transparent 50%),
+    radial-gradient(2px   2px   at 78% 8%,  var(--estrela), transparent 50%),
+    radial-gradient(1.5px 1.5px at 42% 88%, var(--estrela-clara), transparent 50%),
+    /* estrelas médias brancas */
+    radial-gradient(1px 1px at 25% 50%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 60% 35%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 88% 62%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 33% 73%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 7%  82%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 95% 28%, #fff, transparent 50%),
+    /* estrelas pequenas (poeira) */
+    radial-gradient(.5px .5px at 18% 30%, rgba(255,255,255,.85), transparent 50%),
+    radial-gradient(.5px .5px at 50% 12%, rgba(255,255,255,.7),  transparent 50%),
+    radial-gradient(.5px .5px at 67% 95%, rgba(255,255,255,.85), transparent 50%),
+    radial-gradient(.5px .5px at 82% 45%, rgba(255,255,255,.7),  transparent 50%),
+    radial-gradient(.5px .5px at 3%  62%, rgba(255,255,255,.85), transparent 50%),
+    radial-gradient(.5px .5px at 38% 5%,  rgba(255,255,255,.7),  transparent 50%),
+    radial-gradient(.5px .5px at 72% 70%, rgba(255,255,255,.85), transparent 50%),
+    radial-gradient(.5px .5px at 14% 95%, rgba(255,255,255,.7),  transparent 50%);
+  background-size: 480px 480px;
+  background-repeat: repeat;
+  animation: cintilar 4s ease-in-out infinite alternate;
+}
+
+/* Segunda camada de estrelas, deslocada, em movimento sutil */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 20% 22%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 55% 80%, #fff, transparent 50%),
+    radial-gradient(.8px .8px at 75% 40%, var(--lavanda-clara), transparent 50%),
+    radial-gradient(.8px .8px at 40% 60%, #fff, transparent 50%),
+    radial-gradient(.5px .5px at 88% 15%, #fff, transparent 50%);
+  background-size: 350px 350px;
+  background-repeat: repeat;
+  opacity: .8;
+  animation: cintilar 5.5s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes cintilar {
+  from { opacity: .6; }
+  to   { opacity: 1; }
+}
+
+/* todo o conteúdo passa acima das estrelas */
+header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-index: 1; }
+
+/* ============================================================
+   CABEÇALHO
+   ============================================================ */
+.cabecalho {
+  padding: calc(18px + var(--safe-top)) 16px 16px;
+  background: linear-gradient(180deg, rgba(10, 5, 36, .85), rgba(31, 20, 102, .35));
+  border-bottom: 1px solid rgba(184, 158, 255, .15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.cabecalho-conteudo {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Logo (gatinho-fantasma) */
+.logo-wrap {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.15), transparent 60%),
+    linear-gradient(135deg, var(--indigo-claro), var(--noite));
+  box-shadow:
+    0 0 0 2px rgba(184,158,255,.4),
+    0 0 20px rgba(184,158,255,.45),
+    0 6px 16px rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Se a imagem da logo não existir, mostra um fantasminha decorativo */
+.logo.logo-erro {
+  display: none;
+}
+.logo-wrap::before {
+  content: "👻";
+  font-size: 1.8rem;
+  position: absolute;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.4));
+}
+.logo:not(.logo-erro) ~ /* placeholder oculto quando há imagem */ * { display: none; }
+/* truque: o emoji fica de fundo via ::before sempre; quando a img carrega, ela cobre por cima */
+
+.cabecalho-texto {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.nome-livraria {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 6.5vw, 2.4rem);
+  margin: 0;
+  letter-spacing: 1px;
+  line-height: 1.05;
+  color: var(--texto-claro);
+  text-shadow:
+    0 0 18px rgba(184, 158, 255, .55),
+    0 2px 4px rgba(0, 0, 0, .5);
+}
+.nome-livraria::after {
+  content: "✦";
+  margin-left: 6px;
+  font-size: .65em;
+  color: var(--estrela);
+  text-shadow: 0 0 10px rgba(255, 217, 102, .6);
+  vertical-align: super;
+}
+.boas-vindas {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: .85rem;
+  margin: 3px 0 0;
+  color: var(--texto-suave);
+  line-height: 1.3;
+}
+
+.link-instagram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, var(--violeta), var(--aurora-rosa));
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: .85rem;
+  border-radius: 999px;
+  box-shadow: 0 0 18px rgba(255, 122, 217, .35), 0 4px 10px rgba(0,0,0,.4);
+  min-height: var(--alvo-toque);
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.link-instagram span { display: none; }
+.link-instagram:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 12px rgba(255, 122, 217, .25), 0 2px 4px rgba(0,0,0,.3);
+}
+
+/* ============================================================
+   HERO — LIVROS DISPONÍVEIS (título gigante)
+   ============================================================ */
+.hero-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 36px 16px 18px;
+  text-align: center;
+}
+.titulo-principal {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 9vw, 4.2rem);
+  margin: 0;
+  letter-spacing: .15em;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff 30%, var(--lavanda-clara) 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(184, 158, 255, .55);
+  filter: drop-shadow(0 0 8px rgba(255, 217, 102, .15));
+}
+.estrela-titulo {
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  color: var(--estrela);
+  text-shadow: 0 0 12px rgba(255, 217, 102, .7);
+  animation: cintilar 2.5s ease-in-out infinite alternate;
+}
+.estrela-titulo:nth-child(3) { animation-delay: 1s; }
+
+/* ============================================================
+   CONTROLES — busca sticky cósmica
+   ============================================================ */
+.controles {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 10px 12px 12px;
+  background: linear-gradient(180deg, rgba(10, 5, 36, .85) 0 70%, rgba(10, 5, 36, .5));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(184, 158, 255, .12);
+}
+.controles-conteudo {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+.campo-busca-wrap {
+  flex: 1 1 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.icone-busca {
+  position: absolute;
+  left: 14px;
+  color: var(--lavanda);
+  pointer-events: none;
+  opacity: .9;
+}
+.campo-busca {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: 999px;
+  background: var(--vidro);
+  font-size: 16px;
+  color: var(--texto-claro);
+  outline: none;
+  min-height: var(--alvo-toque);
+  -webkit-appearance: none;
+  appearance: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.campo-busca::placeholder { color: var(--texto-discreto); }
+.campo-busca:focus {
+  border-color: var(--lavanda);
+  box-shadow: 0 0 0 3px rgba(184, 158, 255, .25), 0 0 18px rgba(184, 158, 255, .2);
+}
+
+/* ============================================================
+   ESTANTE / GRADE DE LIVROS
+   ============================================================ */
+.estante {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 12px calc(40px + var(--safe-bottom));
+}
+.grade-livros {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px 16px;
+}
+
+/* Card */
+.card-livro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  animation: surgir .55s ease both;
+  animation-delay: var(--atraso, 0s);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* halo de luz embaixo de cada livro (a "estrela" iluminando o livro) */
+.card-livro::after {
+  content: "";
+  position: absolute;
+  left: 10%; right: 10%;
+  bottom: -8px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(184, 158, 255, .5), transparent 70%);
+  filter: blur(4px);
+  z-index: -1;
+}
+
+.capa {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--raio);
+  overflow: hidden;
+  background: var(--indigo);
+  box-shadow: var(--brilho-livro);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.card-livro:active .capa { transform: scale(.97); }
+.capa img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Fallback temático cósmico */
+.capa-fallback {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(2.2rem, 12vw, 3.6rem);
+  text-shadow: 0 0 14px rgba(255, 255, 255, .35), 0 2px 4px rgba(0,0,0,.5);
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255,255,255,.2), transparent 55%),
+    linear-gradient(135deg, var(--violeta), var(--noite));
+  position: relative;
+}
+.capa-fallback::before {
+  content: "✦";
+  position: absolute;
+  top: 14%;
+  right: 14%;
+  font-size: 1.2rem;
+  color: var(--estrela);
+  text-shadow: 0 0 8px rgba(255, 217, 102, .8);
+  opacity: .8;
+}
+.capa-fallback.var-musgo { background: linear-gradient(135deg, var(--indigo-claro), #0a1f3a); }
+.capa-fallback.var-ambar { background: linear-gradient(135deg, #8d3aa8, #4a2bb5); }
+.capa-fallback.var-tinta { background: linear-gradient(135deg, #1c0f4d, #060217); }
+
+/* Selo (todos visíveis agora são "Disponível" ou "Último!") */
+.selo {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: #fff;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.selo.disponivel {
+  background: linear-gradient(135deg, rgba(122, 223, 255, .9), rgba(74, 43, 181, .9));
+  box-shadow: 0 0 12px rgba(122, 223, 255, .35);
+}
+.selo.ultimo {
+  background: linear-gradient(135deg, rgba(255, 217, 102, .95), rgba(255, 122, 100, .9));
+  color: #2b1d10;
+  box-shadow: 0 0 12px rgba(255, 217, 102, .45);
+}
+.selo.esgotado { display: none; } /* esgotados nem aparecem mais */
+
+/* Texto do card */
+.info-livro {
+  padding: 14px 4px 2px;
+  text-align: center;
+}
+.info-titulo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: .95rem;
+  font-weight: 600;
+  margin: 0 0 2px;
+  color: var(--texto-claro);
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.info-autor {
+  margin: 0;
+  font-size: .78rem;
+  color: var(--lavanda);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.info-preco {
+  margin: 6px 0 0;
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--estrela-clara);
+  text-shadow: 0 0 8px rgba(255, 217, 102, .35);
+}
+
+.sem-resultados {
+  text-align: center;
+  font-style: italic;
+  color: var(--texto-suave);
+  margin-top: 36px;
+}
+
+/* ============================================================
+   RODAPÉ
+   ============================================================ */
+.rodape {
+  padding: 24px 16px calc(28px + var(--safe-bottom));
+  text-align: center;
+  font-size: .82rem;
+  color: var(--texto-suave);
+  border-top: 1px solid rgba(184, 158, 255, .1);
+  background: linear-gradient(180deg, transparent, rgba(10, 5, 36, .6));
+}
+.rodape p { margin: 4px 0; }
+.rodape-sub { color: var(--lavanda); font-style: italic; }
+
+/* ============================================================
+   MODAL — bottom-sheet cósmico
+   ============================================================ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal[hidden] { display: none; }
+
+.modal-fundo {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 2, 15, .75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: surgirFundo .25s ease both;
+}
+
+.modal-caixa {
+  position: relative;
+  background:
+    radial-gradient(ellipse 600px 200px at 50% 0%, rgba(184, 158, 255, .15), transparent 70%),
+    linear-gradient(180deg, var(--indigo), var(--noite));
+  color: var(--texto-claro);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 760px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(184, 158, 255, .2);
+  animation: subir .3s ease both;
+  overflow: hidden;
+}
+
+.modal-puxador {
+  display: block;
+  margin: 8px auto 4px;
+  width: 44px;
+  height: 5px;
+  border-radius: 99px;
+  border: 0;
+  background: rgba(184, 158, 255, .35);
+  padding: 0;
+  flex-shrink: 0;
+}
+.modal-fechar {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: var(--alvo-toque);
+  height: var(--alvo-toque);
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--texto-claro);
+  font-size: 1.8rem;
+  line-height: 1;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.modal-fechar:active { background: rgba(255,255,255,.08); }
+
+.modal-rolavel {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  padding-bottom: 8px;
+}
+.modal-conteudo {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+  padding: 12px 20px 20px;
+}
+.modal-capa {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--raio);
+  overflow: hidden;
+  box-shadow: var(--brilho-livro);
+  background: var(--indigo);
+}
+.modal-capa img { width: 100%; height: 100%; object-fit: cover; }
+.modal-capa .capa-fallback { font-size: 2.2rem; }
+
+.modal-info { min-width: 0; }
+.modal-info h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: var(--texto-claro);
+}
+.modal-autor {
+  font-style: italic;
+  margin: 0 0 10px;
+  color: var(--lavanda);
+  font-size: .9rem;
+}
+.modal-sinopse {
+  margin: 14px 0;
+  grid-column: 1 / -1;
+  color: var(--texto-suave);
+  font-size: .95rem;
+  line-height: 1.55;
+}
+.modal-detalhes {
+  grid-column: 1 / -1;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 4px;
+  display: grid;
+  gap: 6px;
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+.modal-detalhes strong { color: var(--texto-claro); }
+
+.modal-rodape {
+  padding: 12px 16px calc(12px + var(--safe-bottom));
+  background: rgba(10, 5, 36, .7);
+  border-top: 1px solid rgba(184, 158, 255, .15);
+  flex-shrink: 0;
+}
+.botao-instagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 22px;
+  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: .3px;
+  box-shadow: 0 0 22px rgba(220, 39, 67, .4), 0 6px 14px rgba(0,0,0,.45);
+  min-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.botao-instagram:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 12px rgba(220, 39, 67, .3), 0 2px 6px rgba(0,0,0,.3);
+}
+.botao-instagram.desativado {
+  background: rgba(100, 100, 120, .6);
+  color: #ddd;
+  pointer-events: none;
+  filter: grayscale(.4);
+  box-shadow: none;
+}
+
+/* ============================================================
+   ANIMAÇÕES
+   ============================================================ */
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes surgirFundo {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes subir {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes surgirCaixa {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   REFINOS PARA TELAS MAIORES
+   ============================================================ */
+
+@media (min-width: 480px) {
+  .grade-livros { gap: 32px 18px; }
+  .info-titulo  { font-size: 1rem; }
+  .info-autor   { font-size: .82rem; }
+  .logo-wrap    { width: 64px; height: 64px; }
+  .logo-wrap::before { font-size: 2rem; }
+}
+
+@media (min-width: 640px) {
+  .link-instagram { padding: 0 18px; font-size: .9rem; }
+  .link-instagram span { display: inline; }
+  .controles { padding: 14px 20px; }
+  .hero-titulo { padding: 56px 20px 28px; gap: 22px; }
+
+  .modal { align-items: center; padding: 24px; }
+  .modal-caixa {
+    border-radius: 16px;
+    max-height: 88vh;
+    animation: surgirCaixa .3s ease both;
+  }
+  .modal-puxador { display: none; }
+  .modal-conteudo {
+    grid-template-columns: 210px 1fr;
+    gap: 24px;
+    padding: 28px;
+  }
+  .modal-info h2 { font-size: 1.6rem; }
+}
+
+@media (min-width: 720px) {
+  .grade-livros { grid-template-columns: repeat(3, 1fr); gap: 36px 22px; }
+  .nome-livraria { font-size: 2.6rem; }
+  .boas-vindas   { font-size: 1rem; }
+  .logo-wrap { width: 72px; height: 72px; }
+  .logo-wrap::before { font-size: 2.3rem; }
+}
+
+@media (min-width: 1000px) {
+  .cabecalho { padding: 28px 24px 22px; }
+  .nome-livraria { font-size: 3rem; }
+  .grade-livros { grid-template-columns: repeat(4, 1fr); }
+  .info-titulo { font-size: 1.05rem; }
+  .hero-titulo { padding: 70px 20px 36px; }
+
+  @media (hover: hover) {
+    .card-livro:hover .capa {
+      transform: translateY(-6px) rotate(-.4deg);
+      box-shadow: 0 22px 36px rgba(0,0,0,.6), 0 0 30px rgba(184, 158, 255, .35);
+    }
+    .link-instagram:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 24px rgba(255, 122, 217, .55), 0 6px 14px rgba(0,0,0,.4);
+    }
+    .botao-instagram:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 28px rgba(220, 39, 67, .55), 0 10px 22px rgba(0,0,0,.45);
+    }
+  }
+}

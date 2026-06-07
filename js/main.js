@@ -1,0 +1,166 @@
+/* ============================================================
+   LÓGICA DO SITE
+   - Renderiza os cards de livros na estante
+   - Modal de detalhes ao clicar
+   - Busca em tempo real (título / autor)
+   - Filtro "só disponíveis"
+   - Monta o link do Instagram com a mensagem pronta
+   ============================================================ */
+
+/* ---------- CONFIGURAÇÃO RÁPIDA ---------- */
+/* Troque aqui o @ do Instagram da livraria (sem o @).
+   Esse mesmo @ aparece no cabeçalho do site —
+   se mudar aqui, lembre de mudar no index.html também. */
+const INSTAGRAM_USUARIO = "mybookverse.pb";
+
+/* ---------- Referências de elementos ---------- */
+const grade        = document.getElementById("grade-livros");
+const semResultados= document.getElementById("sem-resultados");
+const campoBusca   = document.getElementById("campo-busca");
+const modal        = document.getElementById("modal");
+const botaoIG      = document.getElementById("botao-instagram");
+
+/* ---------- Utilidades ---------- */
+
+/** Remove acentos e deixa minúsculo (para a busca ignorar acentos). */
+function normalizar(texto) {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+/** Define o selo de estoque conforme a quantidade. */
+function rotuloEstoque(estoque) {
+  if (estoque <= 0) return { texto: "Esgotado",   classe: "esgotado"   };
+  if (estoque === 1) return { texto: "Último!",   classe: "ultimo"     };
+  return                    { texto: "Disponível", classe: "disponivel" };
+}
+
+/** Gera uma variação de cor para o fallback da capa (estável por título). */
+function varianteFallback(titulo) {
+  const variantes = ["", "var-musgo", "var-ambar", "var-tinta"];
+  let soma = 0;
+  for (let i = 0; i < titulo.length; i++) soma += titulo.charCodeAt(i);
+  return variantes[soma % variantes.length];
+}
+
+/** Monta o link do Instagram já com a mensagem codificada. */
+function montarLinkInstagram(livro) {
+  const msg = `Olá! Tenho interesse no livro "${livro.titulo}" de ${livro.autor} (${livro.preco}). Ainda está disponível?`;
+  return `https://ig.me/m/${INSTAGRAM_USUARIO}?text=${encodeURIComponent(msg)}`;
+}
+
+/* ---------- Renderização dos cards ---------- */
+
+function criarCard(livro, indice) {
+  const card = document.createElement("article");
+  card.className = "card-livro";
+  if (livro.estoque <= 0) card.classList.add("esgotado");
+  // pequeno atraso escalonado para a animação de entrada
+  // atraso escalonado, mas limitado para a lista não demorar a "entrar" toda
+  card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.04) + "s");
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `${livro.titulo}, de ${livro.autor}`);
+
+  const selo = rotuloEstoque(livro.estoque);
+
+  // Capa: imagem real OU fallback bonito com a inicial
+  const capaHTML = livro.imagem
+    ? `<img src="${livro.imagem}" alt="Capa do livro ${livro.titulo}" loading="lazy" />`
+    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
+
+  card.innerHTML = `
+    <div class="capa">
+      <span class="selo ${selo.classe}">${selo.texto}</span>
+      ${capaHTML}
+    </div>
+    <div class="info-livro">
+      <h3 class="info-titulo">${livro.titulo}</h3>
+      <p class="info-autor">${livro.autor}</p>
+      <p class="info-preco">${livro.preco}</p>
+    </div>
+  `;
+
+  card.addEventListener("click", () => abrirModal(livro));
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      abrirModal(livro);
+    }
+  });
+
+  return card;
+}
+
+function renderizar() {
+  const termo = normalizar(campoBusca.value.trim());
+
+  // O site mostra SEMPRE só os livros disponíveis (estoque > 0).
+  // Livros esgotados continuam no arquivo livros.js, mas ficam ocultos.
+  const filtrados = LIVROS.filter((livro) => {
+    if (livro.estoque <= 0) return false;
+    if (!termo) return true;
+    const alvo = normalizar(livro.titulo + " " + livro.autor);
+    return alvo.includes(termo);
+  });
+
+  grade.innerHTML = "";
+  filtrados.forEach((livro, i) => grade.appendChild(criarCard(livro, i)));
+
+  semResultados.hidden = filtrados.length !== 0;
+}
+
+/* ---------- Modal ---------- */
+
+function abrirModal(livro) {
+  modal.querySelector("#modal-titulo").textContent = livro.titulo;
+  modal.querySelector(".modal-autor").textContent = livro.autor;
+  modal.querySelector(".modal-sinopse").textContent = livro.sinopse || "";
+  modal.querySelector("[data-estado]").textContent = livro.estado;
+  modal.querySelector("[data-estoque]").textContent =
+    livro.estoque > 0 ? `${livro.estoque} unidade${livro.estoque > 1 ? "s" : ""}` : "Esgotado";
+  modal.querySelector("[data-preco]").textContent = livro.preco;
+
+  // Capa do modal
+  const capa = modal.querySelector(".modal-capa");
+  capa.innerHTML = livro.imagem
+    ? `<img src="${livro.imagem}" alt="Capa do livro ${livro.titulo}" />`
+    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
+
+  // Botão do Instagram
+  if (livro.estoque <= 0) {
+    botaoIG.classList.add("desativado");
+    botaoIG.textContent = "Indisponível";
+    botaoIG.removeAttribute("href");
+  } else {
+    botaoIG.classList.remove("desativado");
+    botaoIG.textContent = "Pedir pelo Instagram";
+    botaoIG.href = montarLinkInstagram(livro);
+  }
+
+  modal.hidden = false;
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function fecharModal() {
+  modal.hidden = true;
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+modal.addEventListener("click", (e) => {
+  if (e.target.hasAttribute("data-fechar-modal")) fecharModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modal.hidden) fecharModal();
+});
+
+/* ---------- Eventos de busca / filtro ---------- */
+campoBusca.addEventListener("input", renderizar);
+
+/* ---------- Inicialização ---------- */
+document.getElementById("ano-atual").textContent = new Date().getFullYear();
+renderizar();

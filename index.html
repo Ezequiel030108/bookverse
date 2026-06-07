@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e0830" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>BookVerse — Catálogo</title>
+  <meta name="description" content="Catálogo de livros da BookVerse. Peça pelo Instagram." />
+
+  <!-- Google Fonts: Playfair Display (serifada, para títulos) + Inter (sans, para corpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- =============== CABEÇALHO =============== -->
+  <header class="cabecalho">
+    <div class="cabecalho-conteudo">
+      <div class="logo-wrap" aria-hidden="true">
+        <!-- Salve a logo em img/logo.png. Se faltar, mostra um placeholder cósmico. -->
+        <img class="logo" src="img/logo.png" alt="" onerror="this.classList.add('logo-erro')">
+      </div>
+      <div class="cabecalho-texto">
+        <h1 class="nome-livraria">BookVerse</h1>
+        <p class="boas-vindas">Um universo de histórias esperando por você.</p>
+      </div>
+      <a class="link-instagram" href="https://instagram.com/mybookverse.pb" target="_blank" rel="noopener" aria-label="Nosso Instagram">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+          <path d="M12 2.2c3.2 0 3.6 0 4.85.07 1.17.05 1.8.25 2.22.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.05.41 2.22.06 1.26.07 1.64.07 4.85s0 3.6-.07 4.85c-.05 1.17-.25 1.8-.41 2.22a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.05.36-2.22.41-1.26.06-1.64.07-4.85.07s-3.6 0-4.85-.07c-1.17-.05-1.8-.25-2.22-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.22C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.85c.05-1.17.25-1.8.41-2.22.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.05-.36 2.22-.41C8.4 2.2 8.8 2.2 12 2.2zm0 5.6a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm5.4-.4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 9.6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z"/>
+        </svg>
+        <span>@mybookverse.pb</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- =============== TÍTULO GRANDE =============== -->
+  <section class="hero-titulo">
+    <span class="estrela-titulo">✦</span>
+    <h2 class="titulo-principal">LIVROS DISPONÍVEIS</h2>
+    <span class="estrela-titulo">✦</span>
+  </section>
+
+  <!-- =============== CONTROLES (sticky no topo enquanto rola) =============== -->
+  <div class="controles" aria-label="Buscar e filtrar livros">
+    <div class="controles-conteudo">
+      <div class="campo-busca-wrap">
+        <svg class="icone-busca" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm9 16-4.5-4.5"/>
+        </svg>
+        <input
+          type="search"
+          id="campo-busca"
+          class="campo-busca"
+          placeholder="Buscar por título ou autor…"
+          aria-label="Buscar livros"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== ESTANTE DE LIVROS =============== -->
+  <main>
+    <section class="estante" aria-label="Catálogo de livros">
+      <div id="grade-livros" class="grade-livros">
+        <!-- Os cards são gerados em js/main.js -->
+      </div>
+      <p id="sem-resultados" class="sem-resultados" hidden>
+        Nenhum livro encontrado. Tente outro termo.
+      </p>
+    </section>
+  </main>
+
+  <!-- =============== RODAPÉ =============== -->
+  <footer class="rodape">
+    <p>© <span id="ano-atual"></span> BookVerse · Juazeirinho e Campina Grande</p>
+    <p class="rodape-sub">Feito com carinho para nossos leitores ✦</p>
+  </footer>
+
+  <!-- =============== MODAL DE DETALHES (bottom-sheet no mobile) =============== -->
+  <div id="modal" class="modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <div class="modal-fundo" data-fechar-modal></div>
+    <div class="modal-caixa" role="document">
+      <button class="modal-puxador" type="button" data-fechar-modal aria-label="Fechar"></button>
+      <button class="modal-fechar" type="button" data-fechar-modal aria-label="Fechar">×</button>
+
+      <div class="modal-rolavel">
+        <div class="modal-conteudo">
+          <div class="modal-capa"><!-- preenchido pelo JS --></div>
+          <div class="modal-info">
+            <h2 id="modal-titulo"></h2>
+            <p class="modal-autor"></p>
+            <p class="modal-sinopse"></p>
+
+            <ul class="modal-detalhes">
+              <li><strong>Estado:</strong> <span data-estado></span></li>
+              <li><strong>Estoque:</strong> <span data-estoque></span></li>
+              <li><strong>Preço:</strong> <span data-preco></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-rodape">
+        <a id="botao-instagram" class="botao-instagram" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+            <path d="M12 2.2c3.2 0 3.6 0 4.85.07 1.17.05 1.8.25 2.22.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.05.41 2.22.06 1.26.07 1.64.07 4.85s0 3.6-.07 4.85c-.05 1.17-.25 1.8-.41 2.22a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.05.36-2.22.41-1.26.06-1.64.07-4.85.07s-3.6 0-4.85-.07c-1.17-.05-1.8-.25-2.22-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.22C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.85c.05-1.17.25-1.8.41-2.22.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.05-.36 2.22-.41C8.4 2.2 8.8 2.2 12 2.2zm0 7.4a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8zm0-1.8a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4zM17.4 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+          </svg>
+          <span class="botao-instagram-texto">Pedir pelo Instagram</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/livros.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
