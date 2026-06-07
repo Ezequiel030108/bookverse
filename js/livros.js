@@ -33,7 +33,9 @@
               0 = esgotado (some do site)
               1 = "Último!" (selo âmbar)
               2 ou mais = "Disponível" (selo azul)
-   estado  -> "Novo", "Seminovo" ou "Usado"
+   estado  -> Condição do livro. Aparece em DESTAQUE no card.
+              Ex: "Bom estado, porém grifado", "Ótimo estado",
+              "Seminovo", "Novo"
    sinopse -> Um resumo curto do livro
    imagem  -> Caminho da capa dentro da pasta /img/
               Ex: "img/oliver-twist.jpg"
@@ -51,7 +53,7 @@ const LIVROS = [
     genero: "Finanças & Negócios",
     preco: "R$ 20,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Bom estado, porém grifado",
     sinopse: "Baseado no estudo de centenas de pessoas bem-sucedidas, Napoleon Hill revela os 13 princípios que conduzem à riqueza e à realização pessoal. Um dos maiores clássicos do desenvolvimento financeiro de todos os tempos.",
     imagem: "img/quem-pensa-enriquece.jpg"
   },
@@ -62,7 +64,7 @@ const LIVROS = [
     genero: "Finanças & Negócios",
     preco: "R$ 16,00",
     estoque: 1,
-    estado: "Usado",
+    estado: "Bom estado, porém muito grifado",
     sinopse: "Através de parábolas ambientadas na antiga Babilônia, o autor ensina princípios atemporais sobre como economizar, investir e construir riqueza de forma simples e duradoura.",
     imagem: "img/o-homem-mais-rico-da-babilonia.jpg"
   },
@@ -73,7 +75,7 @@ const LIVROS = [
     genero: "Finanças & Negócios",
     preco: "R$ 30,00",
     estoque: 2,
-    estado: "Seminovo",
+    estado: "Bom estado",
     sinopse: "T. Harv Eker mostra como o 'modelo de dinheiro' que carregamos desde a infância determina nossa vida financeira — e ensina a reprogramar a mente para a prosperidade e a riqueza.",
     imagem: "img/os-segredos-da-mente-milionaria.jpg"
   },
@@ -84,7 +86,7 @@ const LIVROS = [
     genero: "Finanças & Negócios",
     preco: "R$ 36,00",
     estoque: 1,
-    estado: "Novo",
+    estado: "Ótimo estado, porém grifado",
     sinopse: "Philip Kotler, o pai do marketing moderno, apresenta a transição do marketing tradicional para o digital, mostrando como conquistar clientes na era da conectividade integrando o online e o offline.",
     imagem: "img/marketing-4-0.jpg"
   },
@@ -97,7 +99,7 @@ const LIVROS = [
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 25,00",
     estoque: 1,
-    estado: "Usado",
+    estado: "Bom estado, porém grifado",
     sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
     imagem: "img/o-poder-do-subconsciente.jpg"
   },
@@ -119,7 +121,7 @@ const LIVROS = [
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 30,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Bom estado, porém grifado",
     sinopse: "Nicholas Boothman apresenta técnicas de comunicação e linguagem corporal para criar conexões instantâneas e causar uma primeira impressão marcante em qualquer situação.",
     imagem: "img/como-convencer-90-segundos.jpg"
   },
@@ -130,7 +132,7 @@ const LIVROS = [
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 30,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Bom estado",
     sinopse: "Uma mensagem motivacional direta sobre atitude, foco e ação. Um chamado para sair da zona de conforto e correr atrás dos seus objetivos e sonhos.",
     imagem: "img/quer-levanta-e-pega.jpg"
   },
@@ -143,7 +145,7 @@ const LIVROS = [
     genero: "Ciência & Curiosidades",
     preco: "R$ 50,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Bom estado",
     sinopse: "Do criador do canal Poligonautas, uma viagem descomplicada pela astronomia — do menor dos átomos aos misteriosos buracos negros — explicando os segredos do universo de forma simples e divertida.",
     imagem: "img/do-atomo-ao-buraco-negro.jpg"
   },
@@ -154,7 +156,7 @@ const LIVROS = [
     genero: "Ciência & Curiosidades",
     preco: "R$ 40,00",
     estoque: 1,
-    estado: "Seminovo",
+    estado: "Bom estado",
     sinopse: "Um guia rápido e acessível que percorre as mais recentes descobertas da astronomia, do Big Bang aos confins do cosmos. Perfeito para quem quer entender o universo sem complicação.",
     imagem: "img/a-historia-do-universo.jpg"
   },
@@ -202,7 +204,7 @@ const LIVROS = [
     genero: "Romance & Literatura",
     preco: "R$ 20,00",
     estoque: 1,
-    estado: "Usado",
+    estado: "Bom estado",
     sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
     imagem: "img/o-guardiao-do-tempo.jpg"
   },
@@ -213,7 +215,7 @@ const LIVROS = [
     genero: "Romance & Literatura",
     preco: "R$ 30,00",
     estoque: 1,
-    estado: "Usado",
+    estado: "Bom estado",
     sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
     imagem: "img/o-xango-de-baker-street.jpg"
   },
@@ -235,7 +237,7 @@ const LIVROS = [
     genero: "Romance & Literatura",
     preco: "R$ 40,00",
     estoque: 1,
-    estado: "Novo",
+    estado: "Ótimo estado",
     sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
     imagem: "img/paredes-da-memoria.jpg"
   }

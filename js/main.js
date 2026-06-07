@@ -93,6 +93,7 @@ function criarCard(livro, indice) {
     <div class="info-livro">
       <h3 class="info-titulo">${livro.titulo}</h3>
       <p class="info-autor">${livro.autor}</p>
+      ${livro.estado ? `<p class="info-estado">${livro.estado}</p>` : ""}
       <p class="info-preco">${livro.preco}</p>
     </div>
   `;
