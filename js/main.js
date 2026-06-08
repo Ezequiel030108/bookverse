@@ -208,6 +208,41 @@ document.addEventListener("keydown", (e) => {
 /* ---------- Eventos de busca / filtro ---------- */
 campoBusca.addEventListener("input", renderizar);
 
+/* ---------- Topo grudado: esconde ao rolar pra baixo, mostra ao rolar pra cima ----------
+   Padrão usado em apps profissionais (Twitter, Medium etc.):
+   o bloco do topo desliza pra fora quando o usuário rola pra baixo
+   e volta assim que ele rola pra cima. */
+const topoGrudado = document.getElementById("topo-grudado");
+let ultimoScroll = window.scrollY;
+let tickAgendado = false;
+// Pequenos limiares para evitar piscar com micro-rolagens (ex.: trackpads).
+const LIMIAR_ESCONDER = 8;   // px de rolagem pra baixo antes de esconder
+const LIMIAR_MOSTRAR  = 4;   // px de rolagem pra cima antes de mostrar
+const ZONA_SEGURA_TOPO = 80; // perto do topo, sempre mostrar
+
+function atualizarTopoGrudado() {
+  const scrollAtual = window.scrollY;
+  const delta = scrollAtual - ultimoScroll;
+
+  if (scrollAtual < ZONA_SEGURA_TOPO) {
+    topoGrudado.classList.remove("escondido");
+  } else if (delta > LIMIAR_ESCONDER) {
+    topoGrudado.classList.add("escondido");
+  } else if (delta < -LIMIAR_MOSTRAR) {
+    topoGrudado.classList.remove("escondido");
+  }
+
+  ultimoScroll = scrollAtual;
+  tickAgendado = false;
+}
+
+window.addEventListener("scroll", () => {
+  if (!tickAgendado) {
+    tickAgendado = true;
+    requestAnimationFrame(atualizarTopoGrudado);
+  }
+}, { passive: true });
+
 /* ---------- Inicialização ---------- */
 document.getElementById("ano-atual").textContent = new Date().getFullYear();
 renderizar();
