@@ -267,42 +267,12 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
 .estrela-titulo:nth-child(3) { animation-delay: 1s; }
 
 /* ============================================================
-   TOPO GRUDADO — cabeçalho + título + busca como um bloco só
-   Fica fixo no topo enquanto se rola pra cima,
-   desliza pra fora ao rolar pra baixo (padrão de apps).
+   CONTROLES — busca sticky cósmica
    ============================================================ */
-.topo-grudado {
+.controles {
   position: sticky;
   top: 0;
   z-index: 30;
-  transition: transform .28s ease;
-  will-change: transform;
-  /* Fundo do bloco grudado — evita que o catálogo vaze por trás
-     do .hero-titulo (que originalmente era transparente). */
-  background: linear-gradient(180deg,
-              rgba(10, 5, 36, .92) 0%,
-              rgba(20, 9, 58, .88) 60%,
-              rgba(10, 5, 36, .85) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-.topo-grudado.escondido {
-  transform: translateY(-100%);
-}
-/* Dentro do wrapper o cabeçalho e a busca não precisam mais ter o blur
-   próprio — quem cuida disso agora é o wrapper. Mantemos só os ajustes
-   visuais (bordas, padding) deles. */
-.topo-grudado .cabecalho,
-.topo-grudado .controles {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-/* ============================================================
-   CONTROLES — caixa de busca
-   ============================================================ */
-.controles {
   padding: 10px 12px 12px;
   background: linear-gradient(180deg, rgba(10, 5, 36, .85) 0 70%, rgba(10, 5, 36, .5));
   backdrop-filter: blur(10px);
