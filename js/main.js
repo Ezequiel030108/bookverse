@@ -141,18 +141,21 @@ function renderizar() {
   let total = 0;
 
   // Seção "Novidades": livros com novoAte ainda válido aparecem em
-  // destaque no topo (além de continuarem na própria categoria).
+  // destaque no topo, num banner promocional (além da própria categoria).
   const novidades = LIVROS.filter((livro) => ehNovidade(livro) && combina(livro));
   if (novidades.length > 0) {
     total += novidades.length;
 
     const secao = document.createElement("section");
-    secao.className = "genero-secao secao-novidades";
-
-    const titulo = document.createElement("h2");
-    titulo.className = "genero-titulo";
-    titulo.textContent = "Novidades";
-    secao.appendChild(titulo);
+    secao.className = "secao-novidades";
+    secao.setAttribute("aria-label", "Novidades da semana");
+    secao.innerHTML = `
+      <div class="novidades-cabecalho">
+        <span class="novidades-etiqueta">✨ Acabou de chegar</span>
+        <h2 class="novidades-titulo">Novidades da Semana</h2>
+        <p class="novidades-subtitulo">Recém-chegados na estante — garanta o seu antes que acabe!</p>
+      </div>
+    `;
 
     const grade = document.createElement("div");
     grade.className = "grade-livros";
