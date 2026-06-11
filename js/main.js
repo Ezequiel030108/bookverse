@@ -20,7 +20,8 @@ const ORDEM_GENEROS = [
   "Autoajuda & Desenvolvimento Pessoal",
   "Ciência & Curiosidades",
   "Clássicos da Literatura",
-  "Romance & Literatura"
+  "Romance & Literatura",
+  "Mangás"
 ];
 
 /* ---------- Referências de elementos ---------- */

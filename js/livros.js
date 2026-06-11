@@ -25,6 +25,7 @@
               "Ciência & Curiosidades"
               "Clássicos da Literatura"
               "Romance & Literatura"
+              "Mangás"
               (Pode criar um gênero novo: basta escrever aqui e,
                se quiser controlar a ordem, adicioná-lo também na
                lista ORDEM_GENEROS dentro do arquivo js/main.js)
@@ -186,6 +187,28 @@ const LIVROS = [
   },
 
   {
+    titulo: "A Metamorfose",
+    autor: "Franz Kafka",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Gregor Samsa acorda certa manhã transformado em um inseto monstruoso. A partir desse absurdo, Kafka constrói uma poderosa reflexão sobre solidão, família e alienação, em uma das obras mais influentes da literatura mundial.",
+    imagem: "img/a-metamorfose.jpg"
+  },
+
+  {
+    titulo: "O Morro dos Ventos Uivantes",
+    autor: "Emily Brontë",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 38,00",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. O único romance de Emily Brontë é um dos maiores clássicos de todos os tempos.",
+    imagem: "img/o-morro-dos-ventos-uivantes.jpg"
+  },
+
+  {
     titulo: "Fahrenheit 451",
     autor: "Ray Bradbury",
     genero: "Clássicos da Literatura",
@@ -240,6 +263,19 @@ const LIVROS = [
     estado: "Ótimo estado",
     sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
     imagem: "img/paredes-da-memoria.jpg"
+  },
+
+  /* ===================== MANGÁS ===================== */
+
+  {
+    titulo: "Nana – Vol. 1",
+    autor: "Ai Yazawa",
+    genero: "Mangás",
+    preco: "R$ 55,00",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Duas garotas chamadas Nana se conhecem por acaso a caminho de Tóquio e acabam dividindo o mesmo apartamento. Entre música, amores e sonhos, Ai Yazawa retrata a amizade e a vida adulta em um dos mangás mais aclamados de todos os tempos.",
+    imagem: "img/nana-1.jpg"
   }
 
 ];
