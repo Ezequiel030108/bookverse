@@ -41,6 +41,11 @@
    imagem  -> Caminho da capa dentro da pasta /img/
               Ex: "img/oliver-twist.jpg"
               Se não tiver capa, deixe assim: ""
+   novoAte -> (opcional) Até essa data o livro aparece em destaque
+              na seção "Novidades", no topo do site. Use o formato
+              "ANO-MÊS-DIA". Depois da data ele sai de lá sozinho
+              (mas continua na categoria normal).
+              Ex: novoAte: "2026-06-18"
 
    ============================================================ */
 
@@ -194,7 +199,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Gregor Samsa acorda certa manhã transformado em um inseto monstruoso. A partir desse absurdo, Kafka constrói uma poderosa reflexão sobre solidão, família e alienação, em uma das obras mais influentes da literatura mundial.",
-    imagem: "img/a-metamorfose.jpg"
+    imagem: "img/a-metamorfose.jpg",
+    novoAte: "2026-06-18"
   },
 
   {
@@ -205,7 +211,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. O único romance de Emily Brontë é um dos maiores clássicos de todos os tempos.",
-    imagem: "img/o-morro-dos-ventos-uivantes.jpg"
+    imagem: "img/o-morro-dos-ventos-uivantes.jpg",
+    novoAte: "2026-06-18"
   },
 
   {
@@ -275,7 +282,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Duas garotas chamadas Nana se conhecem por acaso a caminho de Tóquio e acabam dividindo o mesmo apartamento. Entre música, amores e sonhos, Ai Yazawa retrata a amizade e a vida adulta em um dos mangás mais aclamados de todos os tempos.",
-    imagem: "img/nana-1.jpg"
+    imagem: "img/nana-1.jpg",
+    novoAte: "2026-06-18"
   }
 
 ];

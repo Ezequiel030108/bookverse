@@ -447,6 +447,11 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   box-shadow: 0 0 12px rgba(255, 217, 102, .45);
 }
 .selo.esgotado { display: none; } /* esgotados nem aparecem mais */
+.selo.novo {
+  background: linear-gradient(135deg, rgba(140, 255, 191, .95), rgba(122, 223, 255, .9));
+  color: #0d2b1d;
+  box-shadow: 0 0 12px rgba(140, 255, 191, .45);
+}
 
 /* Texto do card */
 .info-livro {

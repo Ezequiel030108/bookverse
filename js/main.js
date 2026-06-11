@@ -41,6 +41,12 @@ function normalizar(texto) {
     .replace(/[̀-ͯ]/g, "");
 }
 
+/** Verifica se o livro ainda vale como novidade (campo novoAte em livros.js). */
+function ehNovidade(livro) {
+  if (!livro.novoAte) return false;
+  return new Date() <= new Date(livro.novoAte + "T23:59:59");
+}
+
 /** Define o selo de estoque conforme a quantidade. */
 function rotuloEstoque(estoque) {
   if (estoque <= 0) return { texto: "Esgotado",   classe: "esgotado"   };
@@ -68,7 +74,7 @@ function linkInstagram() {
 
 /* ---------- Renderização dos cards ---------- */
 
-function criarCard(livro, indice) {
+function criarCard(livro, indice, seloNovo) {
   const card = document.createElement("article");
   card.className = "card-livro";
   if (livro.estoque <= 0) card.classList.add("esgotado");
@@ -79,7 +85,10 @@ function criarCard(livro, indice) {
   card.setAttribute("role", "button");
   card.setAttribute("aria-label", `${livro.titulo}, de ${livro.autor}`);
 
-  const selo = rotuloEstoque(livro.estoque);
+  // Na seção "Novidades" o selo vira "Novo!"; nas demais, mostra o estoque.
+  const selo = seloNovo
+    ? { texto: "Novo!", classe: "novo" }
+    : rotuloEstoque(livro.estoque);
 
   // Capa: imagem real OU fallback bonito com a inicial
   const capaHTML = livro.imagem
@@ -130,6 +139,28 @@ function renderizar() {
 
   catalogo.innerHTML = "";
   let total = 0;
+
+  // Seção "Novidades": livros com novoAte ainda válido aparecem em
+  // destaque no topo (além de continuarem na própria categoria).
+  const novidades = LIVROS.filter((livro) => ehNovidade(livro) && combina(livro));
+  if (novidades.length > 0) {
+    total += novidades.length;
+
+    const secao = document.createElement("section");
+    secao.className = "genero-secao secao-novidades";
+
+    const titulo = document.createElement("h2");
+    titulo.className = "genero-titulo";
+    titulo.textContent = "Novidades";
+    secao.appendChild(titulo);
+
+    const grade = document.createElement("div");
+    grade.className = "grade-livros";
+    novidades.forEach((livro, i) => grade.appendChild(criarCard(livro, i, true)));
+    secao.appendChild(grade);
+
+    catalogo.appendChild(secao);
+  }
 
   generos.forEach((genero) => {
     const doGenero = LIVROS.filter(
