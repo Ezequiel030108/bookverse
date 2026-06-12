@@ -103,6 +103,23 @@ function formatarReal(valor) {
   return "R$ " + valor;
 }
 
+/** Último dia da promoção por extenso (ex.: "17 de junho"). */
+function dataFimPromo() {
+  const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                 "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  const fim = new Date(PROMOCAO.fim + "T12:00:00");
+  return fim.getDate() + " de " + meses[fim.getMonth()];
+}
+
+/** Hoje é o último dia da promoção? */
+function ultimoDiaPromo() {
+  const hoje = new Date();
+  const hojeISO = hoje.getFullYear() + "-" +
+    String(hoje.getMonth() + 1).padStart(2, "0") + "-" +
+    String(hoje.getDate()).padStart(2, "0");
+  return hojeISO === PROMOCAO.fim;
+}
+
 /** Calcula os preços promocionais do livro (sozinho e na dupla).
     Livros com descontoMaximo nunca passam desse percentual. */
 function precosPromo(livro) {
@@ -205,40 +222,6 @@ function renderizar() {
   catalogo.innerHTML = "";
   let total = 0;
 
-  // Banner da promoção: aparece no topo do catálogo enquanto a
-  // promoção estiver ativa (datas em js/livros.js) e some sozinho.
-  if (promocaoAtiva()) {
-    // No último dia o banner diz "Só hoje"; antes disso, "vale até..."
-    const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
-    const fim = new Date(PROMOCAO.fim + "T12:00:00");
-    const dataBonita = fim.getDate() + " de " + meses[fim.getMonth()];
-    const hoje = new Date();
-    const hojeISO = hoje.getFullYear() + "-" +
-      String(hoje.getMonth() + 1).padStart(2, "0") + "-" +
-      String(hoje.getDate()).padStart(2, "0");
-    const etiqueta = hojeISO === PROMOCAO.fim
-      ? `♥ Só hoje · ${dataBonita}`
-      : `♥ Já começou · vale até ${dataBonita}`;
-
-    const banner = document.createElement("section");
-    banner.className = "secao-promo";
-    banner.setAttribute("aria-label", "Promoção de " + PROMOCAO.nome);
-    banner.innerHTML = `
-      <div class="promo-coracao-fundo" aria-hidden="true">❤</div>
-      <span class="promo-etiqueta">${etiqueta}</span>
-      <h2 class="promo-titulo">${PROMOCAO.nome}</h2>
-      <p class="promo-subtitulo">O site inteiro em promoção — e levando 2 livros, o desconto <strong>dobra</strong>!</p>
-      <div class="promo-regras">
-        <span class="promo-regra"><strong>${PROMOCAO.descontoUm}% OFF</strong>levando 1 livro</span>
-        <span class="promo-regra destaque"><strong>${PROMOCAO.descontoDupla}% OFF em cada</strong>levando 2 ou mais</span>
-        <span class="promo-regra"><strong>♥ Brinde</strong>${PROMOCAO.brinde}</span>
-      </div>
-      <p class="promo-nota">Títulos de R$ 50+ participam com ${PROMOCAO.descontoUm}% fixo · quase tudo é exemplar único — quem chegar primeiro, leva ♥</p>
-    `;
-    catalogo.appendChild(banner);
-  }
-
   // Seção "Novidades": livros com novoAte ainda válido aparecem em
   // destaque no topo, num banner promocional (além da própria categoria).
   const novidades = LIVROS.filter((livro) => ehNovidade(livro) && combina(livro));
@@ -318,8 +301,8 @@ function abrirModal(livro) {
       modal.querySelector(".modal-detalhes").insertAdjacentElement("afterend", avisoPromo);
     }
     avisoPromo.innerHTML = promo.limitado
-      ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro está com ${PROMOCAO.descontoUm}% de desconto na promoção — e todo pedido ganha ${PROMOCAO.brinde}.`
-      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off) — e todo pedido ganha ${PROMOCAO.brinde}.`;
+      ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
+      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> cada (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
   } else if (avisoPromo) {
     avisoPromo.remove();
   }
@@ -371,6 +354,14 @@ campoBusca.addEventListener("input", renderizar);
 function ativarModoPromocao() {
   if (!promocaoAtiva()) return;
   document.body.classList.add("modo-promo");
+
+  // faixa de aviso logo abaixo do cabeçalho, estilo aviso de loja
+  const faixa = document.createElement("p");
+  faixa.className = "faixa-promo";
+  faixa.innerHTML = ultimoDiaPromo()
+    ? `❤ Último dia do <strong>${PROMOCAO.nome}</strong>! ${PROMOCAO.descontoUm}% off em qualquer livro · levando 2 ou mais, <strong>${PROMOCAO.descontoDupla}% off em cada</strong>`
+    : `❤ <strong>${PROMOCAO.nome}</strong> na BookVerse: ${PROMOCAO.descontoUm}% off em qualquer livro · levando 2 ou mais, <strong>${PROMOCAO.descontoDupla}% off em cada</strong> · até ${dataFimPromo()}`;
+  document.querySelector(".cabecalho").insertAdjacentElement("afterend", faixa);
 
   // as estrelas ao lado do título viram corações
   document.querySelectorAll(".estrela-titulo").forEach((el) => {

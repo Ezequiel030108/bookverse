@@ -59,7 +59,6 @@
    inicio / fim    -> primeiro e último dia da promoção ("ANO-MÊS-DIA")
    descontoUm      -> % de desconto comprando 1 livro
    descontoDupla   -> % de desconto EM CADA livro comprando 2 ou mais
-   brinde          -> o mimo que aparece no banner e no modal
 
    Para VER a promoção antes da data, abra o site assim:
    index.html?promo=teste
@@ -74,11 +73,10 @@
 
 const PROMOCAO = {
   nome: "Dia dos Namorados",
-  inicio: "2026-06-11", // ativada na véspera a pedido — o banner avisa que vale até dia 12
-  fim: "2026-06-12",
+  inicio: "2026-06-11", // ativada já na véspera
+  fim: "2026-06-17",
   descontoUm: 10,
-  descontoDupla: 20,
-  brinde: "embrulho de presente + cartãozinho de dedicatória grátis"
+  descontoDupla: 20
 };
 
 const LIVROS = [
