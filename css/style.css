@@ -794,21 +794,83 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
    (controlada por datas em js/livros.js — liga e desliga sozinha)
    ============================================================ */
 
-/* ---- Faixa de aviso da promoção, logo abaixo do cabeçalho ---- */
-.faixa-promo {
+/* ---- Vitrine da promoção: faixa larga abaixo do cabeçalho ----
+   De ponta a ponta da tela, sem bordas arredondadas — linguagem
+   visual diferente dos cartões do catálogo, estilo vitrine de loja. */
+.vitrine-promo {
   position: relative;
   z-index: 1;
-  margin: 0;
-  padding: 9px 16px;
-  text-align: center;
-  font-size: .78rem;
-  line-height: 1.5;
-  letter-spacing: .02em;
-  color: #ffd9ef;
-  background: linear-gradient(90deg, rgba(109, 18, 66, .95), rgba(164, 20, 95, .95), rgba(109, 18, 66, .95));
-  border-bottom: 1px solid rgba(255, 122, 217, .3);
+  padding: 24px 16px 26px;
+  background:
+    radial-gradient(ellipse 520px 200px at 12% 0%, rgba(255, 122, 217, .16), transparent 65%),
+    radial-gradient(ellipse 420px 180px at 92% 100%, rgba(255, 122, 217, .10), transparent 65%),
+    linear-gradient(105deg, #3d0a2b, #58103d 45%, #2a0a3d);
+  border-top: 1px solid rgba(255, 122, 217, .25);
+  border-bottom: 1px solid rgba(255, 122, 217, .35);
+  overflow: hidden;
 }
-.faixa-promo strong { color: #fff; }
+/* coração grande de fundo, bem discreto */
+.vitrine-promo::after {
+  content: "❤";
+  position: absolute;
+  right: -14px;
+  bottom: -34px;
+  font-size: 7rem;
+  line-height: 1;
+  color: var(--aurora-rosa);
+  opacity: .08;
+  transform: rotate(-14deg);
+  pointer-events: none;
+}
+.vitrine-conteudo {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.vitrine-ate {
+  margin: 0 0 4px;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: var(--aurora-rosa);
+}
+.vitrine-titulo {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 6.5vw, 2.3rem);
+  line-height: 1.1;
+  color: var(--texto-claro);
+  text-shadow: 0 0 18px rgba(255, 122, 217, .35);
+}
+.vitrine-coracao {
+  color: var(--aurora-rosa);
+  text-shadow: 0 0 14px rgba(255, 122, 217, .7);
+}
+.vitrine-regras {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.vitrine-regra {
+  margin: 0;
+  font-size: .92rem;
+  color: var(--texto-suave);
+}
+.vitrine-pct {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 1.55em;
+  color: var(--estrela-clara);
+  margin-right: 5px;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .35);
+}
 
 /* ---- Preços promocionais nos cards ---- */
 .info-preco.em-promo {
@@ -904,7 +966,6 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
 @media (min-width: 640px) {
   .link-instagram { padding: 0 18px; font-size: .9rem; }
   .link-instagram span { display: inline; }
-  .faixa-promo { font-size: .85rem; }
   .controles { padding: 14px 20px; }
   .hero-titulo { padding: 56px 20px 28px; gap: 22px; }
 
@@ -927,6 +988,21 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   .grade-livros { grid-template-columns: repeat(3, 1fr); gap: 36px 22px; }
   .nome-livraria { font-size: 2.6rem; }
   .logo-wrap { width: 80px; height: 80px; }
+
+  /* vitrine da promoção em duas colunas: chamada à esquerda, regras à direita */
+  .vitrine-promo { padding: 26px 24px; }
+  .vitrine-conteudo {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    gap: 24px;
+  }
+  .vitrine-regras {
+    align-items: flex-start;
+    border-left: 1px solid rgba(255, 122, 217, .3);
+    padding-left: 28px;
+  }
 }
 
 @media (min-width: 1000px) {

@@ -355,13 +355,23 @@ function ativarModoPromocao() {
   if (!promocaoAtiva()) return;
   document.body.classList.add("modo-promo");
 
-  // faixa de aviso logo abaixo do cabeçalho, estilo aviso de loja
-  const faixa = document.createElement("p");
-  faixa.className = "faixa-promo";
-  faixa.innerHTML = ultimoDiaPromo()
-    ? `❤ Último dia do <strong>${PROMOCAO.nome}</strong>! ${PROMOCAO.descontoUm}% off em qualquer livro · levando 2 ou mais, <strong>${PROMOCAO.descontoDupla}% off em cada</strong>`
-    : `❤ <strong>${PROMOCAO.nome}</strong> na BookVerse: ${PROMOCAO.descontoUm}% off em qualquer livro · levando 2 ou mais, <strong>${PROMOCAO.descontoDupla}% off em cada</strong> · até ${dataFimPromo()}`;
-  document.querySelector(".cabecalho").insertAdjacentElement("afterend", faixa);
+  // vitrine da promoção: faixa larga de ponta a ponta, abaixo do cabeçalho
+  const vitrine = document.createElement("section");
+  vitrine.className = "vitrine-promo";
+  vitrine.setAttribute("aria-label", "Promoção de " + PROMOCAO.nome);
+  vitrine.innerHTML = `
+    <div class="vitrine-conteudo">
+      <div class="vitrine-chamada">
+        <p class="vitrine-ate">${ultimoDiaPromo() ? "último dia · " + dataFimPromo() : "até " + dataFimPromo()}</p>
+        <h2 class="vitrine-titulo">${PROMOCAO.nome}&nbsp;<span class="vitrine-coracao">❤</span></h2>
+      </div>
+      <div class="vitrine-regras">
+        <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoUm}%</span> off em qualquer livro</p>
+        <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span> off em cada um, levando 2 ou mais</p>
+      </div>
+    </div>
+  `;
+  document.querySelector(".cabecalho").insertAdjacentElement("afterend", vitrine);
 
   // as estrelas ao lado do título viram corações
   document.querySelectorAll(".estrela-titulo").forEach((el) => {
