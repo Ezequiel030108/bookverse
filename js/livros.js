@@ -180,7 +180,6 @@ const LIVROS = [
     autor: "Schwarza",
     genero: "Ciência & Curiosidades",
     preco: "R$ 50,00",
-    descontoMaximo: 10, // livro caro: trava o desconto da promoção em 10%
     estoque: 1,
     estado: "Bom estado",
     sinopse: "Do criador do canal Poligonautas, uma viagem descomplicada pela astronomia — do menor dos átomos aos misteriosos buracos negros — explicando os segredos do universo de forma simples e divertida.",
@@ -310,7 +309,6 @@ const LIVROS = [
     autor: "Ai Yazawa",
     genero: "Mangás",
     preco: "R$ 55,00",
-    descontoMaximo: 10, // livro caro e lacrado: trava o desconto da promoção em 10%
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Duas garotas chamadas Nana se conhecem por acaso a caminho de Tóquio e acabam dividindo o mesmo apartamento. Entre música, amores e sonhos, Ai Yazawa retrata a amizade e a vida adulta em um dos mangás mais aclamados de todos os tempos.",
