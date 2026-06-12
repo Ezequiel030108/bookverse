@@ -933,13 +933,13 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   text-shadow: 0 0 10px rgba(255, 122, 217, .55);
   animation: flutuar-coracao 8s ease-in-out infinite;
 }
-.ceu-coracoes span:nth-child(1) { top: 16%; left: 7%;  font-size: 13px; animation-delay: 0s;   }
-.ceu-coracoes span:nth-child(2) { top: 9%;  left: 84%; font-size: 11px; animation-delay: 1.2s; }
-.ceu-coracoes span:nth-child(3) { top: 38%; left: 92%; font-size: 14px; animation-delay: 2.4s; }
-.ceu-coracoes span:nth-child(4) { top: 58%; left: 4%;  font-size: 10px; animation-delay: 3.6s; }
-.ceu-coracoes span:nth-child(5) { top: 76%; left: 88%; font-size: 12px; animation-delay: 4.8s; }
-.ceu-coracoes span:nth-child(6) { top: 88%; left: 14%; font-size: 14px; animation-delay: 6s;   }
-.ceu-coracoes span:nth-child(7) { top: 30%; left: 48%; font-size: 9px;  animation-delay: 2s;   }
+.ceu-coracoes span:nth-child(1) { top: 16%; left: 7%;  font-size: 20px; animation-delay: 0s;   }
+.ceu-coracoes span:nth-child(2) { top: 9%;  left: 84%; font-size: 17px; animation-delay: 1.2s; }
+.ceu-coracoes span:nth-child(3) { top: 38%; left: 92%; font-size: 22px; animation-delay: 2.4s; }
+.ceu-coracoes span:nth-child(4) { top: 58%; left: 4%;  font-size: 16px; animation-delay: 3.6s; }
+.ceu-coracoes span:nth-child(5) { top: 76%; left: 88%; font-size: 19px; animation-delay: 4.8s; }
+.ceu-coracoes span:nth-child(6) { top: 88%; left: 14%; font-size: 22px; animation-delay: 6s;   }
+.ceu-coracoes span:nth-child(7) { top: 30%; left: 48%; font-size: 15px; animation-delay: 2s;   }
 @keyframes flutuar-coracao {
   0%, 100% { transform: translateY(0) scale(1);     opacity: .18; }
   50%      { transform: translateY(-14px) scale(1.1); opacity: .45; }
