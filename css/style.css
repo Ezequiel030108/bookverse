@@ -958,16 +958,18 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
 }
 .modal-promo strong { color: var(--aurora-rosa); }
 
-/* ---- Blush rosa nas molduras das capas (só na promoção) ---- */
+/* ---- Moldura rosa vibrante ao redor das capas (só na promoção) ---- */
 .modo-promo .capa {
   box-shadow: var(--brilho-livro),
-              0 0 0 1.5px rgba(255, 122, 217, .3),
-              0 6px 24px rgba(255, 122, 217, .25);
+              0 0 0 3px rgba(255, 122, 217, .85),
+              0 0 18px 3px rgba(255, 122, 217, .6),
+              0 0 36px rgba(255, 122, 217, .4);
 }
 .modo-promo .modal-capa {
   box-shadow: var(--brilho-livro),
-              0 0 0 1.5px rgba(255, 122, 217, .3),
-              0 6px 24px rgba(255, 122, 217, .25);
+              0 0 0 3px rgba(255, 122, 217, .85),
+              0 0 18px 3px rgba(255, 122, 217, .6),
+              0 0 36px rgba(255, 122, 217, .4);
 }
 /* o halo de luz embaixo de cada livro também ganha o tom rosado */
 .modo-promo .card-livro::after {
