@@ -124,7 +124,7 @@ function precoCardHTML(livro) {
     const p = precosPromo(livro);
     if (p) {
       const linhaDupla = p.limitado
-        ? `<p class="preco-dupla">♥ desconto especial de hoje</p>`
+        ? `<p class="preco-dupla">♥ preço especial da promoção</p>`
         : `<p class="preco-dupla">♥ levando 2: ${formatarReal(p.dupla)} cada</p>`;
       return `
         <p class="info-preco em-promo">
@@ -208,12 +208,25 @@ function renderizar() {
   // Banner da promoção: aparece no topo do catálogo enquanto a
   // promoção estiver ativa (datas em js/livros.js) e some sozinho.
   if (promocaoAtiva()) {
+    // No último dia o banner diz "Só hoje"; antes disso, "vale até..."
+    const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+    const fim = new Date(PROMOCAO.fim + "T12:00:00");
+    const dataBonita = fim.getDate() + " de " + meses[fim.getMonth()];
+    const hoje = new Date();
+    const hojeISO = hoje.getFullYear() + "-" +
+      String(hoje.getMonth() + 1).padStart(2, "0") + "-" +
+      String(hoje.getDate()).padStart(2, "0");
+    const etiqueta = hojeISO === PROMOCAO.fim
+      ? `♥ Só hoje · ${dataBonita}`
+      : `♥ Já começou · vale até ${dataBonita}`;
+
     const banner = document.createElement("section");
     banner.className = "secao-promo";
     banner.setAttribute("aria-label", "Promoção de " + PROMOCAO.nome);
     banner.innerHTML = `
       <div class="promo-coracao-fundo" aria-hidden="true">❤</div>
-      <span class="promo-etiqueta">♥ Só hoje · 12 de junho</span>
+      <span class="promo-etiqueta">${etiqueta}</span>
       <h2 class="promo-titulo">${PROMOCAO.nome}</h2>
       <p class="promo-subtitulo">O site inteiro em promoção — e levando 2 livros, o desconto <strong>dobra</strong>!</p>
       <div class="promo-regras">
@@ -305,7 +318,7 @@ function abrirModal(livro) {
       modal.querySelector(".modal-detalhes").insertAdjacentElement("afterend", avisoPromo);
     }
     avisoPromo.innerHTML = promo.limitado
-      ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro está com ${PROMOCAO.descontoUm}% de desconto só hoje — e todo pedido ganha ${PROMOCAO.brinde}.`
+      ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro está com ${PROMOCAO.descontoUm}% de desconto na promoção — e todo pedido ganha ${PROMOCAO.brinde}.`
       : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off) — e todo pedido ganha ${PROMOCAO.brinde}.`;
   } else if (avisoPromo) {
     avisoPromo.remove();

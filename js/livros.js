@@ -74,7 +74,7 @@
 
 const PROMOCAO = {
   nome: "Dia dos Namorados",
-  inicio: "2026-06-12",
+  inicio: "2026-06-11", // ativada na véspera a pedido — o banner avisa que vale até dia 12
   fim: "2026-06-12",
   descontoUm: 10,
   descontoDupla: 20,
