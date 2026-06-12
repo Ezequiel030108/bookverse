@@ -302,7 +302,7 @@ function abrirModal(livro) {
     }
     avisoPromo.innerHTML = promo.limitado
       ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
-      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> cada (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
+      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
   } else if (avisoPromo) {
     avisoPromo.remove();
   }
