@@ -49,6 +49,38 @@
 
    ============================================================ */
 
+/* ============================================================
+   PROMOÇÃO POR TEMPO LIMITADO
+   ============================================================
+   O bloco abaixo controla a promoção do site inteiro.
+   Ela LIGA e DESLIGA SOZINHA pelas datas — não precisa mexer
+   em mais nada, nem lembrar de desfazer depois.
+
+   inicio / fim    -> primeiro e último dia da promoção ("ANO-MÊS-DIA")
+   descontoUm      -> % de desconto comprando 1 livro
+   descontoDupla   -> % de desconto EM CADA livro comprando 2 ou mais
+   brinde          -> o mimo que aparece no banner e no modal
+
+   Para VER a promoção antes da data, abra o site assim:
+   index.html?promo=teste
+
+   Para fazer OUTRA promoção no futuro (Natal, aniversário...),
+   basta trocar o nome, as datas e os percentuais aqui.
+
+   Dica: livros com a linha  descontoMaximo: 10  nunca passam
+   de 10% de desconto, mesmo na dupla (bom para livros caros
+   ou lacrados, em que 20% pesaria demais na margem).
+   ============================================================ */
+
+const PROMOCAO = {
+  nome: "Dia dos Namorados",
+  inicio: "2026-06-12",
+  fim: "2026-06-12",
+  descontoUm: 10,
+  descontoDupla: 20,
+  brinde: "embrulho de presente + cartãozinho de dedicatória grátis"
+};
+
 const LIVROS = [
 
   /* ===================== FINANÇAS & NEGÓCIOS ===================== */
@@ -150,6 +182,7 @@ const LIVROS = [
     autor: "Schwarza",
     genero: "Ciência & Curiosidades",
     preco: "R$ 50,00",
+    descontoMaximo: 10, // livro caro: trava o desconto da promoção em 10%
     estoque: 1,
     estado: "Bom estado",
     sinopse: "Do criador do canal Poligonautas, uma viagem descomplicada pela astronomia — do menor dos átomos aos misteriosos buracos negros — explicando os segredos do universo de forma simples e divertida.",
@@ -279,6 +312,7 @@ const LIVROS = [
     autor: "Ai Yazawa",
     genero: "Mangás",
     preco: "R$ 55,00",
+    descontoMaximo: 10, // livro caro e lacrado: trava o desconto da promoção em 10%
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Duas garotas chamadas Nana se conhecem por acaso a caminho de Tóquio e acabam dividindo o mesmo apartamento. Entre música, amores e sonhos, Ai Yazawa retrata a amizade e a vida adulta em um dos mangás mais aclamados de todos os tempos.",

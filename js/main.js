@@ -72,6 +72,71 @@ function linkInstagram() {
   return `https://ig.me/m/${INSTAGRAM_USUARIO}`;
 }
 
+/* ---------- Promoção (configurada em js/livros.js) ---------- */
+
+/** A promoção está ativa agora? (liga/desliga sozinha pelas datas)
+    Para testar antes da data, abra o site com ?promo=teste no final. */
+function promocaoAtiva() {
+  if (typeof PROMOCAO === "undefined" || !PROMOCAO) return false;
+  if (new URLSearchParams(location.search).get("promo") === "teste") return true;
+  const agora = new Date();
+  return (
+    agora >= new Date(PROMOCAO.inicio + "T00:00:00") &&
+    agora <= new Date(PROMOCAO.fim + "T23:59:59")
+  );
+}
+
+/** Converte "R$ 30,00" no número 30. */
+function precoNumerico(precoTexto) {
+  const n = parseFloat(
+    String(precoTexto).replace(/[^\d,]/g, "").replace(",", ".")
+  );
+  return isNaN(n) ? null : n;
+}
+
+/** Arredonda para o real cheio (R$ 22,50 vira R$ 22, a favor do cliente). */
+function arredondarReal(valor) {
+  return Math.ceil(valor - 0.5);
+}
+
+function formatarReal(valor) {
+  return "R$ " + valor;
+}
+
+/** Calcula os preços promocionais do livro (sozinho e na dupla).
+    Livros com descontoMaximo nunca passam desse percentual. */
+function precosPromo(livro) {
+  const cheio = precoNumerico(livro.preco);
+  if (cheio === null) return null;
+  const teto = livro.descontoMaximo || 100;
+  const pctUm = Math.min(PROMOCAO.descontoUm, teto);
+  const pctDupla = Math.min(PROMOCAO.descontoDupla, teto);
+  return {
+    um: arredondarReal(cheio * (1 - pctUm / 100)),
+    dupla: arredondarReal(cheio * (1 - pctDupla / 100)),
+    limitado: pctDupla < PROMOCAO.descontoDupla
+  };
+}
+
+/** HTML do preço dentro do card (normal ou, em promoção, riscado + novo). */
+function precoCardHTML(livro) {
+  if (promocaoAtiva()) {
+    const p = precosPromo(livro);
+    if (p) {
+      const linhaDupla = p.limitado
+        ? `<p class="preco-dupla">♥ desconto especial de hoje</p>`
+        : `<p class="preco-dupla">♥ levando 2: ${formatarReal(p.dupla)} cada</p>`;
+      return `
+        <p class="info-preco em-promo">
+          <s class="preco-antigo">${livro.preco}</s>
+          <span class="preco-promo">${formatarReal(p.um)}</span>
+        </p>
+        ${linhaDupla}`;
+    }
+  }
+  return `<p class="info-preco">${livro.preco}</p>`;
+}
+
 /* ---------- Renderização dos cards ---------- */
 
 function criarCard(livro, indice, seloNovo) {
@@ -103,7 +168,7 @@ function criarCard(livro, indice, seloNovo) {
     <div class="info-livro">
       <h3 class="info-titulo">${livro.titulo}</h3>
       <p class="info-autor">${livro.autor}</p>
-      <p class="info-preco">${livro.preco}</p>
+      ${precoCardHTML(livro)}
     </div>
   `;
 
@@ -139,6 +204,27 @@ function renderizar() {
 
   catalogo.innerHTML = "";
   let total = 0;
+
+  // Banner da promoção: aparece no topo do catálogo enquanto a
+  // promoção estiver ativa (datas em js/livros.js) e some sozinho.
+  if (promocaoAtiva()) {
+    const banner = document.createElement("section");
+    banner.className = "secao-promo";
+    banner.setAttribute("aria-label", "Promoção de " + PROMOCAO.nome);
+    banner.innerHTML = `
+      <div class="promo-coracao-fundo" aria-hidden="true">❤</div>
+      <span class="promo-etiqueta">♥ Só hoje · 12 de junho</span>
+      <h2 class="promo-titulo">${PROMOCAO.nome}</h2>
+      <p class="promo-subtitulo">O site inteiro em promoção — e levando 2 livros, o desconto <strong>dobra</strong>!</p>
+      <div class="promo-regras">
+        <span class="promo-regra"><strong>${PROMOCAO.descontoUm}% OFF</strong>levando 1 livro</span>
+        <span class="promo-regra destaque"><strong>${PROMOCAO.descontoDupla}% OFF em cada</strong>levando 2 ou mais</span>
+        <span class="promo-regra"><strong>♥ Brinde</strong>${PROMOCAO.brinde}</span>
+      </div>
+      <p class="promo-nota">Títulos de R$ 50+ participam com ${PROMOCAO.descontoUm}% fixo · quase tudo é exemplar único — quem chegar primeiro, leva ♥</p>
+    `;
+    catalogo.appendChild(banner);
+  }
 
   // Seção "Novidades": livros com novoAte ainda válido aparecem em
   // destaque no topo, num banner promocional (além da própria categoria).
@@ -200,7 +286,30 @@ function abrirModal(livro) {
   modal.querySelector("[data-estado]").textContent = livro.estado;
   modal.querySelector("[data-estoque]").textContent =
     livro.estoque > 0 ? `${livro.estoque} unidade${livro.estoque > 1 ? "s" : ""}` : "Esgotado";
-  modal.querySelector("[data-preco]").textContent = livro.preco;
+
+  // Preço: normal fora da promoção; riscado + novo durante a promoção
+  const campoPreco = modal.querySelector("[data-preco]");
+  const promo = promocaoAtiva() ? precosPromo(livro) : null;
+  if (promo) {
+    campoPreco.innerHTML = `<s class="modal-preco-antigo">${livro.preco}</s> ${formatarReal(promo.um)}`;
+  } else {
+    campoPreco.textContent = livro.preco;
+  }
+
+  // Aviso da promoção dentro do modal (criado e removido conforme o caso)
+  let avisoPromo = modal.querySelector(".modal-promo");
+  if (promo) {
+    if (!avisoPromo) {
+      avisoPromo = document.createElement("p");
+      avisoPromo.className = "modal-promo";
+      modal.querySelector(".modal-detalhes").insertAdjacentElement("afterend", avisoPromo);
+    }
+    avisoPromo.innerHTML = promo.limitado
+      ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro está com ${PROMOCAO.descontoUm}% de desconto só hoje — e todo pedido ganha ${PROMOCAO.brinde}.`
+      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off) — e todo pedido ganha ${PROMOCAO.brinde}.`;
+  } else if (avisoPromo) {
+    avisoPromo.remove();
+  }
 
   // Capa do modal
   const capa = modal.querySelector(".modal-capa");
@@ -243,6 +352,36 @@ document.addEventListener("keydown", (e) => {
 /* ---------- Eventos de busca / filtro ---------- */
 campoBusca.addEventListener("input", renderizar);
 
+/* ---------- Decoração da promoção ---------- */
+/* Tudo aqui só acontece com a promoção ativa e desaparece
+   sozinho quando ela termina (nada fica "sujo" no site). */
+function ativarModoPromocao() {
+  if (!promocaoAtiva()) return;
+  document.body.classList.add("modo-promo");
+
+  // as estrelas ao lado do título viram corações
+  document.querySelectorAll(".estrela-titulo").forEach((el) => {
+    el.textContent = "❤";
+    el.classList.add("coracao");
+  });
+
+  // corações discretos flutuando junto às estrelas do fundo
+  const ceu = document.createElement("div");
+  ceu.className = "ceu-coracoes";
+  ceu.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 7; i++) {
+    const coracao = document.createElement("span");
+    coracao.textContent = "❤";
+    ceu.appendChild(coracao);
+  }
+  document.body.appendChild(ceu);
+
+  // mensagem especial no rodapé
+  const sub = document.querySelector(".rodape-sub");
+  if (sub) sub.textContent = "Feliz Dia dos Namorados! Feito com amor para nossos leitores ♥";
+}
+
 /* ---------- Inicialização ---------- */
 document.getElementById("ano-atual").textContent = new Date().getFullYear();
+ativarModoPromocao();
 renderizar();

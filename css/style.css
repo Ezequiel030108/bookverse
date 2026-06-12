@@ -788,6 +788,192 @@ header, .hero-titulo, .controles, main, .rodape, .modal { position: relative; z-
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ============================================================
+   MODO PROMOÇÃO — DIA DOS NAMORADOS
+   Tudo desta seção só aparece quando a promoção está ativa
+   (controlada por datas em js/livros.js — liga e desliga sozinha)
+   ============================================================ */
+
+/* ---- Banner da promoção no topo do catálogo ---- */
+.secao-promo {
+  position: relative;
+  margin: 26px 0 8px;
+  padding: 30px 18px 24px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 122, 217, .45);
+  background:
+    radial-gradient(ellipse 460px 260px at 88% -15%, rgba(255, 122, 217, .22), transparent 65%),
+    radial-gradient(ellipse 360px 220px at 5% 115%, rgba(255, 122, 217, .12), transparent 65%),
+    linear-gradient(160deg, rgba(74, 27, 96, .55), rgba(20, 9, 58, .75));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .35), inset 0 0 60px rgba(255, 122, 217, .08);
+  overflow: hidden;
+  text-align: center;
+}
+/* filete brilhante no topo, em tons de rosa */
+.secao-promo::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--aurora-rosa), var(--estrela), var(--aurora-rosa), transparent);
+}
+/* coração gigante de fundo, bem sutil */
+.promo-coracao-fundo {
+  position: absolute;
+  right: -18px;
+  bottom: -42px;
+  font-size: 9rem;
+  line-height: 1;
+  color: var(--aurora-rosa);
+  opacity: .07;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.promo-etiqueta {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, #ff2e9d, var(--violeta));
+  box-shadow: 0 0 18px rgba(255, 46, 157, .55);
+}
+.promo-titulo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1.7rem, 7vw, 2.6rem);
+  margin: 14px 0 6px;
+  background: linear-gradient(90deg, var(--estrela-clara), var(--aurora-rosa), var(--lavanda-clara));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--aurora-rosa); /* fallback se o clip de texto não funcionar */
+  filter: drop-shadow(0 0 14px rgba(255, 122, 217, .4));
+}
+.promo-subtitulo {
+  margin: 0 auto 18px;
+  max-width: 520px;
+  font-size: .92rem;
+  color: var(--texto-suave);
+}
+.promo-subtitulo strong { color: var(--aurora-rosa); }
+.promo-regras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto 16px;
+}
+.promo-regra {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 140px;
+  max-width: 200px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 122, 217, .35);
+  background: var(--vidro);
+  font-size: .78rem;
+  line-height: 1.35;
+  color: var(--texto-suave);
+}
+.promo-regra strong {
+  font-size: .95rem;
+  color: var(--texto-claro);
+}
+/* a regra "estrela" da promoção: levando 2, o desconto dobra */
+.promo-regra.destaque {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ff2e9d, var(--violeta));
+  color: rgba(255, 255, 255, .88);
+  box-shadow: 0 0 22px rgba(255, 46, 157, .45);
+}
+.promo-regra.destaque strong { color: #fff; }
+.promo-nota {
+  margin: 0;
+  font-size: .74rem;
+  color: var(--texto-discreto);
+}
+
+/* ---- Preços promocionais nos cards ---- */
+.info-preco.em-promo {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.preco-antigo {
+  font-size: .78em;
+  font-weight: 500;
+  color: var(--texto-discreto);
+  text-decoration: line-through;
+  text-shadow: none;
+}
+.preco-promo { color: var(--estrela-clara); }
+.preco-dupla {
+  margin: 3px 0 0;
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--aurora-rosa);
+  text-shadow: 0 0 8px rgba(255, 122, 217, .35);
+}
+
+/* ---- Promoção dentro do modal ---- */
+.modal-preco-antigo {
+  font-weight: 500;
+  opacity: .6;
+  margin-right: 2px;
+}
+.modal-promo {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 122, 217, .45);
+  background: rgba(255, 122, 217, .08);
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--texto-suave);
+}
+.modal-promo strong { color: var(--aurora-rosa); }
+
+/* ---- Decoração sutil: corações no título e no céu ---- */
+.estrela-titulo.coracao {
+  color: var(--aurora-rosa);
+  text-shadow: 0 0 12px rgba(255, 122, 217, .7);
+}
+.ceu-coracoes {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.ceu-coracoes span {
+  position: absolute;
+  color: var(--aurora-rosa);
+  opacity: .3;
+  text-shadow: 0 0 10px rgba(255, 122, 217, .55);
+  animation: flutuar-coracao 8s ease-in-out infinite;
+}
+.ceu-coracoes span:nth-child(1) { top: 16%; left: 7%;  font-size: 13px; animation-delay: 0s;   }
+.ceu-coracoes span:nth-child(2) { top: 9%;  left: 84%; font-size: 11px; animation-delay: 1.2s; }
+.ceu-coracoes span:nth-child(3) { top: 38%; left: 92%; font-size: 14px; animation-delay: 2.4s; }
+.ceu-coracoes span:nth-child(4) { top: 58%; left: 4%;  font-size: 10px; animation-delay: 3.6s; }
+.ceu-coracoes span:nth-child(5) { top: 76%; left: 88%; font-size: 12px; animation-delay: 4.8s; }
+.ceu-coracoes span:nth-child(6) { top: 88%; left: 14%; font-size: 14px; animation-delay: 6s;   }
+.ceu-coracoes span:nth-child(7) { top: 30%; left: 48%; font-size: 9px;  animation-delay: 2s;   }
+@keyframes flutuar-coracao {
+  0%, 100% { transform: translateY(0) scale(1);     opacity: .18; }
+  50%      { transform: translateY(-14px) scale(1.1); opacity: .45; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation: none !important;
