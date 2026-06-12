@@ -364,11 +364,12 @@ function ativarModoPromocao() {
       <div class="vitrine-chamada">
         <p class="vitrine-ate">${ultimoDiaPromo() ? "último dia · " + dataFimPromo() : "até " + dataFimPromo()}</p>
         <h2 class="vitrine-titulo">${PROMOCAO.nome}&nbsp;<span class="vitrine-coracao">❤</span></h2>
+        <span class="vitrine-flor" aria-hidden="true"></span>
       </div>
       <div class="vitrine-regras">
         <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoUm}%</span> off em qualquer livro</p>
         <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span> off em cada um, levando 2 ou mais</p>
-        <p class="vitrine-brinde">❤ levando 2 livros ou mais, você ganha ${PROMOCAO.brindeDupla}</p>
+        <p class="vitrine-brinde"><span class="vitrine-brinde-icone" aria-hidden="true">❤</span> Levando 2 livros ou mais, você ganha ${PROMOCAO.brindeDupla}</p>
       </div>
     </div>
   `;
