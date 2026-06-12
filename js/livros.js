@@ -223,18 +223,6 @@ const LIVROS = [
   },
 
   {
-    titulo: "A Metamorfose",
-    autor: "Franz Kafka",
-    genero: "Clássicos da Literatura",
-    preco: "R$ 30,00",
-    estoque: 1,
-    estado: "Novo, lacrado",
-    sinopse: "Gregor Samsa acorda certa manhã transformado em um inseto monstruoso. A partir desse absurdo, Kafka constrói uma poderosa reflexão sobre solidão, família e alienação, em uma das obras mais influentes da literatura mundial.",
-    imagem: "img/a-metamorfose.jpg",
-    novoAte: "2026-06-18"
-  },
-
-  {
     titulo: "O Morro dos Ventos Uivantes",
     autor: "Emily Brontë",
     genero: "Clássicos da Literatura",
