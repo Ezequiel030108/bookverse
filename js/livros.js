@@ -76,7 +76,8 @@ const PROMOCAO = {
   inicio: "2026-06-11", // ativada já na véspera
   fim: "2026-06-17",
   descontoUm: 10,
-  descontoDupla: 20
+  descontoDupla: 20,
+  brindeDupla: "um caderno de anotações de brinde" // ganho na compra de 2 livros ou mais
 };
 
 const LIVROS = [

@@ -302,7 +302,7 @@ function abrirModal(livro) {
     }
     avisoPromo.innerHTML = promo.limitado
       ? `♥ <strong>${PROMOCAO.nome}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
-      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
+      : `♥ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off) e você ainda ganha ${PROMOCAO.brindeDupla}. Válida até ${dataFimPromo()}.`;
   } else if (avisoPromo) {
     avisoPromo.remove();
   }
@@ -368,6 +368,7 @@ function ativarModoPromocao() {
       <div class="vitrine-regras">
         <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoUm}%</span> off em qualquer livro</p>
         <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span> off em cada um, levando 2 ou mais</p>
+        <p class="vitrine-brinde">❤ levando 2 livros ou mais, você ganha ${PROMOCAO.brindeDupla}</p>
       </div>
     </div>
   `;
