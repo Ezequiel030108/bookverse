@@ -142,7 +142,7 @@ function precoCardHTML(livro) {
     if (p) {
       const linhaDupla = p.limitado
         ? `<p class="preco-dupla">♥ preço especial da promoção</p>`
-        : `<p class="preco-dupla">♥ levando 2: ${formatarReal(p.dupla)} cada</p>`;
+        : `<p class="preco-dupla">levando 2 livros: ${formatarReal(p.dupla)}</p>`;
       return `
         <p class="info-preco em-promo">
           <s class="preco-antigo">${livro.preco}</s>
