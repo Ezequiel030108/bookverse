@@ -128,6 +128,18 @@ const LIVROS = [
     imagem: "img/marketing-4-0.jpg"
   },
 
+  {
+    titulo: "A Estrada do Futuro",
+    autor: "Bill Gates",
+    genero: "Finanças & Negócios",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Escrito pelo fundador da Microsoft, este clássico apresenta a visão de Bill Gates sobre a revolução digital e o impacto da internet e dos computadores no futuro do trabalho, da educação e do nosso dia a dia.",
+    imagem: "img/a-estrada-do-futuro.jpg",
+    novoAte: "2026-06-21"
+  },
+
   /* ============= AUTOAJUDA & DESENVOLVIMENTO PESSOAL ============= */
 
   {
@@ -245,6 +257,78 @@ const LIVROS = [
     imagem: "img/fahrenheit-451.jpg"
   },
 
+  {
+    titulo: "1984",
+    autor: "George Orwell",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais influentes de todos os tempos, sobre liberdade, verdade e manipulação.",
+    imagem: "img/1984.jpg",
+    novoAte: "2026-06-21"
+  },
+
+  {
+    titulo: "A Revolução dos Bichos",
+    autor: "George Orwell",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Cansados da exploração humana, os animais de uma fazenda se rebelam e tomam o poder em nome da igualdade. Mas o sonho logo se corrompe, nesta fábula afiada de George Orwell sobre poder, revolução e os perigos do totalitarismo.",
+    imagem: "img/a-revolucao-dos-bichos.jpg",
+    novoAte: "2026-06-21"
+  },
+
+  {
+    titulo: "Dentro da Baleia e Outros Ensaios",
+    autor: "George Orwell",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Uma reunião de ensaios de George Orwell que revela seu olhar agudo sobre literatura, política e a sociedade de seu tempo. Textos lúcidos e provocadores que mostram por que Orwell é um dos maiores pensadores do século XX.",
+    imagem: "img/dentro-da-baleia-e-outros-ensaios.jpg",
+    novoAte: "2026-06-21"
+  },
+
+  {
+    titulo: "As Aventuras de Sherlock Holmes – Vol. 1",
+    autor: "Arthur Conan Doyle",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "O primeiro volume das aventuras do mais famoso detetive de todos os tempos. Ao lado do fiel Dr. Watson, Sherlock Holmes usa sua genialidade dedutiva para desvendar mistérios intrigantes nas ruas da Londres vitoriana.",
+    imagem: "img/sherlock-holmes-vol-1.jpg",
+    novoAte: "2026-06-21"
+  },
+
+  {
+    titulo: "As Aventuras de Sherlock Holmes – Vol. 2",
+    autor: "Arthur Conan Doyle",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "A continuação das clássicas aventuras de Sherlock Holmes e Dr. Watson. Novos casos, enigmas e crimes desafiam a mente brilhante do detetive de Baker Street, em histórias imortais de Sir Arthur Conan Doyle.",
+    imagem: "img/sherlock-holmes-vol-2.jpg",
+    novoAte: "2026-06-21"
+  },
+
+  {
+    titulo: "As Aventuras de Sherlock Holmes – Vol. 3",
+    autor: "Arthur Conan Doyle",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "O terceiro volume das aventuras de Sherlock Holmes reúne mais casos memoráveis do detetive mais célebre da literatura. Dedução, suspense e a inconfundível parceria com o Dr. Watson em narrativas que atravessam gerações.",
+    imagem: "img/sherlock-holmes-vol-3.jpg",
+    novoAte: "2026-06-21"
+  },
+
   /* ===================== ROMANCE & LITERATURA ===================== */
 
   {
@@ -289,6 +373,18 @@ const LIVROS = [
     estado: "Ótimo estado",
     sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
     imagem: "img/paredes-da-memoria.jpg"
+  },
+
+  {
+    titulo: "A Batalha do Apocalipse",
+    autor: "Eduardo Spohr",
+    genero: "Romance & Literatura",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Com marcas de uso",
+    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
+    imagem: "img/a-batalha-do-apocalipse.jpg",
+    novoAte: "2026-06-21"
   },
 
   /* ===================== MANGÁS ===================== */
