@@ -91,7 +91,7 @@ const LIVROS = [
     preco: "R$ 20,00",
     estoque: 1,
     estado: "Bom estado, porém grifado",
-    sinopse: "Baseado no estudo de centenas de pessoas bem-sucedidas, Napoleon Hill revela os 13 princípios que conduzem à riqueza e à realização pessoal. Um dos maiores clássicos do desenvolvimento financeiro de todos os tempos.",
+    sinopse: "Baseado no estudo de centenas de pessoas bem-sucedidas, Napoleon Hill revela os 13 princípios que conduzem à riqueza e à realização pessoal. Um dos maiores clássicos do desenvolvim[...]
     imagem: "img/quem-pensa-enriquece.jpg"
   },
 
@@ -124,7 +124,7 @@ const LIVROS = [
     preco: "R$ 36,00",
     estoque: 1,
     estado: "Ótimo estado, porém grifado",
-    sinopse: "Philip Kotler, o pai do marketing moderno, apresenta a transição do marketing tradicional para o digital, mostrando como conquistar clientes na era da conectividade integrando o online e o offline.",
+    sinopse: "Philip Kotler, o pai do marketing moderno, apresenta a transição do marketing tradicional para o digital, mostrando como conquistar clientes na era da conectividade integrando o online[...]
     imagem: "img/marketing-4-0.jpg"
   },
 
@@ -135,7 +135,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "Escrito pelo fundador da Microsoft, este clássico apresenta a visão de Bill Gates sobre a revolução digital e o impacto da internet e dos computadores no futuro do trabalho, da educação e do nosso dia a dia.",
+    sinopse: "Escrito pelo fundador da Microsoft, este clássico apresenta a visão de Bill Gates sobre a revolução digital e o impacto da internet e dos computadores no futuro do trabalho, da educa[...]
     imagem: "img/a-estrada-do-futuro.jpg",
     novoAte: "2026-06-21"
   },
@@ -149,7 +149,7 @@ const LIVROS = [
     preco: "R$ 25,00",
     estoque: 1,
     estado: "Bom estado, porém grifado",
-    sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
+    sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas prátic[...]
     imagem: "img/o-poder-do-subconsciente.jpg"
   },
 
@@ -160,7 +160,7 @@ const LIVROS = [
     preco: "R$ 25,00",
     estoque: 1,
     estado: "Bom estado, porém grifado",
-    sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
+    sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem[...]
     imagem: "img/como-fazer-amigos.jpg"
   },
 
@@ -176,17 +176,6 @@ const LIVROS = [
   },
 
   /* ===================== CIÊNCIA & CURIOSIDADES ===================== */
-
-  {
-    titulo: "Do Átomo ao Buraco Negro",
-    autor: "Schwarza",
-    genero: "Ciência & Curiosidades",
-    preco: "R$ 50,00",
-    estoque: 1,
-    estado: "Bom estado",
-    sinopse: "Do criador do canal Poligonautas, uma viagem descomplicada pela astronomia — do menor dos átomos aos misteriosos buracos negros — explicando os segredos do universo de forma simples e divertida.",
-    imagem: "img/do-atomo-ao-buraco-negro.jpg"
-  },
 
   {
     titulo: "A História do Universo Para Quem Tem Pressa",
@@ -208,7 +197,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Seminovo",
-    sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebres de Charles Dickens.",
+    sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebr[...]
     imagem: "img/oliver-twist.jpg"
   },
 
@@ -219,7 +208,7 @@ const LIVROS = [
     preco: "R$ 40,00",
     estoque: 1,
     estado: "Estado perfeito",
-    sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quatro cantos do planeta.",
+    sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quat[...]
     imagem: "img/a-volta-ao-mundo-em-80-dias.jpg"
   },
 
@@ -230,7 +219,7 @@ const LIVROS = [
     preco: "R$ 38,00",
     estoque: 1,
     estado: "Novo, lacrado",
-    sinopse: "Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. O único romance de Emily Brontë é um dos maiores clássicos de todos os tempos.",
+    sinopse: "Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. O único romance de Emily [...]
     imagem: "img/o-morro-dos-ventos-uivantes.jpg",
     novoAte: "2026-06-18"
   },
@@ -242,7 +231,7 @@ const LIVROS = [
     preco: "R$ 35,00",
     estoque: 1,
     estado: "Com marcas de uso",
-    sinopse: "Em uma sociedade onde os livros são proibidos e queimados por bombeiros, o bombeiro Guy Montag começa a questionar seu papel. Um clássico distópico sobre censura, conhecimento e liberdade de pensamento.",
+    sinopse: "Em uma sociedade onde os livros são proibidos e queimados por bombeiros, o bombeiro Guy Montag começa a questionar seu papel. Um clássico distópico sobre censura, conhecimento e libe[...]
     imagem: "img/fahrenheit-451.jpg"
   },
 
@@ -253,7 +242,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais influentes de todos os tempos, sobre liberdade, verdade e manipulação.",
+    sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais inf[...]
     imagem: "img/1984.jpg",
     novoAte: "2026-06-21"
   },
@@ -265,7 +254,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "Cansados da exploração humana, os animais de uma fazenda se rebelam e tomam o poder em nome da igualdade. Mas o sonho logo se corrompe, nesta fábula afiada de George Orwell sobre poder, revolução e os perigos do totalitarismo.",
+    sinopse: "Cansados da exploração humana, os animais de uma fazenda se rebelam e tomam o poder em nome da igualdade. Mas o sonho logo se corrompe, nesta fábula afiada de George Orwell sobre pode[...]
     imagem: "img/a-revolucao-dos-bichos.jpg",
     novoAte: "2026-06-21"
   },
@@ -277,7 +266,7 @@ const LIVROS = [
     preco: "R$ 25,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "Uma reunião de ensaios de George Orwell que revela seu olhar agudo sobre literatura, política e a sociedade de seu tempo. Textos lúcidos e provocadores que mostram por que Orwell é um dos maiores pensadores do século XX.",
+    sinopse: "Uma reunião de ensaios de George Orwell que revela seu olhar agudo sobre literatura, política e a sociedade de seu tempo. Textos lúcidos e provocadores que mostram por que Orwell é u[...]
     imagem: "img/dentro-da-baleia-e-outros-ensaios.jpg",
     novoAte: "2026-06-21"
   },
@@ -289,7 +278,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "O primeiro volume das aventuras do mais famoso detetive de todos os tempos. Ao lado do fiel Dr. Watson, Sherlock Holmes usa sua genialidade dedutiva para desvendar mistérios intrigantes nas ruas da Londres vitoriana.",
+    sinopse: "O primeiro volume das aventuras do mais famoso detetive de todos os tempos. Ao lado do fiel Dr. Watson, Sherlock Holmes usa sua genialidade dedutiva para desvendar mistérios intrigantes[...]
     imagem: "img/sherlock-holmes-vol-1.jpg",
     novoAte: "2026-06-21"
   },
@@ -301,7 +290,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "A continuação das clássicas aventuras de Sherlock Holmes e Dr. Watson. Novos casos, enigmas e crimes desafiam a mente brilhante do detetive de Baker Street, em histórias imortais de Sir Arthur Conan Doyle.",
+    sinopse: "A continuação das clássicas aventuras de Sherlock Holmes e Dr. Watson. Novos casos, enigmas e crimes desafiam a mente brilhante do detetive de Baker Street, em histórias imortais de [...]
     imagem: "img/sherlock-holmes-vol-2.jpg",
     novoAte: "2026-06-21"
   },
@@ -313,7 +302,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Quase novo",
-    sinopse: "O terceiro volume das aventuras de Sherlock Holmes reúne mais casos memoráveis do detetive mais célebre da literatura. Dedução, suspense e a inconfundível parceria com o Dr. Watson em narrativas que atravessam gerações.",
+    sinopse: "O terceiro volume das aventuras de Sherlock Holmes reúne mais casos memoráveis do detetive mais célebre da literatura. Dedução, suspense e a inconfundível parceria com o Dr. Watson[...]
     imagem: "img/sherlock-holmes-vol-3.jpg",
     novoAte: "2026-06-21"
   },
@@ -327,7 +316,7 @@ const LIVROS = [
     preco: "R$ 20,00",
     estoque: 1,
     estado: "Bom estado",
-    sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
+    sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Te[...]
     imagem: "img/o-guardiao-do-tempo.jpg"
   },
 
@@ -338,7 +327,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Bom estado",
-    sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
+    sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller[...]
     imagem: "img/o-xango-de-baker-street.jpg"
   },
 
@@ -371,23 +360,9 @@ const LIVROS = [
     preco: "R$ 25,00",
     estoque: 1,
     estado: "Com marcas de uso",
-    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
+    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, [...]
     imagem: "img/a-batalha-do-apocalipse.jpg",
     novoAte: "2026-06-21"
-  },
-
-  /* ===================== MANGÁS ===================== */
-
-  {
-    titulo: "Nana – Vol. 1",
-    autor: "Ai Yazawa",
-    genero: "Mangás",
-    preco: "R$ 55,00",
-    estoque: 1,
-    estado: "Novo, lacrado",
-    sinopse: "Duas garotas chamadas Nana se conhecem por acaso a caminho de Tóquio e acabam dividindo o mesmo apartamento. Entre música, amores e sonhos, Ai Yazawa retrata a amizade e a vida adulta em um dos mangás mais aclamados de todos os tempos.",
-    imagem: "img/nana-1.jpg",
-    novoAte: "2026-06-18"
   }
 
 ];
