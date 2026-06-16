@@ -165,17 +165,6 @@ const LIVROS = [
   },
 
   {
-    titulo: "Como Convencer Alguém em 90 Segundos",
-    autor: "Nicholas Boothman",
-    genero: "Autoajuda & Desenvolvimento Pessoal",
-    preco: "R$ 30,00",
-    estoque: 1,
-    estado: "Bom estado, porém grifado",
-    sinopse: "Nicholas Boothman apresenta técnicas de comunicação e linguagem corporal para criar conexões instantâneas e causar uma primeira impressão marcante em qualquer situação.",
-    imagem: "img/como-convencer-90-segundos.jpg"
-  },
-
-  {
     titulo: "Quer? Levanta e Pega!",
     autor: "Júnior Q9",
     genero: "Autoajuda & Desenvolvimento Pessoal",
