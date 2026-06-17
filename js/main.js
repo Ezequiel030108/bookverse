@@ -19,6 +19,7 @@ const ORDEM_GENEROS = [
   "Finanças & Negócios",
   "Autoajuda & Desenvolvimento Pessoal",
   "Ciência & Curiosidades",
+  "Filosofia",
   "Clássicos da Literatura",
   "Romance & Literatura",
   "Mangás"

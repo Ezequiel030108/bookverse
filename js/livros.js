@@ -23,6 +23,7 @@
               "Finanças & Negócios"
               "Autoajuda & Desenvolvimento Pessoal"
               "Ciência & Curiosidades"
+              "Filosofia"
               "Clássicos da Literatura"
               "Romance & Literatura"
               "Mangás"
@@ -321,6 +322,21 @@ const LIVROS = [
     sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
     imagem: "img/paredes-da-memoria.jpg"
   },
+
+  /* ========================= FILOSOFIA ========================= */
+
+  {
+    titulo: "Além do Bem e do Mal",
+    autor: "Friedrich Nietzsche",
+    genero: "Filosofia",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Bom estado, porém grifado",
+    sinopse: "Uma das obras mais provocadoras da filosofia ocidental, 'Além do Bem e do Mal' convida o leitor a questionar a moral vigente e os valores estabelecidos pela tradição. Nietzsche desafia os filósofos dogmáticos, propõe uma reavaliação de todas as crenças e explora temas como a vontade de poder, a religião e a natureza da consciência humana. Leitura essencial para quem quer pensar de forma livre e radical.",
+    imagem: "img/nietzsche-alem-bem-mal.jpg"
+  },
+
+  /* =================== ROMANCE & LITERATURA =================== */
 
   {
     titulo: "A Batalha do Apocalipse",
