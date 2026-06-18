@@ -224,7 +224,7 @@ function renderizar(termoBusca) {
   const novidades = LIVROS.filter(l => ehNovidade(l) && disponivel(l));
   if (novidades.length > 0) {
     catalogo.appendChild(
-      criarFileira("Novidades da Semana", novidades, { seloNovo: true, etiqueta: "✨ Acabou de chegar" })
+      criarFileira("Novidades da Semana", novidades, { seloNovo: true, etiqueta: "★ Acabou de chegar" })
     );
   }
 
@@ -278,7 +278,7 @@ function montarHero(destaques) {
       <div class="hero-conteudo">
         <div class="hero-capa-wrap">${capaHTML(livro, false)}</div>
         <div class="hero-texto">
-          <span class="hero-chip">✨ Novidade</span>
+          <span class="hero-chip">★ Novidade</span>
           <h2 class="hero-livro-titulo">${livro.titulo}</h2>
           <p class="hero-livro-autor">${livro.autor}</p>
           <p class="hero-livro-sinopse">${sinopse}</p>
