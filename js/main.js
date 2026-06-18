@@ -17,8 +17,8 @@ const ORDEM_GENEROS = [
   "Mangás"
 ];
 
-/* Quantos livros aparecem no billboard do topo. */
-const MAX_DESTAQUES = 6;
+/* Quantos livros aparecem no carrossel de novidades do topo. */
+const MAX_DESTAQUES = 10;
 /* Intervalo de troca automática do billboard (ms). */
 const INTERVALO_HERO = 6500;
 
@@ -218,19 +218,13 @@ function renderizar(termoBusca) {
     return;
   }
 
-  // Modo normal: hero + fileiras
+  // Modo normal: carrossel de novidades (topo) + fileiras por gênero.
   document.body.classList.remove("modo-busca");
   semResultados.hidden = true;
 
-  const destaques = LIVROS.filter(l => ehNovidade(l) && disponivel(l)).slice(0, MAX_DESTAQUES);
-  montarHero(destaques);
-
-  const novidades = LIVROS.filter(l => ehNovidade(l) && disponivel(l));
-  if (novidades.length > 0) {
-    catalogo.appendChild(
-      criarFileira("Novidades da Semana", novidades, { seloNovo: true, etiqueta: "✨ Acabou de chegar" })
-    );
-  }
+  // O carrossel do topo é a ÚNICA seção de novidades — sem fileira duplicada.
+  const novidades = LIVROS.filter(l => ehNovidade(l) && disponivel(l)).slice(0, MAX_DESTAQUES);
+  montarHero(novidades);
 
   const generos = [...ORDEM_GENEROS];
   LIVROS.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
@@ -273,19 +267,14 @@ function montarHero(destaques) {
       ? `<div class="hero-fundo" style="background-image:url('${livro.imagem}')"></div>`
       : `<div class="hero-fundo hero-fundo-cor ${varianteFallback(livro.titulo)}"></div>`;
 
-    // Trunca sinopse para não explodir o layout mobile
-    const sinopse = (livro.sinopse || "").substring(0, 160) + ((livro.sinopse || "").length > 160 ? "…" : "");
-
     slide.innerHTML = `
       ${fundo}
       <div class="hero-veu"></div>
       <div class="hero-conteudo">
         <div class="hero-capa-wrap">${capaHTML(livro, false)}</div>
         <div class="hero-texto">
-          <span class="hero-chip">✨ Novidade</span>
           <h2 class="hero-livro-titulo">${livro.titulo}</h2>
           <p class="hero-livro-autor">${livro.autor}</p>
-          <p class="hero-livro-sinopse">${sinopse}</p>
           <div class="hero-acoes">
             <span class="hero-preco">${livro.preco}</span>
             <button class="hero-btn" type="button">Ver detalhes</button>
