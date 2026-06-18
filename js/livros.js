@@ -62,7 +62,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Com marcas de uso",
     sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais — sem precisar cortar o cafezinho.",
-    imagem: "img/do-mil-ao-milhao.jpg"
+    imagem: "img/do-mil-ao-milhao.jpg",
+    novoAte: "2026-06-25"
   },
 
   {
@@ -153,7 +154,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Ótimo estado",
     sinopse: "Dale Carnegie apresenta técnicas práticas e comprovadas para vencer a ansiedade, o estresse e os medos do dia a dia. Com histórias reais e lições atemporais, o livro ensina como mudar a mentalidade, focar no presente e construir uma vida mais tranquila e produtiva. Um clássico com mais de 50 milhões de cópias vendidas.",
-    imagem: "img/como-evitar-preocupacoes.jpg"
+    imagem: "img/como-evitar-preocupacoes.jpg",
+    novoAte: "2026-06-25"
   },
 
   {
@@ -212,8 +214,7 @@ const LIVROS = [
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. O único romance de Emily Brontë é um dos maiores clássicos de todos os tempos.",
-    imagem: "img/o-morro-dos-ventos-uivantes.jpg",
-    novoAte: "2026-06-18"
+    imagem: "img/o-morro-dos-ventos-uivantes.jpg"
   },
 
   {
@@ -235,8 +236,7 @@ const LIVROS = [
     estoque: 1,
     estado: "Quase novo",
     sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais influentes de todos os tempos, sobre liberdade, verdade e manipulação.",
-    imagem: "img/1984.jpg",
-    novoAte: "2026-06-21"
+    imagem: "img/1984.jpg"
   },
 
   {
@@ -355,7 +355,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Ótimo estado",
     sinopse: "Um dos textos mais influentes da história do pensamento humano, escrito pelo filósofo grego Aristóteles. Nesta obra, Aristóteles investiga a natureza do Estado, as formas de governo, a cidadania e a justiça, lançando as bases da ciência política ocidental. Leitura indispensável para entender como as sociedades se organizam e por quê.",
-    imagem: "img/aristoteles-a-politica.jpg"
+    imagem: "img/aristoteles-a-politica.jpg",
+    novoAte: "2026-06-25"
   },
 
   {
@@ -366,7 +367,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado, porém grifado",
     sinopse: "Em um de seus textos mais polêmicos, Nietzsche faz uma crítica radical ao cristianismo e aos valores morais que ele considerava contrários à vida e ao florescimento humano. Com uma escrita incisiva e provocadora, o filósofo propõe uma reavaliação dos fundamentos da civilização ocidental. Obra essencial para compreender o pensamento nietzschiano em sua forma mais ousada.",
-    imagem: "img/nietzsche-o-anticristo.jpg"
+    imagem: "img/nietzsche-o-anticristo.jpg",
+    novoAte: "2026-06-25"
   },
 
   {
@@ -377,7 +379,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado, porém grifado",
     sinopse: "Uma das obras mais provocadoras da filosofia ocidental, 'Além do Bem e do Mal' convida o leitor a questionar a moral vigente e os valores estabelecidos pela tradição. Nietzsche desafia os filósofos dogmáticos, propõe uma reavaliação de todas as crenças e explora temas como a vontade de poder, a religião e a natureza da consciência humana. Leitura essencial para quem quer pensar de forma livre e radical.",
-    imagem: "img/nietzsche-alem-bem-mal.jpg"
+    imagem: "img/nietzsche-alem-bem-mal.jpg",
+    novoAte: "2026-06-25"
   },
 
   /* =================== ROMANCE & LITERATURA =================== */

@@ -1,9 +1,10 @@
 /* ============================================================
-   LÓGICA DO SITE
-   - Renderiza os cards de livros na estante
+   LÓGICA DO SITE — LAYOUT ESTILO NETFLIX
+   - Hero/billboard rotativo com os destaques no topo
+   - Fileiras (carrosséis) por gênero que rolam para o lado
+   - Setas de navegação (desktop) + arrastar/deslizar (mobile)
    - Modal de detalhes ao clicar
    - Busca em tempo real (título / autor)
-   - Filtro "só disponíveis"
    - Monta o link do Instagram com a mensagem pronta
    ============================================================ */
 
@@ -13,7 +14,7 @@
    se mudar aqui, lembre de mudar no index.html também. */
 const INSTAGRAM_USUARIO = "mybookverse.pb";
 
-/* Ordem em que as seções de gênero aparecem no site.
+/* Ordem em que as fileiras de gênero aparecem no site.
    Todo gênero usado em livros.js deve estar listado aqui. */
 const ORDEM_GENEROS = [
   "Finanças & Negócios",
@@ -25,12 +26,21 @@ const ORDEM_GENEROS = [
   "Mangás"
 ];
 
+/* Quantos destaques no máximo aparecem girando no billboard do topo. */
+const MAX_DESTAQUES = 6;
+/* De quanto em quanto tempo o billboard troca de destaque sozinho (ms). */
+const INTERVALO_HERO = 6500;
+
 /* ---------- Referências de elementos ---------- */
 const catalogo     = document.getElementById("catalogo");
 const semResultados= document.getElementById("sem-resultados");
 const campoBusca   = document.getElementById("campo-busca");
 const modal        = document.getElementById("modal");
 const botaoIG      = document.getElementById("botao-instagram");
+const topbar       = document.getElementById("topbar");
+const hero         = document.getElementById("hero");
+const heroPalco    = document.getElementById("hero-palco");
+const heroPontos   = document.getElementById("hero-pontos");
 
 /* ---------- Utilidades ---------- */
 
@@ -73,33 +83,38 @@ function linkInstagram() {
   return `https://ig.me/m/${INSTAGRAM_USUARIO}`;
 }
 
-/* ---------- Renderização dos cards ---------- */
+/** HTML da capa: imagem real OU fallback bonito com a inicial do título. */
+function capaHTML(livro) {
+  return livro.imagem
+    ? `<img src="${livro.imagem}" alt="Capa do livro ${livro.titulo}" loading="lazy" />`
+    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
+}
+
+/** Só os livros que aparecem no site (estoque > 0). */
+function disponivel(livro) {
+  return livro.estoque > 0;
+}
+
+/* ---------- Cards das fileiras ---------- */
 
 function criarCard(livro, indice, seloNovo) {
   const card = document.createElement("article");
   card.className = "card-livro";
-  if (livro.estoque <= 0) card.classList.add("esgotado");
-  // pequeno atraso escalonado para a animação de entrada
-  // atraso escalonado, mas limitado para a lista não demorar a "entrar" toda
+  // atraso escalonado e limitado para a fileira "entrar" suave, sem demorar
   card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.04) + "s");
   card.tabIndex = 0;
   card.setAttribute("role", "button");
   card.setAttribute("aria-label", `${livro.titulo}, de ${livro.autor}`);
 
-  // Na seção "Novidades" o selo vira "Novo!"; nas demais, mostra o estoque.
+  // Nas fileiras de novidade o selo vira "Novo!"; nas demais, mostra o estoque.
   const selo = seloNovo
     ? { texto: "Novo!", classe: "novo" }
     : rotuloEstoque(livro.estoque);
 
-  // Capa: imagem real OU fallback bonito com a inicial
-  const capaHTML = livro.imagem
-    ? `<img src="${livro.imagem}" alt="Capa do livro ${livro.titulo}" loading="lazy" />`
-    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
-
   card.innerHTML = `
     <div class="capa">
       <span class="selo ${selo.classe}">${selo.texto}</span>
-      ${capaHTML}
+      ${capaHTML(livro)}
     </div>
     <div class="info-livro">
       <h3 class="info-titulo">${livro.titulo}</h3>
@@ -119,16 +134,123 @@ function criarCard(livro, indice, seloNovo) {
   return card;
 }
 
+/** Cria uma fileira (carrossel horizontal) com título e setas de navegação. */
+function criarFileira(titulo, livros, opcoes = {}) {
+  const { seloNovo = false, etiqueta = "" } = opcoes;
+
+  const secao = document.createElement("section");
+  secao.className = "fileira" + (seloNovo ? " fileira-novidades" : "");
+
+  const cabecalho = document.createElement("div");
+  cabecalho.className = "fileira-cabecalho";
+  cabecalho.innerHTML = `
+    ${etiqueta ? `<span class="fileira-etiqueta">${etiqueta}</span>` : ""}
+    <h2 class="fileira-titulo">${titulo}</h2>
+  `;
+  secao.appendChild(cabecalho);
+
+  // Área que rola: trilho + setas sobrepostas
+  const area = document.createElement("div");
+  area.className = "fileira-area";
+
+  const setaEsq = document.createElement("button");
+  setaEsq.type = "button";
+  setaEsq.className = "fileira-seta fileira-seta-esq";
+  setaEsq.setAttribute("aria-label", "Ver anteriores");
+  setaEsq.innerHTML = "‹";
+
+  const setaDir = document.createElement("button");
+  setaDir.type = "button";
+  setaDir.className = "fileira-seta fileira-seta-dir";
+  setaDir.setAttribute("aria-label", "Ver mais");
+  setaDir.innerHTML = "›";
+
+  const trilho = document.createElement("div");
+  trilho.className = "fileira-trilho";
+  livros.forEach((livro, i) => trilho.appendChild(criarCard(livro, i, seloNovo)));
+
+  area.appendChild(setaEsq);
+  area.appendChild(trilho);
+  area.appendChild(setaDir);
+  secao.appendChild(area);
+
+  // Rola ~90% da largura visível a cada clique
+  const passo = () => Math.max(trilho.clientWidth * 0.9, 240);
+  setaEsq.addEventListener("click", () => trilho.scrollBy({ left: -passo(), behavior: "smooth" }));
+  setaDir.addEventListener("click", () => trilho.scrollBy({ left:  passo(), behavior: "smooth" }));
+
+  // Mostra/esconde as setas conforme dá ou não para rolar mais
+  const atualizarSetas = () => {
+    const fim = trilho.scrollWidth - trilho.clientWidth - 2;
+    setaEsq.classList.toggle("oculta", trilho.scrollLeft <= 2);
+    setaDir.classList.toggle("oculta", trilho.scrollLeft >= fim);
+    // Se não há o que rolar, esconde as duas
+    if (trilho.scrollWidth <= trilho.clientWidth + 4) {
+      setaEsq.classList.add("oculta");
+      setaDir.classList.add("oculta");
+    }
+  };
+  trilho.addEventListener("scroll", atualizarSetas, { passive: true });
+  // mede depois que o layout assentou
+  requestAnimationFrame(atualizarSetas);
+  setTimeout(atualizarSetas, 300);
+
+  return secao;
+}
+
+/* ---------- Renderização principal ---------- */
+
 function renderizar() {
   const termo = normalizar(campoBusca.value.trim());
+  const buscando = termo.length > 0;
 
-  // Filtro base: só livros disponíveis (estoque > 0) e que batem com a busca.
-  // Livros esgotados continuam em livros.js, mas ficam ocultos.
   function combina(livro) {
-    if (livro.estoque <= 0) return false;
+    if (!disponivel(livro)) return false;
     if (!termo) return true;
     const alvo = normalizar(livro.titulo + " " + livro.autor);
     return alvo.includes(termo);
+  }
+
+  catalogo.innerHTML = "";
+  pararHero();
+
+  /* --- Modo busca: esconde o hero e mostra uma grade de resultados --- */
+  if (buscando) {
+    hero.hidden = true;
+    document.body.classList.add("modo-busca");
+
+    const resultados = LIVROS.filter(combina);
+    if (resultados.length > 0) {
+      const secao = document.createElement("section");
+      secao.className = "fileira fileira-grade";
+      secao.innerHTML = `<div class="fileira-cabecalho"><h2 class="fileira-titulo">Resultados</h2></div>`;
+      const grade = document.createElement("div");
+      grade.className = "grade-livros";
+      resultados.forEach((livro, i) => grade.appendChild(criarCard(livro, i)));
+      secao.appendChild(grade);
+      catalogo.appendChild(secao);
+    }
+    semResultados.hidden = resultados.length !== 0;
+    return;
+  }
+
+  /* --- Modo normal: hero + fileiras por gênero --- */
+  document.body.classList.remove("modo-busca");
+  semResultados.hidden = true;
+
+  // Destaques = novidades disponíveis (limitadas), para o billboard do topo.
+  const destaques = LIVROS.filter((l) => ehNovidade(l) && disponivel(l)).slice(0, MAX_DESTAQUES);
+  montarHero(destaques);
+
+  // Fileira "Novidades da Semana" no topo (todas as novidades disponíveis).
+  const novidades = LIVROS.filter((l) => ehNovidade(l) && disponivel(l));
+  if (novidades.length > 0) {
+    catalogo.appendChild(
+      criarFileira("Novidades da Semana", novidades, {
+        seloNovo: true,
+        etiqueta: "✨ Acabou de chegar"
+      })
+    );
   }
 
   // Monta a lista de gêneros: os da ordem definida + qualquer outro que apareça.
@@ -138,59 +260,134 @@ function renderizar() {
     if (!generos.includes(g)) generos.push(g);
   });
 
-  catalogo.innerHTML = "";
-  let total = 0;
+  generos.forEach((genero) => {
+    const doGenero = LIVROS.filter(
+      (livro) => (livro.genero || "Outros") === genero && disponivel(livro)
+    );
+    if (doGenero.length === 0) return;
+    catalogo.appendChild(criarFileira(genero, doGenero));
+  });
+}
 
-  // Seção "Novidades": livros com novoAte ainda válido aparecem em
-  // destaque no topo, num banner promocional (além da própria categoria).
-  const novidades = LIVROS.filter((livro) => ehNovidade(livro) && combina(livro));
-  if (novidades.length > 0) {
-    total += novidades.length;
+/* ---------- Hero / Billboard rotativo ---------- */
 
-    const secao = document.createElement("section");
-    secao.className = "secao-novidades";
-    secao.setAttribute("aria-label", "Novidades da semana");
-    secao.innerHTML = `
-      <div class="novidades-cabecalho">
-        <span class="novidades-etiqueta">✨ Acabou de chegar</span>
-        <h2 class="novidades-titulo">Novidades da Semana</h2>
-        <p class="novidades-subtitulo">Recém-chegados na estante — garanta o seu antes que acabe!</p>
+let heroIndice = 0;
+let heroTimer = null;
+let heroLista = [];
+
+function montarHero(destaques) {
+  heroLista = destaques;
+  heroPalco.innerHTML = "";
+  heroPontos.innerHTML = "";
+
+  if (destaques.length === 0) {
+    hero.hidden = true;
+    return;
+  }
+  hero.hidden = false;
+
+  destaques.forEach((livro, i) => {
+    const slide = document.createElement("article");
+    slide.className = "hero-slide";
+    slide.dataset.indice = i;
+
+    // Fundo desfocado (a própria capa) + camada escura para o texto respirar
+    const fundo = livro.imagem
+      ? `<div class="hero-fundo" style="background-image:url('${livro.imagem}')"></div>`
+      : `<div class="hero-fundo hero-fundo-cor ${varianteFallback(livro.titulo)}"></div>`;
+
+    slide.innerHTML = `
+      ${fundo}
+      <div class="hero-veu"></div>
+      <div class="hero-conteudo">
+        <div class="hero-capa">${capaHTML(livro)}</div>
+        <div class="hero-texto">
+          <span class="hero-etiqueta">✨ Novidade</span>
+          <h2 class="hero-titulo-livro">${livro.titulo}</h2>
+          <p class="hero-autor">${livro.autor}</p>
+          <p class="hero-sinopse">${livro.sinopse || ""}</p>
+          <div class="hero-acoes">
+            <span class="hero-preco">${livro.preco}</span>
+            <button class="hero-botao" type="button">Ver detalhes</button>
+          </div>
+        </div>
       </div>
     `;
 
-    const grade = document.createElement("div");
-    grade.className = "grade-livros";
-    novidades.forEach((livro, i) => grade.appendChild(criarCard(livro, i, true)));
-    secao.appendChild(grade);
+    // Clicar em qualquer lugar do slide (ou no botão) abre o modal
+    slide.querySelector(".hero-botao").addEventListener("click", (e) => {
+      e.stopPropagation();
+      abrirModal(livro);
+    });
+    slide.querySelector(".hero-capa").addEventListener("click", () => abrirModal(livro));
 
-    catalogo.appendChild(secao);
-  }
+    heroPalco.appendChild(slide);
 
-  generos.forEach((genero) => {
-    const doGenero = LIVROS.filter(
-      (livro) => (livro.genero || "Outros") === genero && combina(livro)
-    );
-    if (doGenero.length === 0) return;
-    total += doGenero.length;
-
-    const secao = document.createElement("section");
-    secao.className = "genero-secao";
-
-    const titulo = document.createElement("h2");
-    titulo.className = "genero-titulo";
-    titulo.textContent = genero;
-    secao.appendChild(titulo);
-
-    const grade = document.createElement("div");
-    grade.className = "grade-livros";
-    doGenero.forEach((livro, i) => grade.appendChild(criarCard(livro, i)));
-    secao.appendChild(grade);
-
-    catalogo.appendChild(secao);
+    // ponto indicador
+    const ponto = document.createElement("button");
+    ponto.type = "button";
+    ponto.className = "hero-ponto";
+    ponto.setAttribute("role", "tab");
+    ponto.setAttribute("aria-label", `Destaque ${i + 1}`);
+    ponto.addEventListener("click", () => irParaHero(i, true));
+    heroPontos.appendChild(ponto);
   });
 
-  semResultados.hidden = total !== 0;
+  heroIndice = 0;
+  aplicarHero();
+  iniciarHero();
 }
+
+function aplicarHero() {
+  heroPalco.style.transform = `translateX(-${heroIndice * 100}%)`;
+  [...heroPontos.children].forEach((p, i) =>
+    p.classList.toggle("ativo", i === heroIndice)
+  );
+  // mostra/esconde as setas se só houver um destaque
+  hero.classList.toggle("hero-unico", heroLista.length <= 1);
+}
+
+function irParaHero(i, manual) {
+  if (heroLista.length === 0) return;
+  heroIndice = (i + heroLista.length) % heroLista.length;
+  aplicarHero();
+  if (manual) iniciarHero(); // reinicia o cronômetro ao interagir
+}
+
+function iniciarHero() {
+  pararHero();
+  if (heroLista.length > 1) {
+    heroTimer = setInterval(() => irParaHero(heroIndice + 1), INTERVALO_HERO);
+  }
+}
+
+function pararHero() {
+  if (heroTimer) { clearInterval(heroTimer); heroTimer = null; }
+}
+
+document.querySelector(".hero-seta-anterior").addEventListener("click", () => irParaHero(heroIndice - 1, true));
+document.querySelector(".hero-seta-proximo").addEventListener("click", () => irParaHero(heroIndice + 1, true));
+
+// Pausa a rotação enquanto o ponteiro está sobre o hero (desktop)
+hero.addEventListener("mouseenter", pararHero);
+hero.addEventListener("mouseleave", iniciarHero);
+
+/* Arrastar para o lado no hero (mobile) troca de destaque */
+let heroX0 = null;
+heroPalco.addEventListener("touchstart", (e) => { heroX0 = e.touches[0].clientX; pararHero(); }, { passive: true });
+heroPalco.addEventListener("touchend", (e) => {
+  if (heroX0 === null) return;
+  const dx = e.changedTouches[0].clientX - heroX0;
+  if (Math.abs(dx) > 45) irParaHero(heroIndice + (dx < 0 ? 1 : -1), true);
+  else iniciarHero();
+  heroX0 = null;
+}, { passive: true });
+
+/* ---------- Barra superior: fica sólida ao rolar ---------- */
+function atualizarTopbar() {
+  topbar.classList.toggle("rolado", window.scrollY > 10);
+}
+window.addEventListener("scroll", atualizarTopbar, { passive: true });
 
 /* ---------- Modal ---------- */
 
@@ -203,13 +400,11 @@ function abrirModal(livro) {
     livro.estoque > 0 ? `${livro.estoque} unidade${livro.estoque > 1 ? "s" : ""}` : "Esgotado";
   modal.querySelector("[data-preco]").textContent = livro.preco;
 
-  // Capa do modal
   const capa = modal.querySelector(".modal-capa");
   capa.innerHTML = livro.imagem
     ? `<img src="${livro.imagem}" alt="Capa do livro ${livro.titulo}" />`
     : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
 
-  // Botão do Instagram
   const textoBtn = botaoIG.querySelector(".botao-instagram-texto");
   if (livro.estoque <= 0) {
     botaoIG.classList.add("desativado");
@@ -241,9 +436,10 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !modal.hidden) fecharModal();
 });
 
-/* ---------- Eventos de busca / filtro ---------- */
+/* ---------- Eventos ---------- */
 campoBusca.addEventListener("input", renderizar);
 
 /* ---------- Inicialização ---------- */
 document.getElementById("ano-atual").textContent = new Date().getFullYear();
+atualizarTopbar();
 renderizar();
