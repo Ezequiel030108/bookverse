@@ -19,8 +19,8 @@ const ORDEM_GENEROS = [
 
 /* Quantos livros aparecem no carrossel de novidades do topo. */
 const MAX_DESTAQUES = 10;
-/* Intervalo de troca automática do billboard (ms). */
-const INTERVALO_HERO = 6500;
+/* Intervalo do auto-play do carrossel (ms) — estilo "stories". */
+const INTERVALO_HERO = 5000;
 
 /* ---------- Referências ---------- */
 const catalogo       = document.getElementById("catalogo");
@@ -236,40 +236,37 @@ function renderizar(termoBusca) {
   });
 }
 
-/* ---------- Hero billboard (scroll-snap) ---------- */
-/*
-  A técnica correta:
-  - .hero-janela: overflow-x:auto + scroll-snap-type:x mandatory
-    (clipa os slides e permite swipe nativo)
-  - .hero-palco: display:grid, grid-auto-columns:100%
-    (cada slide ocupa 100% da janela — sem bugs de % em flex)
-  - Setas e pontos: chamam heroJanela.scrollTo({ left: i × width })
-  - O scroll nativo do mobile já funciona; as setas adicionam suporte desktop
-*/
+/* ---------- Carrossel de novidades (auto-play estilo "stories") ----------
+   - Swipe nativo no mobile (scroll-snap horizontal).
+   - Avança sozinho a cada INTERVALO_HERO; a barrinha ativa enche no tempo.
+   - Assim que o usuário interage (swipe, seta ou barra), o auto-play PARA.
+   - heroTravado evita que o scroll programático confunda o índice (bug das
+     setas/indicadores).                                                      */
 
-let heroIndice = 0;
-let heroTimer  = null;
-let heroLista  = [];
+const heroNav      = document.querySelector(".hero-nav");
+const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let heroIndice  = 0;
+let heroTimer   = null;
+let heroLista   = [];
+let heroAuto    = true;    // auto-play ligado até a 1ª interação manual
+let heroTravado = false;   // ignora o listener de scroll durante scroll programático
+let heroTravaTimer, heroScrollTimer;
 
 function montarHero(destaques) {
   heroLista = destaques;
   heroPalco.innerHTML = "";
   heroPontosEl.innerHTML = "";
+  heroAuto = true;
+  heroPontosEl.classList.remove("manual");
 
-  if (destaques.length === 0) { hero.hidden = true; return; }
+  if (destaques.length === 0) { hero.hidden = true; pararHero(); return; }
   hero.hidden = false;
 
   destaques.forEach((livro, i) => {
     const slide = document.createElement("article");
     slide.className = "hero-slide";
-
-    const fundo = livro.imagem
-      ? `<div class="hero-fundo" style="background-image:url('${livro.imagem}')"></div>`
-      : `<div class="hero-fundo hero-fundo-cor ${varianteFallback(livro.titulo)}"></div>`;
-
     slide.innerHTML = `
-      ${fundo}
-      <div class="hero-veu"></div>
       <div class="hero-conteudo">
         <div class="hero-capa-wrap">${capaHTML(livro, false)}</div>
         <div class="hero-texto">
@@ -282,60 +279,70 @@ function montarHero(destaques) {
         </div>
       </div>
     `;
-
     slide.querySelector(".hero-btn").addEventListener("click", (e) => { e.stopPropagation(); abrirModal(livro); });
     slide.querySelector(".hero-capa-wrap").addEventListener("click", () => abrirModal(livro));
     heroPalco.appendChild(slide);
 
-    // Ponto indicador
-    const ponto = document.createElement("button");
-    ponto.type = "button";
-    ponto.className = "hero-ponto";
-    ponto.setAttribute("role", "tab");
-    ponto.setAttribute("aria-label", `Destaque ${i + 1}: ${livro.titulo}`);
-    ponto.addEventListener("click", () => irParaHero(i, true));
-    heroPontosEl.appendChild(ponto);
+    // Barra de progresso (estilo stories)
+    const barra = document.createElement("button");
+    barra.type = "button";
+    barra.className = "hero-prog";
+    barra.setAttribute("aria-label", `Ir para a novidade ${i + 1}: ${livro.titulo}`);
+    barra.innerHTML = `<span class="hero-prog-fill"></span>`;
+    barra.addEventListener("click", () => { pausarAuto(); irParaHero(i); });
+    heroPontosEl.appendChild(barra);
   });
 
-  heroIndice = 0;
-  atualizarPontosHero();
-  iniciarHeroTimer();
+  // Com 1 só novidade, não precisa de navegação
+  heroNav.hidden = destaques.length <= 1;
 
-  // Atualiza os pontos quando o usuário desliza no mobile
-  let scrollEndTimer;
-  heroJanela.addEventListener("scroll", () => {
-    clearTimeout(scrollEndTimer);
-    scrollEndTimer = setTimeout(() => {
-      const w = heroJanela.offsetWidth;
-      if (!w) return;
-      const novoIdx = Math.round(heroJanela.scrollLeft / w);
-      if (novoIdx !== heroIndice && novoIdx >= 0 && novoIdx < heroLista.length) {
-        heroIndice = novoIdx;
-        atualizarPontosHero();
-        iniciarHeroTimer();
-      }
-    }, 80);
-  }, { passive: true });
+  heroIndice = 0;
+  irParaHero(0, false);
+  iniciarHeroTimer();
 }
 
-function irParaHero(i, manual = false) {
+function irParaHero(i, animar = true) {
   if (!heroLista.length) return;
   heroIndice = ((i % heroLista.length) + heroLista.length) % heroLista.length;
-  heroJanela.scrollTo({ left: heroIndice * heroJanela.offsetWidth, behavior: "smooth" });
-  atualizarPontosHero();
-  if (manual) iniciarHeroTimer();
+  heroTravado = true;
+  heroJanela.scrollTo({
+    left: heroIndice * heroJanela.clientWidth,
+    behavior: (animar && !semMovimento) ? "smooth" : "auto"
+  });
+  atualizarProgresso();
+  clearTimeout(heroTravaTimer);
+  heroTravaTimer = setTimeout(() => { heroTravado = false; }, animar ? 650 : 60);
 }
 
-function atualizarPontosHero() {
-  [...heroPontosEl.children].forEach((p, i) => {
-    p.classList.toggle("ativo", i === heroIndice);
-    p.setAttribute("aria-selected", i === heroIndice ? "true" : "false");
+function atualizarProgresso() {
+  [...heroPontosEl.children].forEach((barra, i) => {
+    const fill = barra.querySelector(".hero-prog-fill");
+    if (!fill) return;
+    barra.setAttribute("aria-current", i === heroIndice ? "true" : "false");
+    if (i < heroIndice) {
+      fill.style.transition = "none";
+      fill.style.width = "100%";
+    } else if (i > heroIndice) {
+      fill.style.transition = "none";
+      fill.style.width = "0%";
+    } else if (heroAuto && !semMovimento) {
+      // a barra ativa enche ao longo do intervalo
+      fill.style.transition = "none";
+      fill.style.width = "0%";
+      void fill.offsetWidth;                       // reflow p/ reiniciar a animação
+      fill.style.transition = `width ${INTERVALO_HERO}ms linear`;
+      fill.style.width = "100%";
+    } else {
+      fill.style.transition = "none";
+      fill.style.width = "100%";
+    }
   });
 }
 
 function iniciarHeroTimer() {
   pararHero();
-  if (heroLista.length > 1) {
+  if (heroAuto && heroLista.length > 1) {
+    atualizarProgresso();                          // (re)inicia a barra ativa
     heroTimer = setInterval(() => irParaHero(heroIndice + 1), INTERVALO_HERO);
   }
 }
@@ -344,12 +351,42 @@ function pararHero() {
   if (heroTimer) { clearInterval(heroTimer); heroTimer = null; }
 }
 
-// Setas do hero
-document.querySelector(".hero-ant").addEventListener("click", () => irParaHero(heroIndice - 1, true));
-document.querySelector(".hero-prox").addEventListener("click", () => irParaHero(heroIndice + 1, true));
+/* Para o auto-play assim que houver interação manual (e não volta). */
+function pausarAuto() {
+  if (!heroAuto) return;
+  heroAuto = false;
+  pararHero();
+  heroPontosEl.classList.add("manual");
+  atualizarProgresso();
+}
 
-hero.addEventListener("mouseenter", pararHero);
-hero.addEventListener("mouseleave", iniciarHeroTimer);
+/* Sincroniza o índice quando o usuário desliza (ignora scroll programático). */
+heroJanela.addEventListener("scroll", () => {
+  if (heroTravado) return;
+  clearTimeout(heroScrollTimer);
+  heroScrollTimer = setTimeout(() => {
+    const w = heroJanela.clientWidth;
+    if (!w) return;
+    const idx = Math.round(heroJanela.scrollLeft / w);
+    if (idx >= 0 && idx < heroLista.length && idx !== heroIndice) {
+      heroIndice = idx;
+      atualizarProgresso();
+    }
+  }, 90);
+}, { passive: true });
+
+/* Qualquer arraste/toque/scroll manual no carrossel encerra o auto-play. */
+["pointerdown", "touchstart", "wheel"].forEach(ev =>
+  heroJanela.addEventListener(ev, pausarAuto, { passive: true })
+);
+
+/* Setas (sempre param o auto-play). */
+document.querySelector(".hero-ant").addEventListener("click", () => { pausarAuto(); irParaHero(heroIndice - 1); });
+document.querySelector(".hero-prox").addEventListener("click", () => { pausarAuto(); irParaHero(heroIndice + 1); });
+
+/* No desktop, o mouse por cima pausa temporariamente (só enquanto é automático). */
+hero.addEventListener("mouseenter", () => { if (heroAuto) pararHero(); });
+hero.addEventListener("mouseleave", () => { if (heroAuto) iniciarHeroTimer(); });
 
 /* ---------- Busca: sincroniza os dois campos (desktop + mobile) ---------- */
 
@@ -363,26 +400,14 @@ function sincronizarBusca(origem) {
 campoBusca.addEventListener("input",    () => sincronizarBusca(campoBusca));
 campoBuscaMob.addEventListener("input", () => sincronizarBusca(campoBuscaMob));
 
-/* ---------- Toggle de busca no mobile ---------- */
+/* ---------- Busca no mobile: abrir / fechar ---------- */
 
-btnBuscaToggle.addEventListener("click", () => {
-  const aberta = topbarBuscaMob.getAttribute("aria-hidden") === "false";
-  if (aberta) {
-    fecharBuscaMobile();
-  } else {
-    topbarBuscaMob.setAttribute("aria-hidden", "false");
-    topbarBuscaMob.classList.add("aberta");
-    btnBuscaToggle.setAttribute("aria-expanded", "true");
-    campoBuscaMob.focus();
-  }
-});
-
-btnCancelar.addEventListener("click", () => {
-  campoBuscaMob.value = "";
-  campoBusca.value    = "";
-  fecharBuscaMobile();
-  renderizar("");
-});
+function abrirBuscaMobile(focar) {
+  topbarBuscaMob.setAttribute("aria-hidden", "false");
+  topbarBuscaMob.classList.add("aberta");
+  btnBuscaToggle.setAttribute("aria-expanded", "true");
+  if (focar) campoBuscaMob.focus();
+}
 
 function fecharBuscaMobile() {
   topbarBuscaMob.setAttribute("aria-hidden", "true");
@@ -390,9 +415,40 @@ function fecharBuscaMobile() {
   btnBuscaToggle.setAttribute("aria-expanded", "false");
 }
 
-/* ---------- Topbar: fica sólida ao rolar ---------- */
+// O ícone de lupa continua abrindo a busca manualmente (e foca para digitar)
+btnBuscaToggle.addEventListener("click", () => {
+  if (topbarBuscaMob.classList.contains("aberta")) fecharBuscaMobile();
+  else abrirBuscaMobile(true);
+});
+
+btnCancelar.addEventListener("click", () => {
+  campoBuscaMob.value = "";
+  campoBusca.value    = "";
+  fecharBuscaMobile();
+  campoBuscaMob.blur();
+  renderizar("");
+});
+
+/* ---------- Rolagem: barra sólida + busca que surge ao subir ----------
+   A caixa NÃO aparece na tela inicial. Quando o usuário já desceu um pouco
+   e rola para CIMA, ela surge de ponta a ponta no topo, pronta para digitar
+   (como se aparecesse para ele). Ao descer, ela some.                       */
+
+const LIMIAR_BUSCA = 300;            // só revela depois de ter descido um tanto
+let ultimoY = window.scrollY;
+
 window.addEventListener("scroll", () => {
-  topbar.classList.toggle("rolado", window.scrollY > 60);
+  const y = window.scrollY;
+  topbar.classList.toggle("rolado", y > 60);
+
+  // Não interfere se o usuário está digitando ou já tem texto na busca
+  const digitando = document.activeElement === campoBuscaMob || campoBuscaMob.value.length > 0;
+  if (!digitando) {
+    if (y <= LIMIAR_BUSCA)        fecharBuscaMobile();   // perto do topo: escondida
+    else if (y < ultimoY - 4)     abrirBuscaMobile(false); // subindo: revela (sem focar)
+    else if (y > ultimoY + 4)     fecharBuscaMobile();   // descendo: esconde
+  }
+  ultimoY = y;
 }, { passive: true });
 
 /* ---------- Modal ---------- */

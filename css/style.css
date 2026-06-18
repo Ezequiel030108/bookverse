@@ -329,34 +329,130 @@ body::after {
 }
 .hero[hidden] { display: none; }
 
-/* Cabeçalho explícito da seção */
-.hero-cabecalho { padding: 2px 6px 12px; }
+/* Cabeçalho da seção de novidades — propositalmente mais imponente
+   que os títulos das fileiras comuns (é a vitrine principal). */
+.hero-cabecalho { padding: 4px 6px 14px; text-align: center; }
 .hero-eyebrow {
-  display: block;
-  font-size: .66rem;
-  font-weight: 700;
-  letter-spacing: 1.8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: 2.4px;
   text-transform: uppercase;
-  color: var(--lavanda);
+  color: var(--aurora-rosa);
+}
+.hero-eyebrow::before,
+.hero-eyebrow::after {
+  content: "✦";
+  color: var(--estrela);
+  font-size: .95em;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .7);
 }
 .hero-titulo-secao {
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 800;
-  font-size: clamp(1.4rem, 6vw, 1.9rem);
-  margin: 3px 0 0;
-  color: var(--texto-claro);
-  text-shadow: 0 0 16px rgba(184, 158, 255, .3);
+  font-size: clamp(1.85rem, 8vw, 2.8rem);
+  line-height: 1.04;
+  margin: 6px 0 0;
+  color: var(--estrela-clara);            /* fallback */
+  background: linear-gradient(100deg, var(--estrela) 0%, #fff 45%, var(--lavanda-clara) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 18px rgba(184, 158, 255, .45));
+}
+
+/* Vitrine = moldura que clipa o céu e os slides */
+.hero-vitrine {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(184, 158, 255, .16);
+}
+
+/* Céu estrelado do hero — fica atrás dos slides e NÃO rola com o swipe */
+.hero-ceu {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background-color: #0a0628;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(ellipse 80% 65% at 50% -12%, rgba(74,43,181,.5), transparent 60%),
+    radial-gradient(ellipse 70% 90% at 90% 118%, rgba(255,122,217,.14), transparent 62%),
+    radial-gradient(1.7px 1.7px at 10% 20%, #fff, transparent 50%),
+    radial-gradient(1.7px 1.7px at 82% 14%, var(--estrela), transparent 50%),
+    radial-gradient(1.5px 1.5px at 65% 72%, #fff, transparent 50%),
+    radial-gradient(1.5px 1.5px at 24% 82%, var(--estrela-clara), transparent 50%),
+    radial-gradient(1.3px 1.3px at 45% 33%, #fff, transparent 50%),
+    radial-gradient(1.3px 1.3px at 93% 56%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 33% 55%, rgba(255,255,255,.9), transparent 50%),
+    radial-gradient(1px 1px at 72% 40%, rgba(255,255,255,.85), transparent 50%),
+    radial-gradient(1px 1px at 15% 62%, rgba(255,255,255,.8), transparent 50%),
+    radial-gradient(1px 1px at 56% 90%, rgba(255,255,255,.85), transparent 50%),
+    radial-gradient(.8px .8px at 5% 40%, rgba(255,255,255,.7), transparent 50%),
+    radial-gradient(.8px .8px at 40% 10%, rgba(255,255,255,.7), transparent 50%),
+    radial-gradient(.8px .8px at 78% 84%, rgba(255,255,255,.7), transparent 50%),
+    radial-gradient(.8px .8px at 97% 28%, rgba(255,255,255,.65), transparent 50%);
+}
+/* camada extra de estrelinhas que cintilam devagar */
+.hero-ceu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 60% 22%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 85% 66%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 35% 76%, #fff, transparent 50%),
+    radial-gradient(1px 1px at 50% 48%, #fff, transparent 50%);
+  animation: cintilar 4.5s ease-in-out infinite alternate;
+}
+
+/* Cometas que cruzam o céu de vez em quando */
+.cometa {
+  position: absolute;
+  width: 170px;
+  height: 2px;
+  background: linear-gradient(90deg, #fff 0%, rgba(216,202,255,.7) 28%, rgba(255,255,255,0) 78%);
+  border-radius: 99px;
+  filter: drop-shadow(0 0 7px rgba(255,255,255,.9));
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.cometa::after {
+  content: "";
+  position: absolute;
+  left: -3px; top: 50%;
+  margin-top: -4px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 14px 4px rgba(255,255,255,.95), 0 0 6px 2px var(--estrela-clara);
+}
+.cometa-1 { top: 12%; right: -150px; animation: cometa 12s ease-in 4s infinite; }
+.cometa-2 { top: 42%; right: -150px; animation: cometa 17s ease-in 10s infinite; }
+@keyframes cometa {
+  0%   { transform: translate(0, 0) rotate(-18deg); opacity: 0; }
+  4%   { opacity: 1; }
+  12%  { opacity: 1; }
+  17%  { transform: translate(-122vw, 40vw) rotate(-18deg); opacity: 0; }
+  100% { transform: translate(-122vw, 40vw) rotate(-18deg); opacity: 0; }
 }
 
 /* Janela = clipa e habilita o swipe horizontal com snap */
 .hero-janela {
-  border-radius: 22px;
+  position: relative;
+  z-index: 1;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(184, 158, 255, .16);
 }
 .hero-janela::-webkit-scrollbar { display: none; }
 
@@ -373,30 +469,6 @@ body::after {
   scroll-snap-stop: always;
   min-height: 440px;
   display: flex;
-  overflow: hidden;
-}
-
-/* Fundo desfocado (a própria capa ampliada) — atmosfera */
-.hero-fundo {
-  position: absolute;
-  inset: -12%;
-  background-size: cover;
-  background-position: center 30%;
-  filter: blur(34px) saturate(1.25) brightness(.62);
-  transform: scale(1.16);
-}
-.hero-fundo-cor { filter: none; transform: none; background: linear-gradient(135deg, var(--violeta), var(--noite)); }
-.hero-fundo-cor.var-musgo { background: linear-gradient(135deg, var(--indigo-claro), #0a1f3a); }
-.hero-fundo-cor.var-ambar { background: linear-gradient(135deg, #8d3aa8, #4a2bb5); }
-.hero-fundo-cor.var-tinta { background: linear-gradient(135deg, #1c0f4d, #060217); }
-
-/* Véu: escurece base/topo e deixa um brilho roxo atrás da capa */
-.hero-veu {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(120% 80% at 50% 32%, rgba(74,43,181,.28), transparent 62%),
-    linear-gradient(0deg, rgba(8,4,26,.96) 0%, rgba(8,4,26,.5) 46%, rgba(8,4,26,.34) 100%);
 }
 
 /* Mobile-first: coluna centralizada, capa GRANDE em primeiro plano */
@@ -492,21 +564,30 @@ body::after {
   transition: background .15s ease, transform .12s ease;
 }
 .hero-seta:active { transform: scale(.9); }
-.hero-pontos { display: flex; gap: 8px; align-items: center; }
-.hero-ponto {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border-radius: 999px;
-  background: rgba(184, 158, 255, .35);
-  transition: width .3s ease, background .3s ease;
+/* Indicador estilo "stories": barrinhas que enchem no auto-play */
+.hero-pontos {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 320px;
 }
-.hero-ponto.ativo {
-  width: 26px;
+.hero-prog {
+  flex: 1 1 18px;
+  max-width: 44px;
+  height: 4px;
+  padding: 0;
+  border-radius: 99px;
+  background: rgba(184, 158, 255, .26);
+  overflow: hidden;
+}
+.hero-prog-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
   background: linear-gradient(90deg, var(--estrela), var(--estrela-clara));
 }
-/* Com 1 só destaque, esconde a navegação */
-.hero-palco:has(.hero-slide:only-child) ~ .hero-nav { display: none; }
 
 /* ============================================================
    FILEIRAS (carrosséis)
@@ -540,6 +621,13 @@ main {
   line-height: 1.15;
   color: var(--texto-claro);
   text-shadow: 0 0 14px rgba(184, 158, 255, .3);
+}
+.fileira-titulo::before {
+  content: "✦";
+  color: var(--estrela);
+  font-size: .68em;
+  margin-right: 8px;
+  text-shadow: 0 0 10px rgba(255, 217, 102, .6);
 }
 
 /* Fileira de novidades — moldura sutil de destaque */
