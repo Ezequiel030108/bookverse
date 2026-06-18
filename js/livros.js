@@ -55,6 +55,17 @@ const LIVROS = [
   /* ===================== FINANÇAS & NEGÓCIOS ===================== */
 
   {
+    titulo: "Do Mil ao Milhão: Sem Cortar o Cafezinho",
+    autor: "Thiago Nigro",
+    genero: "Finanças & Negócios",
+    preco: "R$ 20,00",
+    estoque: 1,
+    estado: "Com marcas de uso",
+    sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais — sem precisar cortar o cafezinho.",
+    imagem: "img/do-mil-ao-milhao.jpg"
+  },
+
+  {
     titulo: "Quem Pensa Enriquece",
     autor: "Napoleon Hill",
     genero: "Finanças & Negócios",
@@ -132,6 +143,17 @@ const LIVROS = [
     estado: "Bom estado, porém grifado",
     sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
     imagem: "img/como-fazer-amigos.jpg"
+  },
+
+  {
+    titulo: "Como Evitar Preocupações e Começar a Viver",
+    autor: "Dale Carnegie",
+    genero: "Autoajuda & Desenvolvimento Pessoal",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Ótimo estado",
+    sinopse: "Dale Carnegie apresenta técnicas práticas e comprovadas para vencer a ansiedade, o estresse e os medos do dia a dia. Com histórias reais e lições atemporais, o livro ensina como mudar a mentalidade, focar no presente e construir uma vida mais tranquila e produtiva. Um clássico com mais de 50 milhões de cópias vendidas.",
+    imagem: "img/como-evitar-preocupacoes.jpg"
   },
 
   {
@@ -324,6 +346,28 @@ const LIVROS = [
   },
 
   /* ========================= FILOSOFIA ========================= */
+
+  {
+    titulo: "A Política",
+    autor: "Aristóteles",
+    genero: "Filosofia",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Ótimo estado",
+    sinopse: "Um dos textos mais influentes da história do pensamento humano, escrito pelo filósofo grego Aristóteles. Nesta obra, Aristóteles investiga a natureza do Estado, as formas de governo, a cidadania e a justiça, lançando as bases da ciência política ocidental. Leitura indispensável para entender como as sociedades se organizam e por quê.",
+    imagem: "img/aristoteles-a-politica.jpg"
+  },
+
+  {
+    titulo: "O Anticristo",
+    autor: "Friedrich Nietzsche",
+    genero: "Filosofia",
+    preco: "R$ 20,00",
+    estoque: 1,
+    estado: "Bom estado, porém grifado",
+    sinopse: "Em um de seus textos mais polêmicos, Nietzsche faz uma crítica radical ao cristianismo e aos valores morais que ele considerava contrários à vida e ao florescimento humano. Com uma escrita incisiva e provocadora, o filósofo propõe uma reavaliação dos fundamentos da civilização ocidental. Obra essencial para compreender o pensamento nietzschiano em sua forma mais ousada.",
+    imagem: "img/nietzsche-o-anticristo.jpg"
+  },
 
   {
     titulo: "Além do Bem e do Mal",
