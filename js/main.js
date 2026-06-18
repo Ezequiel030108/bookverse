@@ -84,11 +84,15 @@ function criarCard(livro, indice, seloNovo) {
   card.setAttribute("role", "button");
   card.setAttribute("aria-label", `${livro.titulo} — ${livro.autor}`);
 
-  const selo = seloNovo ? { texto: "Novo!", classe: "novo" } : rotuloEstoque(livro.estoque);
+  // Selo só para o que é raro e relevante: novidade.
+  // Como quase todo livro de sebo é exemplar único, marcar estoque em
+  // todo card vira ruído — a condição/estoque fica no modal de detalhes.
+  const eNovo = seloNovo || ehNovidade(livro);
+  const seloHTML = eNovo ? `<span class="selo novo">Novo</span>` : "";
 
   card.innerHTML = `
     <div class="capa">
-      <span class="selo ${selo.classe}">${selo.texto}</span>
+      ${seloHTML}
       ${capaHTML(livro)}
       <div class="capa-overlay" aria-hidden="true">
         <span class="overlay-ver">Ver detalhes</span>
@@ -224,7 +228,7 @@ function renderizar(termoBusca) {
   const novidades = LIVROS.filter(l => ehNovidade(l) && disponivel(l));
   if (novidades.length > 0) {
     catalogo.appendChild(
-      criarFileira("Novidades da Semana", novidades, { seloNovo: true, etiqueta: "★ Acabou de chegar" })
+      criarFileira("Novidades da Semana", novidades, { seloNovo: true, etiqueta: "✨ Acabou de chegar" })
     );
   }
 
@@ -278,7 +282,7 @@ function montarHero(destaques) {
       <div class="hero-conteudo">
         <div class="hero-capa-wrap">${capaHTML(livro, false)}</div>
         <div class="hero-texto">
-          <span class="hero-chip">★ Novidade</span>
+          <span class="hero-chip">✨ Novidade</span>
           <h2 class="hero-livro-titulo">${livro.titulo}</h2>
           <p class="hero-livro-autor">${livro.autor}</p>
           <p class="hero-livro-sinopse">${sinopse}</p>
