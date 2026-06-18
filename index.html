@@ -11,19 +11,17 @@
   <meta name="description" content="Catálogo de livros da BookVerse. Peça pelo Instagram." />
   <link rel="icon" href="favicon.ico" sizes="48x48">
   <link rel="apple-touch-icon" href="img/logo.png">
-
-  <!-- Google Fonts: Playfair Display (serifada, para títulos) + Inter (sans, para corpo) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <!-- =============== BARRA SUPERIOR (estilo Netflix, fixa no topo) =============== -->
+  <!-- ===== BARRA SUPERIOR ===== -->
   <header class="topbar" id="topbar">
-    <div class="topbar-conteudo">
+    <!-- Linha 1: Logo + ações -->
+    <div class="topbar-linha">
       <a class="marca" href="#" aria-label="BookVerse — início">
         <span class="marca-logo-wrap" aria-hidden="true">
           <img class="marca-logo" src="img/logo.png" alt="" onerror="this.classList.add('logo-erro')">
@@ -31,84 +29,98 @@
         <span class="marca-nome">BookVerse</span>
       </a>
 
-      <div class="topbar-acoes">
-        <div class="campo-busca-wrap">
-          <svg class="icone-busca" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm9 16-4.5-4.5"/>
-          </svg>
-          <input
-            type="search"
-            id="campo-busca"
-            class="campo-busca"
-            placeholder="Buscar título ou autor…"
-            aria-label="Buscar livros"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-          />
-        </div>
+      <!-- Campo de busca inline — visível no desktop, escondido no mobile -->
+      <div class="campo-busca-wrap busca-desktop" id="busca-desktop">
+        <svg class="icone-busca" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm9 16-4.5-4.5"/>
+        </svg>
+        <input type="search" id="campo-busca" class="campo-busca" placeholder="Pesquisar livros e autores…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Buscar livros" />
+      </div>
 
-        <a class="link-instagram" href="https://instagram.com/mybookverse.pb" target="_blank" rel="noopener" aria-label="Nosso Instagram">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+      <div class="topbar-acoes">
+        <!-- Ícone de busca — só visível no mobile -->
+        <button class="btn-icon btn-busca-toggle" id="btn-busca-toggle" type="button" aria-label="Buscar" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 22 22"/>
+          </svg>
+        </button>
+
+        <a class="link-instagram" href="https://instagram.com/mybookverse.pb" target="_blank" rel="noopener" aria-label="Instagram @mybookverse.pb">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
             <path d="M12 2.2c3.2 0 3.6 0 4.85.07 1.17.05 1.8.25 2.22.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.05.41 2.22.06 1.26.07 1.64.07 4.85s0 3.6-.07 4.85c-.05 1.17-.25 1.8-.41 2.22a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.05.36-2.22.41-1.26.06-1.64.07-4.85.07s-3.6 0-4.85-.07c-1.17-.05-1.8-.25-2.22-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.22C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.85c.05-1.17.25-1.8.41-2.22.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.05-.36 2.22-.41C8.4 2.2 8.8 2.2 12 2.2zm0 5.6a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm5.4-.4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 9.6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z"/>
           </svg>
-          <span>@mybookverse.pb</span>
+          <span class="ig-label">@mybookverse.pb</span>
         </a>
       </div>
     </div>
+
+    <!-- Linha 2: busca expansível no mobile (oculta por padrão) -->
+    <div class="topbar-busca-mobile" id="topbar-busca-mobile" aria-hidden="true">
+      <div class="campo-busca-wrap">
+        <svg class="icone-busca" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm9 16-4.5-4.5"/>
+        </svg>
+        <input type="search" id="campo-busca-mobile" class="campo-busca" placeholder="Pesquisar livros e autores…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Buscar livros" />
+      </div>
+      <button class="btn-cancelar" id="btn-cancelar" type="button">Cancelar</button>
+    </div>
   </header>
 
-  <!-- =============== HERO / BILLBOARD (destaques rotativos) =============== -->
-  <section class="hero" id="hero" aria-label="Destaques" hidden>
-    <div class="hero-palco" id="hero-palco"><!-- slides gerados em js/main.js --></div>
-    <div class="hero-controles" id="hero-controles">
-      <button class="hero-seta hero-seta-anterior" type="button" aria-label="Destaque anterior">‹</button>
-      <div class="hero-pontos" id="hero-pontos" role="tablist" aria-label="Selecionar destaque"></div>
-      <button class="hero-seta hero-seta-proximo" type="button" aria-label="Próximo destaque">›</button>
+  <!-- ===== HERO / BILLBOARD ===== -->
+  <!--
+    IMPORTANTE: a .hero-janela tem overflow-x:auto (scroll-snap),
+    o .hero-palco é um grid com colunas = 100% da janela.
+    Isso garante que os slides apareçam corretamente e o swipe
+    funcione nativamente no mobile.
+  -->
+  <section class="hero" id="hero" aria-label="Destaques em destaque" hidden>
+    <div class="hero-janela" id="hero-janela">
+      <div class="hero-palco" id="hero-palco">
+        <!-- slides gerados pelo JS -->
+      </div>
+    </div>
+    <div class="hero-nav">
+      <button class="hero-seta hero-ant" type="button" aria-label="Slide anterior">&#8249;</button>
+      <div class="hero-pontos" id="hero-pontos" role="tablist" aria-label="Destaques"></div>
+      <button class="hero-seta hero-prox" type="button" aria-label="Próximo slide">&#8250;</button>
     </div>
   </section>
 
-  <!-- =============== CATÁLOGO (carrosséis por categoria) =============== -->
-  <main>
-    <div id="catalogo">
-      <!-- As fileiras por gênero e os cards são gerados em js/main.js -->
-    </div>
+  <!-- ===== CATÁLOGO (fileiras) ===== -->
+  <main id="main">
+    <div id="catalogo"></div>
     <p id="sem-resultados" class="sem-resultados" hidden>
       Nenhum livro encontrado. Tente outro termo.
     </p>
   </main>
 
-  <!-- =============== RODAPÉ =============== -->
+  <!-- ===== RODAPÉ ===== -->
   <footer class="rodape">
     <p>© <span id="ano-atual"></span> BookVerse · Juazeirinho e Campina Grande</p>
     <p class="rodape-sub">Feito com carinho para nossos leitores ✦</p>
   </footer>
 
-  <!-- =============== MODAL DE DETALHES (bottom-sheet no mobile) =============== -->
+  <!-- ===== MODAL ===== -->
   <div id="modal" class="modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
     <div class="modal-fundo" data-fechar-modal></div>
     <div class="modal-caixa" role="document">
       <button class="modal-puxador" type="button" data-fechar-modal aria-label="Fechar"></button>
       <button class="modal-fechar" type="button" data-fechar-modal aria-label="Fechar">×</button>
-
       <div class="modal-rolavel">
         <div class="modal-conteudo">
-          <div class="modal-capa"><!-- preenchido pelo JS --></div>
+          <div class="modal-capa"></div>
           <div class="modal-info">
             <h2 id="modal-titulo"></h2>
             <p class="modal-autor"></p>
             <p class="modal-sinopse"></p>
-
             <ul class="modal-detalhes">
-              <li><strong>Estado</strong> <span class="badge-destaque" data-estado></span></li>
-              <li><strong>Estoque</strong> <span class="badge-destaque" data-estoque></span></li>
-              <li><strong>Preço</strong> <span class="badge-destaque badge-preco" data-preco></span></li>
+              <li><strong>Estado</strong><span class="badge-destaque" data-estado></span></li>
+              <li><strong>Estoque</strong><span class="badge-destaque" data-estoque></span></li>
+              <li><strong>Preço</strong><span class="badge-destaque badge-preco" data-preco></span></li>
             </ul>
           </div>
         </div>
       </div>
-
       <div class="modal-rodape">
         <a id="botao-instagram" class="botao-instagram" href="#" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
