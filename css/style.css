@@ -229,10 +229,12 @@ body::after {
   position: absolute;
   z-index: -1;
 }
+.marca-textos { display: flex; flex-direction: column; min-width: 0; }
 .marca-nome {
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 800;
   font-size: 1.45rem;
+  line-height: 1.05;
   letter-spacing: .3px;
   color: var(--texto-claro);
   text-shadow: 0 0 16px rgba(184, 158, 255, .5);
@@ -246,6 +248,19 @@ body::after {
   vertical-align: super;
   text-shadow: 0 0 10px rgba(255, 217, 102, .6);
 }
+/* Localização — discreta, logo abaixo do nome, visível ao abrir o site */
+.marca-local {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: .62rem;
+  font-weight: 500;
+  letter-spacing: .2px;
+  color: var(--texto-discreto);
+  white-space: nowrap;
+}
+.marca-local svg { color: var(--lavanda); opacity: .9; flex-shrink: 0; }
 
 /* Busca inline (desktop) — escondida no mobile.
    Seletor com duas classes p/ vencer .campo-busca-wrap{display:flex}. */
@@ -422,7 +437,12 @@ body::after {
   position: relative;
   border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(184, 158, 255, .16);
+  /* borda fina + brilho lavanda discreto, só para separar do fundo do site */
+  box-shadow:
+    inset 0 0 0 1px rgba(184, 158, 255, .32),
+    0 0 0 1px rgba(184, 158, 255, .12),
+    0 0 30px rgba(184, 158, 255, .20),
+    0 24px 60px rgba(0, 0, 0, .55);
 }
 
 /* Céu estrelado do hero — PROTAGONISTA: estrelas grandes, espalhadas,

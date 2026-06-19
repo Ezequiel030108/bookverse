@@ -52,9 +52,14 @@ projeto livros/
      estoque: 3,
      estado: "Novo",
      sinopse: "Santiago, um jovem pastor andaluz...",
-     imagem: ""
+     imagem: "",
+     dataAdicao: "2026-06-19"
    },
    ```
+
+   > 💡 Coloque em `dataAdicao` a **data de hoje** ao cadastrar o livro.
+   > Ele aparece em **"Novidades da Semana"** (no topo) por 7 dias e depois
+   > sai de lá sozinho — continuando normalmente na categoria dele.
 
 3. **Selecione e copie** esse bloco inteiro (inclusive a vírgula no final).
 4. **Cole** logo abaixo, antes do `]` que fecha a lista.
@@ -81,6 +86,7 @@ Abra `js/livros.js`, encontre o livro, troque o texto entre as aspas e salve.
 | `estado`  | `"Novo"`, `"Seminovo"` ou `"Usado"`                      |
 | `sinopse` | Resumo curto do livro                                    |
 | `imagem`  | Caminho da capa, ex: `"img/o-alquimista.jpg"`            |
+| `dataAdicao` | (opcional) Data que você adicionou, ex: `"2026-06-19"`. Mostra em "Novidades da Semana" por 7 dias |
 
 ---
 

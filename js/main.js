@@ -17,8 +17,13 @@ const ORDEM_GENEROS = [
   "Mangás"
 ];
 
-/* Quantos livros aparecem no carrossel de novidades do topo. */
-const MAX_DESTAQUES = 10;
+/* Novidades = livros adicionados nos últimos DIAS_NOVIDADE dias (o código
+   calcula sozinho a partir de "dataAdicao"). O carrossel tenta mostrar
+   ALVO_DESTAQUES livros; se houver poucas novidades da semana, completa com
+   os adicionados mais recentemente. MAX_DESTAQUES é o teto de segurança. */
+const DIAS_NOVIDADE  = 7;
+const ALVO_DESTAQUES = 6;
+const MAX_DESTAQUES  = 10;
 /* Intervalo do auto-play do carrossel (ms) — estilo "stories". */
 const INTERVALO_HERO = 5000;
 
@@ -37,6 +42,11 @@ const heroPontosEl   = document.getElementById("hero-pontos");
 const btnBuscaToggle = document.getElementById("btn-busca-toggle");
 const topbarBuscaMob = document.getElementById("topbar-busca-mobile");
 const btnCancelar    = document.getElementById("btn-cancelar");
+const heroTitulo     = document.querySelector(".hero-titulo-secao");
+const heroEyebrow    = document.querySelector(".hero-eyebrow");
+
+/* Conjunto de livros "em destaque" (os mais recentes) — define o selo "Novo". */
+let LIVROS_DESTAQUE = new Set();
 
 /* ---------- Utilidades ---------- */
 
@@ -44,9 +54,57 @@ function normalizar(texto) {
   return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
+/* Quando o livro foi adicionado (em ms), ou null se não informado. */
+function dataAdicaoMs(livro) {
+  if (!livro.dataAdicao) return null;
+  const t = Date.parse(livro.dataAdicao + "T00:00:00");
+  return Number.isNaN(t) ? null : t;
+}
+/* Dias desde a adição (Infinity se o livro não tem data). */
+function diasDesdeAdicao(livro) {
+  const t = dataAdicaoMs(livro);
+  return t == null ? Infinity : (Date.now() - t) / 86400000;
+}
+/* É novidade da semana? (adicionado nos últimos DIAS_NOVIDADE dias) */
 function ehNovidade(livro) {
-  if (!livro.novoAte) return false;
-  return new Date() <= new Date(livro.novoAte + "T23:59:59");
+  return diasDesdeAdicao(livro) <= DIAS_NOVIDADE;
+}
+
+/* Embaralha (Fisher-Yates) sem alterar o array original. */
+function embaralhar(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Monta a lista do carrossel:
+   1) novidades da semana (mais recentes primeiro);
+   2) se forem poucas, completa com os adicionados mais recentemente;
+   3) último recurso (catálogo sem datas): alguns disponíveis quaisquer.
+   Retorna também "temSemana" para decidir o título da seção. */
+function calcularDestaques() {
+  const disp = LIVROS.filter(disponivel);
+  const porDataDesc = (a, b) => (dataAdicaoMs(b) ?? -Infinity) - (dataAdicaoMs(a) ?? -Infinity);
+
+  const semana = disp.filter(ehNovidade).sort(porDataDesc);
+  const temSemana = semana.length > 0;
+
+  const destaques = semana.slice();
+  if (destaques.length < ALVO_DESTAQUES) {
+    const recentes = disp
+      .filter(l => dataAdicaoMs(l) != null && !destaques.includes(l))
+      .sort(porDataDesc);
+    for (const l of recentes) {
+      if (destaques.length >= ALVO_DESTAQUES) break;
+      destaques.push(l);
+    }
+  }
+  if (destaques.length === 0) destaques.push(...disp.slice(0, ALVO_DESTAQUES));
+
+  return { destaques: destaques.slice(0, MAX_DESTAQUES), temSemana };
 }
 
 function rotuloEstoque(estoque) {
@@ -84,10 +142,9 @@ function criarCard(livro, indice, seloNovo) {
   card.setAttribute("role", "button");
   card.setAttribute("aria-label", `${livro.titulo} — ${livro.autor}`);
 
-  // Selo só para o que é raro e relevante: novidade.
-  // Como quase todo livro de sebo é exemplar único, marcar estoque em
-  // todo card vira ruído — a condição/estoque fica no modal de detalhes.
-  const eNovo = seloNovo || ehNovidade(livro);
+  // Selo "Novo" só nos livros em destaque (os mais recentes adicionados).
+  // Estoque/condição ficam no modal — marcar todo card viraria ruído.
+  const eNovo = seloNovo || LIVROS_DESTAQUE.has(livro);
   const seloHTML = eNovo ? `<span class="selo novo">Novo</span>` : "";
 
   card.innerHTML = `
@@ -222,9 +279,10 @@ function renderizar(termoBusca) {
   document.body.classList.remove("modo-busca");
   semResultados.hidden = true;
 
-  // O carrossel do topo é a ÚNICA seção de novidades — sem fileira duplicada.
-  const novidades = LIVROS.filter(l => ehNovidade(l) && disponivel(l)).slice(0, MAX_DESTAQUES);
-  montarHero(novidades);
+  // O carrossel do topo é a ÚNICA seção de novidades.
+  const { destaques, temSemana } = calcularDestaques();
+  LIVROS_DESTAQUE = new Set(destaques);            // controla o selo "Novo" nos cards
+  montarHero(embaralhar(destaques), temSemana);    // ordem nova a cada carregamento
 
   const generos = [...ORDEM_GENEROS];
   LIVROS.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
@@ -256,13 +314,18 @@ let heroTravado = false;   // ignora o listener de scroll durante scroll program
 let heroTravaTimer;
 let heroRaf     = false;
 
-function montarHero(destaques) {
+function montarHero(destaques, temSemana = true) {
   heroLista = destaques;
   heroPalco.innerHTML = "";
   heroPontosEl.innerHTML = "";
 
   if (destaques.length === 0) { hero.hidden = true; pararHero(); return; }
   hero.hidden = false;
+
+  // Título da seção: "Novidades da Semana" se há livros desta semana;
+  // senão, vira "Livros Novos" (mostrando os mais recentes adicionados).
+  if (heroTitulo)  heroTitulo.textContent  = temSemana ? "Novidades da Semana" : "Livros Novos";
+  if (heroEyebrow) heroEyebrow.textContent = temSemana ? "Acabou de chegar"    : "Da nossa estante";
 
   destaques.forEach((livro, i) => {
     const slide = document.createElement("article");

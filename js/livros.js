@@ -42,11 +42,15 @@
    imagem  -> Caminho da capa dentro da pasta /img/
               Ex: "img/oliver-twist.jpg"
               Se não tiver capa, deixe assim: ""
-   novoAte -> (opcional) Até essa data o livro aparece em destaque
-              na seção "Novidades", no topo do site. Use o formato
-              "ANO-MÊS-DIA". Depois da data ele sai de lá sozinho
-              (mas continua na categoria normal).
-              Ex: novoAte: "2026-06-18"
+   dataAdicao -> (opcional) A data em que você adicionou o livro, no
+              formato "ANO-MÊS-DIA" (ex: "2026-06-19"). O site calcula
+              sozinho e mostra os livros adicionados nos ÚLTIMOS 7 DIAS
+              na seção "Novidades da Semana", no topo. Passada a semana,
+              o livro sai de lá sozinho (mas continua na sua categoria).
+              👉 Dica: ao cadastrar um livro novo, é só pôr a data de hoje.
+              Se a semana ficar com poucos livros, o site completa com os
+              mais recentes; se não houver nenhum, o título vira
+              "Livros Novos".
 
    ============================================================ */
 
@@ -63,7 +67,7 @@ const LIVROS = [
     estado: "Com marcas de uso",
     sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais — sem precisar cortar o cafezinho.",
     imagem: "img/do-mil-ao-milhao.jpg",
-    novoAte: "2026-06-25"
+    dataAdicao: "2026-06-18"
   },
 
   {
@@ -119,7 +123,7 @@ const LIVROS = [
     estado: "Quase novo",
     sinopse: "Escrito pelo fundador da Microsoft, este clássico apresenta a visão de Bill Gates sobre a revolução digital e o impacto da internet e dos computadores no futuro do trabalho, da educação e do nosso dia a dia.",
     imagem: "img/a-estrada-do-futuro.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-09"
   },
 
   /* ============= AUTOAJUDA & DESENVOLVIMENTO PESSOAL ============= */
@@ -155,7 +159,7 @@ const LIVROS = [
     estado: "Ótimo estado",
     sinopse: "Dale Carnegie apresenta técnicas práticas e comprovadas para vencer a ansiedade, o estresse e os medos do dia a dia. Com histórias reais e lições atemporais, o livro ensina como mudar a mentalidade, focar no presente e construir uma vida mais tranquila e produtiva. Um clássico com mais de 50 milhões de cópias vendidas.",
     imagem: "img/como-evitar-preocupacoes.jpg",
-    novoAte: "2026-06-25"
+    dataAdicao: "2026-06-18"
   },
 
   {
@@ -248,7 +252,7 @@ const LIVROS = [
     estado: "Quase novo",
     sinopse: "Cansados da exploração humana, os animais de uma fazenda se rebelam e tomam o poder em nome da igualdade. Mas o sonho logo se corrompe, nesta fábula afiada de George Orwell sobre poder, revolução e os perigos do totalitarismo.",
     imagem: "img/a-revolucao-dos-bichos.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-08"
   },
 
   {
@@ -260,7 +264,7 @@ const LIVROS = [
     estado: "Quase novo",
     sinopse: "Uma reunião de ensaios de George Orwell que revela seu olhar agudo sobre literatura, política e a sociedade de seu tempo. Textos lúcidos e provocadores que mostram por que Orwell é um dos maiores pensadores do século XX.",
     imagem: "img/dentro-da-baleia-e-outros-ensaios.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-08"
   },
 
   {
@@ -272,7 +276,7 @@ const LIVROS = [
     estado: "Quase novo",
     sinopse: "O primeiro volume das aventuras do mais famoso detetive de todos os tempos. Ao lado do fiel Dr. Watson, Sherlock Holmes usa sua genialidade dedutiva para desvendar mistérios intrigantes nas ruas da Londres vitoriana.",
     imagem: "img/sherlock-holmes-vol-1.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-07"
   },
 
   {
@@ -284,7 +288,7 @@ const LIVROS = [
     estado: "Quase novo",
     sinopse: "A continuação das clássicas aventuras de Sherlock Holmes e Dr. Watson. Novos casos, enigmas e crimes desafiam a mente brilhante do detetive de Baker Street, em histórias imortais de Sir Arthur Conan Doyle.",
     imagem: "img/sherlock-holmes-vol-2.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-07"
   },
 
   {
@@ -296,7 +300,7 @@ const LIVROS = [
     estado: "Quase novo",
     sinopse: "O terceiro volume das aventuras de Sherlock Holmes reúne mais casos memoráveis do detetive mais célebre da literatura. Dedução, suspense e a inconfundível parceria com o Dr. Watson em narrativas que atravessam gerações.",
     imagem: "img/sherlock-holmes-vol-3.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-07"
   },
 
   /* ===================== ROMANCE & LITERATURA ===================== */
@@ -356,7 +360,7 @@ const LIVROS = [
     estado: "Ótimo estado",
     sinopse: "Um dos textos mais influentes da história do pensamento humano, escrito pelo filósofo grego Aristóteles. Nesta obra, Aristóteles investiga a natureza do Estado, as formas de governo, a cidadania e a justiça, lançando as bases da ciência política ocidental. Leitura indispensável para entender como as sociedades se organizam e por quê.",
     imagem: "img/aristoteles-a-politica.jpg",
-    novoAte: "2026-06-25"
+    dataAdicao: "2026-06-17"
   },
 
   {
@@ -368,7 +372,7 @@ const LIVROS = [
     estado: "Bom estado, porém grifado",
     sinopse: "Em um de seus textos mais polêmicos, Nietzsche faz uma crítica radical ao cristianismo e aos valores morais que ele considerava contrários à vida e ao florescimento humano. Com uma escrita incisiva e provocadora, o filósofo propõe uma reavaliação dos fundamentos da civilização ocidental. Obra essencial para compreender o pensamento nietzschiano em sua forma mais ousada.",
     imagem: "img/nietzsche-o-anticristo.jpg",
-    novoAte: "2026-06-25"
+    dataAdicao: "2026-06-17"
   },
 
   {
@@ -380,7 +384,7 @@ const LIVROS = [
     estado: "Bom estado, porém grifado",
     sinopse: "Uma das obras mais provocadoras da filosofia ocidental, 'Além do Bem e do Mal' convida o leitor a questionar a moral vigente e os valores estabelecidos pela tradição. Nietzsche desafia os filósofos dogmáticos, propõe uma reavaliação de todas as crenças e explora temas como a vontade de poder, a religião e a natureza da consciência humana. Leitura essencial para quem quer pensar de forma livre e radical.",
     imagem: "img/nietzsche-alem-bem-mal.jpg",
-    novoAte: "2026-06-25"
+    dataAdicao: "2026-06-16"
   },
 
   /* =================== ROMANCE & LITERATURA =================== */
@@ -394,7 +398,7 @@ const LIVROS = [
     estado: "Com marcas de uso",
     sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
     imagem: "img/a-batalha-do-apocalipse.jpg",
-    novoAte: "2026-06-21"
+    dataAdicao: "2026-06-08"
   }
 
 ];
