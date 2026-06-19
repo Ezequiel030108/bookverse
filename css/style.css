@@ -153,15 +153,18 @@ body::after {
   background: #fff;
   box-shadow: 0 0 12px 3px rgba(255,255,255,.9), 0 0 5px 1px var(--estrela-clara);
 }
-.meteoro-1 { top: 8%;  right: -160px; animation: meteoro 11s ease-in 2s  infinite; }
-.meteoro-2 { top: 32%; right: -160px; animation: meteoro 15s ease-in 7s  infinite; }
-.meteoro-3 { top: 60%; right: -160px; animation: meteoro 19s ease-in 12s infinite; }
+.meteoro-1 { top: 6%;  right: -180px; animation: meteoro 11s ease-in 2s  infinite; }
+.meteoro-2 { top: 26%; right: -180px; animation: meteoro 15s ease-in 7s  infinite; }
+.meteoro-3 { top: 50%; right: -180px; animation: meteoro 19s ease-in 12s infinite; }
+/* A direção do deslocamento (dx:dy) bate com o ângulo do risco (-22deg):
+   dy/dx = tan(22°) ≈ 0,40 → 52vw / 130vw. Usar vw nos dois eixos mantém
+   o ângulo igual em qualquer tela, então o rastro segue reto (sem "drift"). */
 @keyframes meteoro {
-  0%   { transform: translate(0, 0) rotate(-20deg); opacity: 0; }
-  3%   { opacity: 1; }
-  11%  { opacity: 1; }
-  16%  { transform: translate(-128vw, 62vh) rotate(-20deg); opacity: 0; }
-  100% { transform: translate(-128vw, 62vh) rotate(-20deg); opacity: 0; }
+  0%   { transform: translate(0, 0) rotate(-22deg); opacity: 0; }
+  4%   { opacity: 1; }
+  12%  { opacity: 1; }
+  17%  { transform: translate(-130vw, 52vw) rotate(-22deg); opacity: 0; }
+  100% { transform: translate(-130vw, 52vw) rotate(-22deg); opacity: 0; }
 }
 
 .topbar, .hero, main, .rodape, .modal { position: relative; z-index: 1; }

@@ -238,19 +238,20 @@ function renderizar(termoBusca) {
 
 /* ---------- Carrossel de novidades ----------
    - Swipe nativo no mobile (scroll-snap horizontal).
-   - Avança sozinho a cada INTERVALO_HERO; ao interagir (swipe, seta ou
-     bolinha) o auto-play PARA e não volta.
-   - As bolinhas acompanham o swipe em TEMPO REAL (via requestAnimationFrame),
-     sem o atraso que existia no celular.
-   - heroTravado evita que o scroll programático confunda o índice.          */
+   - Passa SOZINHO a cada INTERVALO_HERO e CONTINUA passando.
+   - Ao interagir (swipe, seta ou bolinha), o auto-play é ADIADO e só
+     volta após RETOMAR_APOS de inatividade — assim ele nunca "briga"
+     com o usuário, mas retoma quando ele para de mexer.
+   - As bolinhas acompanham o swipe em tempo real (rAF).
+   - heroTravado evita que o scroll programático confunda o índice.         */
 
 const heroNav      = document.querySelector(".hero-nav");
 const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const RETOMAR_APOS = 9000;   // inatividade até o auto-play voltar (ms)
 
 let heroIndice  = 0;
 let heroTimer   = null;
 let heroLista   = [];
-let heroAuto    = true;    // auto-play ligado até a 1ª interação manual
 let heroTravado = false;   // ignora o listener de scroll durante scroll programático
 let heroTravaTimer;
 let heroRaf     = false;
@@ -259,7 +260,6 @@ function montarHero(destaques) {
   heroLista = destaques;
   heroPalco.innerHTML = "";
   heroPontosEl.innerHTML = "";
-  heroAuto = true;
 
   if (destaques.length === 0) { hero.hidden = true; pararHero(); return; }
   hero.hidden = false;
@@ -289,7 +289,7 @@ function montarHero(destaques) {
     ponto.type = "button";
     ponto.className = "hero-ponto";
     ponto.setAttribute("aria-label", `Ir para a novidade ${i + 1}: ${livro.titulo}`);
-    ponto.addEventListener("click", () => { pausarAuto(); irParaHero(i); });
+    ponto.addEventListener("click", () => { irParaHero(i); adiarAuto(); });
     heroPontosEl.appendChild(ponto);
   });
 
@@ -298,7 +298,7 @@ function montarHero(destaques) {
 
   heroIndice = 0;
   irParaHero(0, false);
-  iniciarHeroTimer();
+  agendarAuto(INTERVALO_HERO);
 }
 
 function irParaHero(i, animar = true) {
@@ -311,7 +311,7 @@ function irParaHero(i, animar = true) {
   });
   atualizarPontos();
   clearTimeout(heroTravaTimer);
-  heroTravaTimer = setTimeout(() => { heroTravado = false; }, animar ? 600 : 60);
+  heroTravaTimer = setTimeout(() => { heroTravado = false; }, animar ? 700 : 60);
 }
 
 function atualizarPontos() {
@@ -321,25 +321,30 @@ function atualizarPontos() {
   });
 }
 
-function iniciarHeroTimer() {
+/* Agenda o próximo avanço automático; ao disparar, agenda o seguinte
+   (laço contínuo). */
+function agendarAuto(atraso) {
   pararHero();
-  if (heroAuto && heroLista.length > 1) {
-    heroTimer = setInterval(() => irParaHero(heroIndice + 1), INTERVALO_HERO);
-  }
+  if (heroLista.length <= 1) return;
+  heroTimer = setTimeout(() => {
+    irParaHero(heroIndice + 1);
+    agendarAuto(INTERVALO_HERO);
+  }, atraso);
 }
 
 function pararHero() {
-  if (heroTimer) { clearInterval(heroTimer); heroTimer = null; }
+  if (heroTimer) { clearTimeout(heroTimer); heroTimer = null; }
 }
 
-/* Para o auto-play assim que houver interação manual (e não volta). */
-function pausarAuto() {
-  if (!heroAuto) return;
-  heroAuto = false;
-  pararHero();
+/* Interação manual: empurra o próximo avanço para daqui a RETOMAR_APOS.
+   Cada nova interação reinicia essa contagem — sem "briga" com o usuário. */
+function adiarAuto() {
+  agendarAuto(RETOMAR_APOS);
 }
 
-/* Indicador acompanha o swipe em tempo real (rAF — sem atraso no celular). */
+/* Bolinhas acompanham o swipe em tempo real (sem atraso no celular).
+   Não mexe no auto-play aqui: o adiamento vem dos eventos de toque/scroll
+   abaixo (assim o scroll do próprio auto-play não se auto-adia). */
 heroJanela.addEventListener("scroll", () => {
   if (heroTravado || heroRaf) return;
   heroRaf = true;
@@ -352,18 +357,18 @@ heroJanela.addEventListener("scroll", () => {
   });
 }, { passive: true });
 
-/* Qualquer arraste/toque/scroll manual no carrossel encerra o auto-play. */
+/* Início de qualquer interação manual adia o auto-play. */
 ["pointerdown", "touchstart", "wheel"].forEach(ev =>
-  heroJanela.addEventListener(ev, pausarAuto, { passive: true })
+  heroJanela.addEventListener(ev, adiarAuto, { passive: true })
 );
 
-/* Setas (sempre param o auto-play). */
-document.querySelector(".hero-ant").addEventListener("click", () => { pausarAuto(); irParaHero(heroIndice - 1); });
-document.querySelector(".hero-prox").addEventListener("click", () => { pausarAuto(); irParaHero(heroIndice + 1); });
+/* Setas: navegam e adiam (não param de vez). */
+document.querySelector(".hero-ant").addEventListener("click", () => { irParaHero(heroIndice - 1); adiarAuto(); });
+document.querySelector(".hero-prox").addEventListener("click", () => { irParaHero(heroIndice + 1); adiarAuto(); });
 
-/* No desktop, o mouse por cima pausa temporariamente (só enquanto é automático). */
-hero.addEventListener("mouseenter", () => { if (heroAuto) pararHero(); });
-hero.addEventListener("mouseleave", () => { if (heroAuto) iniciarHeroTimer(); });
+/* No desktop, o mouse por cima pausa; ao sair, retoma. */
+hero.addEventListener("mouseenter", pararHero);
+hero.addEventListener("mouseleave", () => agendarAuto(INTERVALO_HERO));
 
 /* ---------- Busca: sincroniza os dois campos (desktop + mobile) ---------- */
 
