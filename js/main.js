@@ -236,12 +236,13 @@ function renderizar(termoBusca) {
   });
 }
 
-/* ---------- Carrossel de novidades (auto-play estilo "stories") ----------
+/* ---------- Carrossel de novidades ----------
    - Swipe nativo no mobile (scroll-snap horizontal).
-   - Avança sozinho a cada INTERVALO_HERO; a barrinha ativa enche no tempo.
-   - Assim que o usuário interage (swipe, seta ou barra), o auto-play PARA.
-   - heroTravado evita que o scroll programático confunda o índice (bug das
-     setas/indicadores).                                                      */
+   - Avança sozinho a cada INTERVALO_HERO; ao interagir (swipe, seta ou
+     bolinha) o auto-play PARA e não volta.
+   - As bolinhas acompanham o swipe em TEMPO REAL (via requestAnimationFrame),
+     sem o atraso que existia no celular.
+   - heroTravado evita que o scroll programático confunda o índice.          */
 
 const heroNav      = document.querySelector(".hero-nav");
 const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -251,14 +252,14 @@ let heroTimer   = null;
 let heroLista   = [];
 let heroAuto    = true;    // auto-play ligado até a 1ª interação manual
 let heroTravado = false;   // ignora o listener de scroll durante scroll programático
-let heroTravaTimer, heroScrollTimer;
+let heroTravaTimer;
+let heroRaf     = false;
 
 function montarHero(destaques) {
   heroLista = destaques;
   heroPalco.innerHTML = "";
   heroPontosEl.innerHTML = "";
   heroAuto = true;
-  heroPontosEl.classList.remove("manual");
 
   if (destaques.length === 0) { hero.hidden = true; pararHero(); return; }
   hero.hidden = false;
@@ -283,14 +284,13 @@ function montarHero(destaques) {
     slide.querySelector(".hero-capa-wrap").addEventListener("click", () => abrirModal(livro));
     heroPalco.appendChild(slide);
 
-    // Barra de progresso (estilo stories)
-    const barra = document.createElement("button");
-    barra.type = "button";
-    barra.className = "hero-prog";
-    barra.setAttribute("aria-label", `Ir para a novidade ${i + 1}: ${livro.titulo}`);
-    barra.innerHTML = `<span class="hero-prog-fill"></span>`;
-    barra.addEventListener("click", () => { pausarAuto(); irParaHero(i); });
-    heroPontosEl.appendChild(barra);
+    // Bolinha indicadora
+    const ponto = document.createElement("button");
+    ponto.type = "button";
+    ponto.className = "hero-ponto";
+    ponto.setAttribute("aria-label", `Ir para a novidade ${i + 1}: ${livro.titulo}`);
+    ponto.addEventListener("click", () => { pausarAuto(); irParaHero(i); });
+    heroPontosEl.appendChild(ponto);
   });
 
   // Com 1 só novidade, não precisa de navegação
@@ -309,40 +309,21 @@ function irParaHero(i, animar = true) {
     left: heroIndice * heroJanela.clientWidth,
     behavior: (animar && !semMovimento) ? "smooth" : "auto"
   });
-  atualizarProgresso();
+  atualizarPontos();
   clearTimeout(heroTravaTimer);
-  heroTravaTimer = setTimeout(() => { heroTravado = false; }, animar ? 650 : 60);
+  heroTravaTimer = setTimeout(() => { heroTravado = false; }, animar ? 600 : 60);
 }
 
-function atualizarProgresso() {
-  [...heroPontosEl.children].forEach((barra, i) => {
-    const fill = barra.querySelector(".hero-prog-fill");
-    if (!fill) return;
-    barra.setAttribute("aria-current", i === heroIndice ? "true" : "false");
-    if (i < heroIndice) {
-      fill.style.transition = "none";
-      fill.style.width = "100%";
-    } else if (i > heroIndice) {
-      fill.style.transition = "none";
-      fill.style.width = "0%";
-    } else if (heroAuto && !semMovimento) {
-      // a barra ativa enche ao longo do intervalo
-      fill.style.transition = "none";
-      fill.style.width = "0%";
-      void fill.offsetWidth;                       // reflow p/ reiniciar a animação
-      fill.style.transition = `width ${INTERVALO_HERO}ms linear`;
-      fill.style.width = "100%";
-    } else {
-      fill.style.transition = "none";
-      fill.style.width = "100%";
-    }
+function atualizarPontos() {
+  [...heroPontosEl.children].forEach((p, i) => {
+    p.classList.toggle("ativo", i === heroIndice);
+    p.setAttribute("aria-current", i === heroIndice ? "true" : "false");
   });
 }
 
 function iniciarHeroTimer() {
   pararHero();
   if (heroAuto && heroLista.length > 1) {
-    atualizarProgresso();                          // (re)inicia a barra ativa
     heroTimer = setInterval(() => irParaHero(heroIndice + 1), INTERVALO_HERO);
   }
 }
@@ -356,23 +337,19 @@ function pausarAuto() {
   if (!heroAuto) return;
   heroAuto = false;
   pararHero();
-  heroPontosEl.classList.add("manual");
-  atualizarProgresso();
 }
 
-/* Sincroniza o índice quando o usuário desliza (ignora scroll programático). */
+/* Indicador acompanha o swipe em tempo real (rAF — sem atraso no celular). */
 heroJanela.addEventListener("scroll", () => {
-  if (heroTravado) return;
-  clearTimeout(heroScrollTimer);
-  heroScrollTimer = setTimeout(() => {
+  if (heroTravado || heroRaf) return;
+  heroRaf = true;
+  requestAnimationFrame(() => {
+    heroRaf = false;
     const w = heroJanela.clientWidth;
     if (!w) return;
-    const idx = Math.round(heroJanela.scrollLeft / w);
-    if (idx >= 0 && idx < heroLista.length && idx !== heroIndice) {
-      heroIndice = idx;
-      atualizarProgresso();
-    }
-  }, 90);
+    const idx = Math.max(0, Math.min(heroLista.length - 1, Math.round(heroJanela.scrollLeft / w)));
+    if (idx !== heroIndice) { heroIndice = idx; atualizarPontos(); }
+  });
 }, { passive: true });
 
 /* Qualquer arraste/toque/scroll manual no carrossel encerra o auto-play. */

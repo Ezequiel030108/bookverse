@@ -89,38 +89,80 @@ body::before, body::after {
 }
 body::before {
   background-image:
-    radial-gradient(1.5px 1.5px at 12% 18%, var(--estrela), transparent 50%),
-    radial-gradient(2px   2px   at 78% 8%,  var(--estrela), transparent 50%),
-    radial-gradient(1.5px 1.5px at 42% 88%, var(--estrela-clara), transparent 50%),
-    radial-gradient(1px 1px at 25% 50%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 60% 35%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 88% 62%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 33% 73%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 7%  82%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 95% 28%, #fff, transparent 50%),
-    radial-gradient(.5px .5px at 18% 30%, rgba(255,255,255,.85), transparent 50%),
-    radial-gradient(.5px .5px at 50% 12%, rgba(255,255,255,.7),  transparent 50%),
-    radial-gradient(.5px .5px at 67% 95%, rgba(255,255,255,.85), transparent 50%),
-    radial-gradient(.5px .5px at 82% 45%, rgba(255,255,255,.7),  transparent 50%),
-    radial-gradient(.5px .5px at 3%  62%, rgba(255,255,255,.85), transparent 50%),
-    radial-gradient(.5px .5px at 38% 5%,  rgba(255,255,255,.7),  transparent 50%);
-  background-size: 480px 480px;
+    radial-gradient(1.8px 1.8px at 12% 18%, var(--estrela), transparent 55%),
+    radial-gradient(2.3px 2.3px at 78% 8%,  var(--estrela), transparent 55%),
+    radial-gradient(1.8px 1.8px at 42% 88%, var(--estrela-clara), transparent 55%),
+    radial-gradient(1.3px 1.3px at 25% 50%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 60% 35%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 88% 62%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 33% 73%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 7%  82%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 95% 28%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 53% 60%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 70% 78%, #fff, transparent 55%),
+    radial-gradient(.8px .8px at 18% 30%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 50% 12%, rgba(255,255,255,.75), transparent 55%),
+    radial-gradient(.8px .8px at 67% 95%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 82% 45%, rgba(255,255,255,.75), transparent 55%),
+    radial-gradient(.8px .8px at 3%  62%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 38% 5%,  rgba(255,255,255,.75), transparent 55%);
+  background-size: 440px 440px;
   background-repeat: repeat;
   animation: cintilar 4s ease-in-out infinite alternate;
 }
 body::after {
   background-image:
-    radial-gradient(1px 1px at 20% 22%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 55% 80%, #fff, transparent 50%),
-    radial-gradient(.8px .8px at 75% 40%, var(--lavanda-clara), transparent 50%),
-    radial-gradient(.8px .8px at 40% 60%, #fff, transparent 50%),
-    radial-gradient(.5px .5px at 88% 15%, #fff, transparent 50%);
-  background-size: 350px 350px;
+    radial-gradient(1.3px 1.3px at 20% 22%, #fff, transparent 55%),
+    radial-gradient(1.3px 1.3px at 55% 80%, #fff, transparent 55%),
+    radial-gradient(1px 1px at 75% 40%, var(--lavanda-clara), transparent 55%),
+    radial-gradient(1px 1px at 40% 60%, #fff, transparent 55%),
+    radial-gradient(1px 1px at 88% 15%, #fff, transparent 55%),
+    radial-gradient(.8px .8px at 10% 45%, #fff, transparent 55%);
+  background-size: 320px 320px;
   background-repeat: repeat;
-  opacity: .8;
+  opacity: .85;
   animation: cintilar 5.5s ease-in-out infinite alternate-reverse;
 }
-@keyframes cintilar { from { opacity: .55; } to { opacity: 1; } }
+@keyframes cintilar { from { opacity: .6; } to { opacity: 1; } }
+
+/* Meteoros que cruzam o fundo do site de vez em quando */
+.ceu-global {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.meteoro {
+  position: absolute;
+  width: 150px;
+  height: 2px;
+  background: linear-gradient(90deg, #fff 0%, rgba(216,202,255,.6) 30%, rgba(255,255,255,0) 80%);
+  border-radius: 99px;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.85));
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.meteoro::after {
+  content: "";
+  position: absolute;
+  left: -3px; top: 50%;
+  margin-top: -3.5px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px 3px rgba(255,255,255,.9), 0 0 5px 1px var(--estrela-clara);
+}
+.meteoro-1 { top: 8%;  right: -160px; animation: meteoro 11s ease-in 2s  infinite; }
+.meteoro-2 { top: 32%; right: -160px; animation: meteoro 15s ease-in 7s  infinite; }
+.meteoro-3 { top: 60%; right: -160px; animation: meteoro 19s ease-in 12s infinite; }
+@keyframes meteoro {
+  0%   { transform: translate(0, 0) rotate(-20deg); opacity: 0; }
+  3%   { opacity: 1; }
+  11%  { opacity: 1; }
+  16%  { transform: translate(-128vw, 62vh) rotate(-20deg); opacity: 0; }
+  100% { transform: translate(-128vw, 62vh) rotate(-20deg); opacity: 0; }
+}
 
 .topbar, .hero, main, .rodape, .modal { position: relative; z-index: 1; }
 
@@ -253,23 +295,32 @@ body::after {
 .link-instagram:active { transform: scale(.93); }
 .ig-label { display: none; }
 
-/* Linha de busca expansível no mobile */
+/* Linha de busca que surge no topo (mobile).
+   Fica em position:absolute (não empurra o conteúdo) e anima com
+   transform/opacity — fluido, sem o "travamento" do max-height. */
 .topbar-busca-mobile {
-  max-width: 1320px;
-  margin: 0 auto;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  overflow: hidden;
-  max-height: 0;
+  padding: 8px 14px 12px;
+  background: linear-gradient(180deg, rgba(8, 4, 26, .97), rgba(8, 4, 26, .86));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(184, 158, 255, .12);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .35);
+  transform: translateY(-14px);
   opacity: 0;
-  padding: 0 14px;
-  transition: max-height .28s ease, opacity .22s ease, padding .28s ease;
+  pointer-events: none;
+  transition: transform .28s cubic-bezier(.22, .61, .36, 1), opacity .2s ease;
 }
 .topbar-busca-mobile.aberta {
-  max-height: 64px;
+  transform: translateY(0);
   opacity: 1;
-  padding: 0 14px 12px;
+  pointer-events: auto;
 }
 .btn-cancelar {
   color: var(--lavanda-clara);
@@ -371,7 +422,9 @@ body::after {
   box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(184, 158, 255, .16);
 }
 
-/* Céu estrelado do hero — fica atrás dos slides e NÃO rola com o swipe */
+/* Céu estrelado do hero — PROTAGONISTA: estrelas grandes, espalhadas,
+   brilhando e pulsando, para a seção de novidades chamar atenção.
+   Fica atrás dos slides e NÃO rola com o swipe. */
 .hero-ceu {
   position: absolute;
   inset: 0;
@@ -380,68 +433,84 @@ body::after {
   background-color: #0a0628;
   background-repeat: no-repeat;
   background-image:
-    radial-gradient(ellipse 80% 65% at 50% -12%, rgba(74,43,181,.5), transparent 60%),
-    radial-gradient(ellipse 70% 90% at 90% 118%, rgba(255,122,217,.14), transparent 62%),
-    radial-gradient(1.7px 1.7px at 10% 20%, #fff, transparent 50%),
-    radial-gradient(1.7px 1.7px at 82% 14%, var(--estrela), transparent 50%),
-    radial-gradient(1.5px 1.5px at 65% 72%, #fff, transparent 50%),
-    radial-gradient(1.5px 1.5px at 24% 82%, var(--estrela-clara), transparent 50%),
-    radial-gradient(1.3px 1.3px at 45% 33%, #fff, transparent 50%),
-    radial-gradient(1.3px 1.3px at 93% 56%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 33% 55%, rgba(255,255,255,.9), transparent 50%),
-    radial-gradient(1px 1px at 72% 40%, rgba(255,255,255,.85), transparent 50%),
-    radial-gradient(1px 1px at 15% 62%, rgba(255,255,255,.8), transparent 50%),
-    radial-gradient(1px 1px at 56% 90%, rgba(255,255,255,.85), transparent 50%),
-    radial-gradient(.8px .8px at 5% 40%, rgba(255,255,255,.7), transparent 50%),
-    radial-gradient(.8px .8px at 40% 10%, rgba(255,255,255,.7), transparent 50%),
-    radial-gradient(.8px .8px at 78% 84%, rgba(255,255,255,.7), transparent 50%),
-    radial-gradient(.8px .8px at 97% 28%, rgba(255,255,255,.65), transparent 50%);
+    radial-gradient(ellipse 85% 70% at 50% -14%, rgba(74,43,181,.55), transparent 60%),
+    radial-gradient(ellipse 70% 90% at 90% 118%, rgba(255,122,217,.16), transparent 62%),
+    radial-gradient(2.4px 2.4px at 12% 22%, #fff, transparent 55%),
+    radial-gradient(2.4px 2.4px at 80% 16%, var(--estrela), transparent 55%),
+    radial-gradient(2.2px 2.2px at 64% 74%, #fff, transparent 55%),
+    radial-gradient(2.2px 2.2px at 26% 80%, var(--estrela-clara), transparent 55%),
+    radial-gradient(2px 2px at 45% 33%, #fff, transparent 55%),
+    radial-gradient(2px 2px at 92% 58%, var(--estrela), transparent 55%),
+    radial-gradient(1.8px 1.8px at 33% 55%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 72% 40%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 15% 60%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 56% 90%, #fff, transparent 55%),
+    radial-gradient(1.4px 1.4px at 6% 38%, rgba(255,255,255,.95), transparent 55%),
+    radial-gradient(1.4px 1.4px at 40% 12%, rgba(255,255,255,.95), transparent 55%),
+    radial-gradient(1.4px 1.4px at 86% 82%, rgba(255,255,255,.9), transparent 55%),
+    radial-gradient(1.4px 1.4px at 97% 30%, rgba(255,255,255,.9), transparent 55%),
+    radial-gradient(1.2px 1.2px at 50% 6%, rgba(255,255,255,.85), transparent 55%);
 }
-/* camada extra de estrelinhas que cintilam devagar */
-.hero-ceu::before {
+/* duas camadas de estrelas que pulsam (twinkle) em ritmos diferentes */
+.hero-ceu::before,
+.hero-ceu::after {
   content: "";
   position: absolute;
   inset: 0;
   background-repeat: no-repeat;
+}
+.hero-ceu::before {
   background-image:
-    radial-gradient(1px 1px at 20% 30%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 60% 22%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 85% 66%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 35% 76%, #fff, transparent 50%),
-    radial-gradient(1px 1px at 50% 48%, #fff, transparent 50%);
-  animation: cintilar 4.5s ease-in-out infinite alternate;
+    radial-gradient(1.8px 1.8px at 20% 30%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 60% 24%, var(--estrela-clara), transparent 55%),
+    radial-gradient(1.8px 1.8px at 85% 66%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 35% 76%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 50% 50%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 10% 50%, #fff, transparent 55%);
+  animation: pulsarCeu 3.6s ease-in-out infinite alternate;
 }
+.hero-ceu::after {
+  background-image:
+    radial-gradient(1.6px 1.6px at 28% 14%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 74% 30%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 90% 48%, var(--estrela), transparent 55%),
+    radial-gradient(1.6px 1.6px at 48% 86%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 18% 88%, #fff, transparent 55%);
+  animation: pulsarCeu 2.7s ease-in-out .6s infinite alternate;
+}
+@keyframes pulsarCeu { from { opacity: .35; } to { opacity: 1; } }
 
-/* Cometas que cruzam o céu de vez em quando */
-.cometa {
+/* Estrelas grandes que brilham e pulsam (focos de atenção) */
+.estrela-brilho {
   position: absolute;
-  width: 170px;
-  height: 2px;
-  background: linear-gradient(90deg, #fff 0%, rgba(216,202,255,.7) 28%, rgba(255,255,255,0) 78%);
-  border-radius: 99px;
-  filter: drop-shadow(0 0 7px rgba(255,255,255,.9));
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-.cometa::after {
-  content: "";
-  position: absolute;
-  left: -3px; top: 50%;
-  margin-top: -4px;
-  width: 8px; height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 14px 4px rgba(255,255,255,.95), 0 0 6px 2px var(--estrela-clara);
+  box-shadow: 0 0 9px 2px rgba(255,255,255,.95), 0 0 18px 5px rgba(255,217,102,.5);
+  animation: pulsarEstrela 3.2s ease-in-out infinite;
+  pointer-events: none;
 }
-.cometa-1 { top: 12%; right: -150px; animation: cometa 12s ease-in 4s infinite; }
-.cometa-2 { top: 42%; right: -150px; animation: cometa 17s ease-in 10s infinite; }
-@keyframes cometa {
-  0%   { transform: translate(0, 0) rotate(-18deg); opacity: 0; }
-  4%   { opacity: 1; }
-  12%  { opacity: 1; }
-  17%  { transform: translate(-122vw, 40vw) rotate(-18deg); opacity: 0; }
-  100% { transform: translate(-122vw, 40vw) rotate(-18deg); opacity: 0; }
+/* raios em cruz que cintilam junto */
+.estrela-brilho::before,
+.estrela-brilho::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+}
+.estrela-brilho::before { width: 1px; height: 24px; background: linear-gradient(transparent, rgba(255,255,255,.75), transparent); }
+.estrela-brilho::after  { width: 24px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); }
+.estrela-brilho.e1 { top: 16%; left: 14%; animation-delay: 0s; }
+.estrela-brilho.e2 { top: 23%; left: 84%; width: 6px; height: 6px; animation-delay: .8s; }
+.estrela-brilho.e3 { top: 68%; left: 22%; width: 4px; height: 4px; animation-delay: 1.6s; }
+.estrela-brilho.e4 { top: 80%; left: 78%; animation-delay: .4s; }
+.estrela-brilho.e5 { top: 40%; left: 62%; width: 4px; height: 4px; animation-delay: 2.1s; }
+.estrela-brilho.e6 { top: 11%; left: 52%; width: 6px; height: 6px; animation-delay: 1.2s; }
+.estrela-brilho.e7 { top: 58%; left: 93%; width: 4px; height: 4px; animation-delay: 2.6s; }
+@keyframes pulsarEstrela {
+  0%, 100% { transform: scale(.6);  opacity: .5; }
+  50%      { transform: scale(1.3); opacity: 1; }
 }
 
 /* Janela = clipa e habilita o swipe horizontal com snap */
@@ -564,28 +633,18 @@ body::after {
   transition: background .15s ease, transform .12s ease;
 }
 .hero-seta:active { transform: scale(.9); }
-/* Indicador estilo "stories": barrinhas que enchem no auto-play */
-.hero-pontos {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-  flex: 0 1 320px;
-}
-.hero-prog {
-  flex: 1 1 18px;
-  max-width: 44px;
-  height: 4px;
+/* Indicador: bolinhas; a ativa vira uma pílula dourada (acompanha o swipe) */
+.hero-pontos { display: flex; gap: 8px; align-items: center; justify-content: center; }
+.hero-ponto {
+  width: 8px;
+  height: 8px;
   padding: 0;
-  border-radius: 99px;
-  background: rgba(184, 158, 255, .26);
-  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(184, 158, 255, .35);
+  transition: width .25s ease, background .25s ease;
 }
-.hero-prog-fill {
-  display: block;
-  height: 100%;
-  width: 0%;
-  border-radius: 99px;
+.hero-ponto.ativo {
+  width: 26px;
   background: linear-gradient(90deg, var(--estrela), var(--estrela-clara));
 }
 
@@ -1041,11 +1100,6 @@ main {
   .hero-capa-wrap { width: 224px; flex-shrink: 0; }
   .hero-texto { max-width: 60ch; }
   .hero-acoes { justify-content: flex-start; }
-  .hero-veu {
-    background:
-      radial-gradient(70% 120% at 22% 50%, rgba(74,43,181,.32), transparent 58%),
-      linear-gradient(90deg, rgba(8,4,26,.92) 0%, rgba(8,4,26,.7) 60%, rgba(8,4,26,.55) 100%);
-  }
 
   .fileira-cabecalho { padding: 0 24px; }
   .fileira-trilho { padding-left: 24px; padding-right: 24px; scroll-padding-left: 24px; }
