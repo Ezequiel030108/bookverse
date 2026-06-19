@@ -559,11 +559,11 @@ body::after {
   position: relative;
   scroll-snap-align: center;
   scroll-snap-stop: always;
-  min-height: 440px;
+  min-height: 348px;
   display: flex;
 }
 
-/* Mobile-first: coluna centralizada, capa GRANDE em primeiro plano */
+/* Mobile-first: coluna centralizada, capa em primeiro plano */
 .hero-conteudo {
   position: relative;
   z-index: 2;
@@ -572,12 +572,12 @@ body::after {
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 16px;
-  padding: 26px 20px;
+  gap: 12px;
+  padding: 18px 20px;
   width: 100%;
 }
 .hero-capa-wrap {
-  width: clamp(150px, 44vw, 196px);
+  width: clamp(124px, 36vw, 168px);
   aspect-ratio: 2 / 3;
   border-radius: 12px;
   overflow: hidden;
@@ -606,7 +606,7 @@ body::after {
   overflow: hidden;
 }
 .hero-livro-autor {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   font-style: italic;
   color: var(--lavanda-clara);
   font-size: .9rem;
@@ -1109,18 +1109,18 @@ main {
   }
   .ig-label { display: inline; }
 
-  /* Desktop: vitrine horizontal — capa grande à esquerda, texto à direita */
+  /* Desktop: vitrine horizontal — capa à esquerda, texto à direita */
   .hero { margin-top: 18px; }
-  .hero-slide { min-height: 380px; }
+  .hero-slide { min-height: 320px; }
   .hero-conteudo {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     text-align: left;
-    gap: 44px;
-    padding: 40px 52px;
+    gap: 40px;
+    padding: 30px 48px;
   }
-  .hero-capa-wrap { width: 224px; flex-shrink: 0; }
+  .hero-capa-wrap { width: 196px; flex-shrink: 0; }
   .hero-texto { max-width: 60ch; }
   .hero-acoes { justify-content: flex-start; }
 
@@ -1141,8 +1141,8 @@ main {
 
 @media (min-width: 1000px) {
   :root { --card-largura: 180px; }
-  .hero-slide { min-height: 460px; }
-  .hero-capa-wrap { width: 264px; }
+  .hero-slide { min-height: 360px; }
+  .hero-capa-wrap { width: 228px; }
   .fileira-grade .grade-livros { grid-template-columns: repeat(5, 1fr); }
 }
 

@@ -24,8 +24,13 @@ const ORDEM_GENEROS = [
 const DIAS_NOVIDADE  = 7;
 const ALVO_DESTAQUES = 6;
 const MAX_DESTAQUES  = 10;
-/* Intervalo do auto-play do carrossel (ms) — estilo "stories". */
-const INTERVALO_HERO = 5000;
+/* Intervalo do auto-play do carrossel (ms) — estilo "stories".
+   PRIMEIRO_AUTO é mais curto para o usuário perceber logo que há mais
+   novidades ao entrar. FIXAR_ULTIMO sempre aparece por último (enquanto
+   estiver entre os destaques). */
+const INTERVALO_HERO = 3500;
+const PRIMEIRO_AUTO  = 2200;
+const FIXAR_ULTIMO   = "O Anticristo";
 
 /* ---------- Referências ---------- */
 const catalogo       = document.getElementById("catalogo");
@@ -282,7 +287,12 @@ function renderizar(termoBusca) {
   // O carrossel do topo é a ÚNICA seção de novidades.
   const { destaques, temSemana } = calcularDestaques();
   LIVROS_DESTAQUE = new Set(destaques);            // controla o selo "Novo" nos cards
-  montarHero(embaralhar(destaques), temSemana);    // ordem nova a cada carregamento
+
+  const ordem = embaralhar(destaques);             // ordem nova a cada carregamento
+  // "O Anticristo" sempre por último (enquanto estiver entre os destaques)
+  const iFixar = ordem.findIndex(l => l.titulo === FIXAR_ULTIMO);
+  if (iFixar !== -1) ordem.push(ordem.splice(iFixar, 1)[0]);
+  montarHero(ordem, temSemana);
 
   const generos = [...ORDEM_GENEROS];
   LIVROS.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
@@ -361,7 +371,7 @@ function montarHero(destaques, temSemana = true) {
 
   heroIndice = 0;
   irParaHero(0, false);
-  agendarAuto(INTERVALO_HERO);
+  agendarAuto(PRIMEIRO_AUTO);   // primeiro avanço mais rápido (1ª impressão)
 }
 
 function irParaHero(i, animar = true) {
