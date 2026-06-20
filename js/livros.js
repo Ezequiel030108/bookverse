@@ -375,18 +375,6 @@ const LIVROS = [
     dataAdicao: "2026-06-17"
   },
 
-  {
-    titulo: "A Arte da Guerra",
-    autor: "Sun Tzu",
-    genero: "Filosofia",
-    preco: "R$ 20,00",
-    estoque: 1,
-    estado: "Bom estado",
-    sinopse: "Escrito há mais de 2.500 anos pelo general chinês Sun Tzu, 'A Arte da Guerra' reúne em treze capítulos os princípios atemporais da estratégia, da liderança e da tomada de decisão. Mais do que um tratado militar, tornou-se leitura indispensável para quem quer vencer desafios com inteligência — nos negócios, na carreira e na vida. Edição com a obra completa.",
-    imagem: "",
-    dataAdicao: "2026-06-20"
-  },
-
   /* =================== ROMANCE & LITERATURA =================== */
 
   {
