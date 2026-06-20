@@ -97,8 +97,8 @@ const LIVROS = [
     autor: "T. Harv Eker",
     genero: "Finanças & Negócios",
     preco: "R$ 30,00",
-    estoque: 2,
-    estado: "Bom estado",
+    estoque: 3,
+    estado: "Ótimo estado",
     sinopse: "T. Harv Eker mostra como o 'modelo de dinheiro' que carregamos desde a infância determina nossa vida financeira — e ensina a reprogramar a mente para a prosperidade e a riqueza.",
     imagem: "img/os-segredos-da-mente-milionaria.jpg"
   },
@@ -385,6 +385,18 @@ const LIVROS = [
     sinopse: "Uma das obras mais provocadoras da filosofia ocidental, 'Além do Bem e do Mal' convida o leitor a questionar a moral vigente e os valores estabelecidos pela tradição. Nietzsche desafia os filósofos dogmáticos, propõe uma reavaliação de todas as crenças e explora temas como a vontade de poder, a religião e a natureza da consciência humana. Leitura essencial para quem quer pensar de forma livre e radical.",
     imagem: "img/nietzsche-alem-bem-mal.jpg",
     dataAdicao: "2026-06-16"
+  },
+
+  {
+    titulo: "A Arte da Guerra",
+    autor: "Sun Tzu",
+    genero: "Filosofia",
+    preco: "R$ 20,00",
+    estoque: 1,
+    estado: "Bom estado",
+    sinopse: "Escrito há mais de 2.500 anos pelo general chinês Sun Tzu, 'A Arte da Guerra' reúne em treze capítulos os princípios atemporais da estratégia, da liderança e da tomada de decisão. Mais do que um tratado militar, tornou-se leitura indispensável para quem quer vencer desafios com inteligência — nos negócios, na carreira e na vida. Edição com a obra completa.",
+    imagem: "",
+    dataAdicao: "2026-06-20"
   },
 
   /* =================== ROMANCE & LITERATURA =================== */
