@@ -14,7 +14,8 @@ const ORDEM_GENEROS = [
   "Filosofia",
   "Clássicos da Literatura",
   "Romance & Literatura",
-  "Mangás"
+  "Mangás",
+  "Quadrinhos"
 ];
 
 /* Novidades = livros adicionados nos últimos DIAS_NOVIDADE dias (o código

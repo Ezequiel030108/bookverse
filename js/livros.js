@@ -387,6 +387,140 @@ const LIVROS = [
     sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
     imagem: "img/a-batalha-do-apocalipse.jpg",
     dataAdicao: "2026-06-08"
+  },
+
+  /* ===================== NOVOS LIVROS — JUN/2026 ===================== */
+
+  {
+    titulo: "O Curioso Caso de Benjamin Button",
+    autor: "F. Scott Fitzgerald",
+    genero: "Clássicos da Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Benjamin Button nasce como um velho de setenta anos e envelhece ao contrário, ficando mais jovem a cada década. Este conto fantástico de F. Scott Fitzgerald é uma reflexão poética sobre o tempo, a identidade e o que significa viver uma vida fora da ordem estabelecida pelo mundo.",
+    imagem: "img/o-curioso-caso-de-benjamin-button.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "A Cirurgiã",
+    autor: "Leslie Wolfe",
+    genero: "Romance & Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Uma cirurgiã talentosa se vê no centro de um suspense psicológico perturbador. Leslie Wolfe constrói uma narrativa intensa e envolvente que prende o leitor do início ao fim, explorando segredos, manipulação e os limites da mente humana. Um suspense totalmente envolvente que fará você correr pelas páginas até o final.",
+    imagem: "img/a-cirurgia.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "Frankenstein",
+    autor: "Mary Shelley",
+    genero: "Clássicos da Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "O jovem cientista Victor Frankenstein cria, em sua ambição desmedida, um ser a partir de partes de cadáveres. Ao dar vida à criatura, foge horrorizado, desencadeando uma tragédia que perseguirá os dois para sempre. Considerado o primeiro romance de ficção científica, Frankenstein é uma obra atemporal sobre os limites da ciência e as responsabilidades do criador.",
+    imagem: "img/frankenstein.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "O Médico e o Monstro",
+    autor: "Robert Louis Stevenson",
+    genero: "Clássicos da Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "O respeitável Dr. Jekyll desenvolve uma poção que libera seu lado sombrio na forma do temível Mr. Hyde. Um clássico da literatura vitoriana que explora a dualidade da natureza humana e o conflito entre o bem e o mal que habita cada pessoa.",
+    imagem: "img/o-medico-e-o-monstro.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "O Chamado de Cthulhu e Outros Contos",
+    autor: "H.P. Lovecraft",
+    genero: "Clássicos da Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Uma coletânea dos contos mais célebres de H.P. Lovecraft, incluindo a obra que definiu o gênero do horror cósmico. Em 'O Chamado de Cthulhu', um investigador descobre pistas de um culto secreto ligado a uma entidade adormecida no fundo do oceano, capaz de enlouquecer qualquer mortal que a contemple.",
+    imagem: "img/o-chamado-de-cthulhu.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "O Corvo e Contos Extraordinários",
+    autor: "Edgar Allan Poe",
+    genero: "Clássicos da Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Uma seleção das obras mais icônicas do mestre do macabro, incluindo o poema 'O Corvo' e contos como 'O Coração Delator' e 'A Queda da Casa de Usher'. Edgar Allan Poe criou um universo de horror psicológico, mistério e beleza sombria que influencia a literatura até hoje.",
+    imagem: "img/o-corvo-e-contos-extraordinarios.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "O Príncipe Cruel",
+    autor: "Holly Black",
+    genero: "Romance & Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Jude foi levada para o mundo das fadas quando criança e cresceu tentando conquistar seu lugar entre os imortais. Com ambição e inteligência, ela disputa poder com o arrogante príncipe Cardan. O primeiro livro da trilogia Folk of the Air é uma fantasia intensa sobre traição, desejo e o preço do poder.",
+    imagem: "img/o-principe-cruel.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "Saboroso Cadáver",
+    autor: "Agustina Bazterrica",
+    genero: "Romance & Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Em um futuro distópico onde os animais transmitem um vírus mortal, o consumo de carne humana é legalizado e institucionalizado. Marcos trabalha nessa indústria e tenta manter sua humanidade num mundo que a perdeu. Um romance visceral e perturbador da argentina Agustina Bazterrica, vencedor do Prêmio Clarín de Literatura.",
+    imagem: "img/saboroso-cadaver.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "Your Name.",
+    autor: "Makoto Shinkai",
+    genero: "Romance & Literatura",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Mitsuha, uma garota de uma cidade rural, e Taki, um rapaz de Tóquio, acordam certo dia nos corpos um do outro. O que começa como uma conexão estranha vai se transformando em algo profundo e inevitável. Baseado no animê de maior bilheteria da história do Japão, é um romance sobre destino, saudade e amor que transcende o tempo.",
+    imagem: "img/your-name.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "The Promised Neverland – Vol. 1",
+    autor: "Kaiu Shirai / Posuka Demizu",
+    genero: "Mangás",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Emma, Norman e Ray vivem numa adorável casa de campo com outras crianças, cuidadas por uma gentil 'Mamãe'. Mas quando descobrem a terrível verdade sobre o seu lar, o que parecia um paraíso se revela um pesadelo. O primeiro volume de um dos mangás de suspense mais aclamados dos últimos anos.",
+    imagem: "img/the-promised-neverland-1.jpg",
+    dataAdicao: "2026-06-24"
+  },
+
+  {
+    titulo: "Os Fabulosos X-Men – N.º 1",
+    autor: "Marvel / Panini",
+    genero: "Quadrinhos",
+    preco: "A definir",
+    estoque: 1,
+    estado: "Novo, lacrado",
+    sinopse: "Renascidos das cinzas, os X-Men iniciam uma nova era! Em 'Um Novo Começo', a equipe mais famosa dos mutantes enfrenta novos desafios num mundo em transformação. O número inaugural de uma nova série que redefine os limites dos heróis da Marvel.",
+    imagem: "img/os-fabulosos-x-men-1.jpg",
+    dataAdicao: "2026-06-24"
   }
 
 ];
