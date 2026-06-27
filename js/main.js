@@ -8,12 +8,12 @@
 const INSTAGRAM_USUARIO = "mybookverse.pb";
 
 const ORDEM_GENEROS = [
+  "Clássicos da Literatura",
+  "Romance & Literatura",
   "Finanças & Negócios",
   "Autoajuda & Desenvolvimento Pessoal",
   "Ciência & Curiosidades",
   "Filosofia",
-  "Clássicos da Literatura",
-  "Romance & Literatura",
   "Suspense & Terror",
   "Mangás"
 ];
@@ -138,6 +138,85 @@ function capaHTML(livro, lazy = true) {
 
 function disponivel(livro) { return livro.estoque > 0; }
 
+/* ---------- Promoção (configurada em js/livros.js) ----------
+   Liga e desliga sozinha pelas datas de PROMOCAO. Para testar antes da
+   data, abra o site com ?promo=teste no final do endereço. */
+
+function promocaoAtiva() {
+  if (typeof PROMOCAO === "undefined" || !PROMOCAO) return false;
+  if (new URLSearchParams(location.search).get("promo") === "teste") return true;
+  const agora = new Date();
+  return (
+    agora >= new Date(PROMOCAO.inicio + "T00:00:00") &&
+    agora <= new Date(PROMOCAO.fim + "T23:59:59")
+  );
+}
+
+/* "R$ 45,00" -> 45 (número). */
+function precoNumerico(precoTexto) {
+  const n = parseFloat(String(precoTexto).replace(/[^\d,]/g, "").replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+/* Arredonda para o real cheio, a favor do cliente (R$ 22,50 -> R$ 22). */
+function arredondarReal(valor) { return Math.ceil(valor - 0.5); }
+function formatarReal(valor) { return "R$ " + valor; }
+
+/* Último dia da promoção por extenso (ex.: "19 de julho"). */
+function dataFimPromo() {
+  const meses = ["janeiro","fevereiro","março","abril","maio","junho",
+                 "julho","agosto","setembro","outubro","novembro","dezembro"];
+  const fim = new Date(PROMOCAO.fim + "T12:00:00");
+  return fim.getDate() + " de " + meses[fim.getMonth()];
+}
+/* Hoje é o último dia da promoção? */
+function ultimoDiaPromo() {
+  const h = new Date();
+  const iso = h.getFullYear() + "-" + String(h.getMonth() + 1).padStart(2, "0") +
+              "-" + String(h.getDate()).padStart(2, "0");
+  return iso === PROMOCAO.fim;
+}
+/* Preços promocionais (sozinho e na dupla). descontoMaximo limita o teto. */
+function precosPromo(livro) {
+  const cheio = precoNumerico(livro.preco);
+  if (cheio === null) return null;
+  const teto = livro.descontoMaximo || 100;
+  const pctUm = Math.min(PROMOCAO.descontoUm, teto);
+  const pctDupla = Math.min(PROMOCAO.descontoDupla, teto);
+  return {
+    um: arredondarReal(cheio * (1 - pctUm / 100)),
+    dupla: arredondarReal(cheio * (1 - pctDupla / 100)),
+    limitado: pctDupla < PROMOCAO.descontoDupla
+  };
+}
+/* Preço do card: normal, ou riscado + promocional durante a promoção. */
+function precoCardHTML(livro) {
+  if (promocaoAtiva()) {
+    const p = precosPromo(livro);
+    if (p) {
+      const linhaDupla = p.limitado
+        ? `<p class="preco-dupla">⚽ preço especial da Copa</p>`
+        : `<p class="preco-dupla">levando 2 livros: ${formatarReal(p.dupla)}</p>`;
+      return `
+        <p class="info-preco em-promo">
+          <s class="preco-antigo">${livro.preco}</s>
+          <span class="preco-promo">${formatarReal(p.um)}</span>
+        </p>
+        ${linhaDupla}`;
+    }
+  }
+  return `<p class="info-preco">${livro.preco}</p>`;
+}
+/* Preço no carrossel (hero). */
+function precoHeroHTML(livro) {
+  if (promocaoAtiva()) {
+    const p = precosPromo(livro);
+    if (p) {
+      return `<span class="hero-preco em-promo"><s>${livro.preco}</s> ${formatarReal(p.um)}</span>`;
+    }
+  }
+  return `<span class="hero-preco">${livro.preco}</span>`;
+}
+
 /* ---------- Cards das fileiras ---------- */
 
 function criarCard(livro, indice, seloNovo) {
@@ -164,7 +243,7 @@ function criarCard(livro, indice, seloNovo) {
     <div class="info-livro">
       <h3 class="info-titulo">${livro.titulo}</h3>
       <p class="info-autor">${livro.autor}</p>
-      <p class="info-preco">${livro.preco}</p>
+      ${precoCardHTML(livro)}
     </div>
   `;
 
@@ -299,7 +378,10 @@ function renderizar(termoBusca) {
   LIVROS.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
 
   generos.forEach(genero => {
-    const lista = LIVROS.filter(l => (l.genero || "Outros") === genero && disponivel(l));
+    // Livros em destaque (principais/mais famosos) primeiro na fileira.
+    // sort estável: os demais mantêm a ordem do arquivo livros.js.
+    const lista = LIVROS.filter(l => (l.genero || "Outros") === genero && disponivel(l))
+      .sort((a, b) => (b.destaque ? 1 : 0) - (a.destaque ? 1 : 0));
     if (lista.length === 0) return;
     catalogo.appendChild(criarFileira(genero, lista));
   });
@@ -348,7 +430,7 @@ function montarHero(destaques, temSemana = true) {
           <h2 class="hero-livro-titulo">${livro.titulo}</h2>
           <p class="hero-livro-autor">${livro.autor}</p>
           <div class="hero-acoes">
-            <span class="hero-preco">${livro.preco}</span>
+            ${precoHeroHTML(livro)}
             <button class="hero-btn" type="button">Ver detalhes</button>
           </div>
         </div>
@@ -516,7 +598,27 @@ function abrirModal(livro) {
   modal.querySelector("[data-estado]").textContent    = livro.estado;
   modal.querySelector("[data-estoque]").textContent   =
     livro.estoque > 0 ? `${livro.estoque} unidade${livro.estoque > 1 ? "s" : ""}` : "Esgotado";
-  modal.querySelector("[data-preco]").textContent     = livro.preco;
+  const promo = promocaoAtiva() ? precosPromo(livro) : null;
+  const elPreco = modal.querySelector("[data-preco]");
+  if (promo) {
+    elPreco.innerHTML = `<s class="modal-preco-antigo">${livro.preco}</s> ${formatarReal(promo.um)}`;
+  } else {
+    elPreco.textContent = livro.preco;
+  }
+  // Nota da promoção no modal (criada/removida conforme o caso)
+  let avisoPromo = modal.querySelector(".modal-promo");
+  if (promo) {
+    if (!avisoPromo) {
+      avisoPromo = document.createElement("p");
+      avisoPromo.className = "modal-promo";
+      modal.querySelector(".modal-detalhes").insertAdjacentElement("afterend", avisoPromo);
+    }
+    avisoPromo.innerHTML = promo.limitado
+      ? `⚽ <strong>${PROMOCAO.nome}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
+      : `⚽ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off) e você ainda ganha ${PROMOCAO.brindeDupla}. Válida até ${dataFimPromo()}.`;
+  } else if (avisoPromo) {
+    avisoPromo.remove();
+  }
 
   const capa = modal.querySelector(".modal-capa");
   capa.innerHTML = livro.imagem
@@ -548,6 +650,50 @@ function fecharModal() {
 modal.addEventListener("click", (e) => { if (e.target.hasAttribute("data-fechar-modal")) fecharModal(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) fecharModal(); });
 
+/* ---------- Decoração da promoção (tema Copa do Mundo) ----------
+   Só acontece com a promoção ativa e some sozinho quando ela acaba —
+   nada fica "sujo" no site fora do período. */
+function ativarModoPromocao() {
+  if (!promocaoAtiva()) return;
+  document.body.classList.add("modo-promo");
+
+  // Vitrine: faixa de ponta a ponta, logo abaixo do cabeçalho.
+  const vitrine = document.createElement("section");
+  vitrine.className = "vitrine-promo";
+  vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
+  vitrine.innerHTML = `
+    <div class="vitrine-conteudo">
+      <div class="vitrine-chamada">
+        <p class="vitrine-ate">${ultimoDiaPromo() ? "último dia · " + dataFimPromo() : "até " + dataFimPromo()}</p>
+        <h2 class="vitrine-titulo">${PROMOCAO.nome}&nbsp;<span class="vitrine-icone" aria-hidden="true">⚽</span></h2>
+        <span class="vitrine-trofeu" aria-hidden="true">🏆</span>
+      </div>
+      <div class="vitrine-regras">
+        <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoUm}%</span> off em qualquer livro</p>
+        <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span> off em cada um, levando 2 ou mais</p>
+        <p class="vitrine-brinde"><span class="vitrine-brinde-icone" aria-hidden="true">🎁</span> Levando 2 livros ou mais, você ganha ${PROMOCAO.brindeDupla}</p>
+      </div>
+    </div>
+  `;
+  topbar.insertAdjacentElement("afterend", vitrine);
+
+  // Bolas de futebol discretas flutuando no fundo.
+  const ceu = document.createElement("div");
+  ceu.className = "ceu-bolas";
+  ceu.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 7; i++) {
+    const bola = document.createElement("span");
+    bola.textContent = ["⚽", "🏆", "⚽", "🥅", "⚽", "🏆", "⚽"][i];
+    ceu.appendChild(bola);
+  }
+  document.body.appendChild(ceu);
+
+  // Mensagem especial no rodapé.
+  const sub = document.querySelector(".rodape-sub");
+  if (sub) sub.textContent = "É Copa do Mundo! Feito com paixão para nossos leitores ⚽🏆";
+}
+
 /* ---------- Inicialização ---------- */
 document.getElementById("ano-atual").textContent = new Date().getFullYear();
+ativarModoPromocao();
 renderizar("");

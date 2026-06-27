@@ -43,6 +43,11 @@
    imagem  -> Caminho da capa dentro da pasta /img/
               Ex: "img/oliver-twist.jpg"
               Se não tiver capa, deixe assim: ""
+   destaque -> (opcional) true para o livro aparecer entre os PRIMEIROS
+              da sua categoria (os principais e mais famosos). Sem isso,
+              ele segue a ordem normal do arquivo.
+   descontoMaximo -> (opcional) limita o desconto da promoção neste livro
+              (ex.: descontoMaximo: 10 -> nunca passa de 10% off).
    dataAdicao -> (opcional) A data em que você adicionou o livro, no
               formato "ANO-MÊS-DIA" (ex: "2026-06-19"). O site calcula
               sozinho e mostra os livros adicionados nos ÚLTIMOS 7 DIAS
@@ -55,12 +60,32 @@
 
    ============================================================ */
 
+
+/* ============================================================
+   PROMOÇÃO (liga e desliga sozinha pelas datas abaixo)
+   ------------------------------------------------------------
+   Enquanto a data de hoje estiver entre "inicio" e "fim", o site
+   entra no modo promoção: preços com desconto, faixa no topo e
+   decoração temática da Copa do Mundo. Fora desse período tudo
+   volta ao normal sozinho. Para testar antes da data, abra o site
+   com ?promo=teste no fim do endereço.
+   ============================================================ */
+const PROMOCAO = {
+  nome: "Copa do Mundo",
+  inicio: "2026-06-11",  // começo do torneio
+  fim: "2026-07-19",     // dia da grande final
+  descontoUm: 10,        // % off em qualquer livro
+  descontoDupla: 20,     // % off em cada um, levando 2 ou mais
+  brindeDupla: "um marcador de páginas da Copa de brinde"
+};
+
 const LIVROS = [
 
   /* ===================== FINANÇAS & NEGÓCIOS ===================== */
 
   {
     titulo: "Do Mil ao Milhão: Sem Cortar o Cafezinho",
+    destaque: true,
     autor: "Thiago Nigro",
     genero: "Finanças & Negócios",
     preco: "R$ 20,00",
@@ -73,6 +98,7 @@ const LIVROS = [
 
   {
     titulo: "Quem Pensa Enriquece",
+    destaque: true,
     autor: "Napoleon Hill",
     genero: "Finanças & Negócios",
     preco: "R$ 20,00",
@@ -84,6 +110,7 @@ const LIVROS = [
 
   {
     titulo: "O Homem Mais Rico da Babilônia",
+    destaque: true,
     autor: "George S. Clason",
     genero: "Finanças & Negócios",
     preco: "R$ 16,00",
@@ -131,6 +158,7 @@ const LIVROS = [
 
   {
     titulo: "O Poder do Subconsciente",
+    destaque: true,
     autor: "Dr. Joseph Murphy",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 25,00",
@@ -142,6 +170,7 @@ const LIVROS = [
 
   {
     titulo: "Como Fazer Amigos e Influenciar Pessoas",
+    destaque: true,
     autor: "Dale Carnegie",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 25,00",
@@ -153,6 +182,7 @@ const LIVROS = [
 
   {
     titulo: "Como Evitar Preocupações e Começar a Viver",
+    destaque: true,
     autor: "Dale Carnegie",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 30,00",
@@ -213,6 +243,7 @@ const LIVROS = [
 
   {
     titulo: "O Morro dos Ventos Uivantes",
+    destaque: true,
     autor: "Emily Brontë",
     genero: "Clássicos da Literatura",
     preco: "R$ 38,00",
@@ -224,6 +255,7 @@ const LIVROS = [
 
   {
     titulo: "Fahrenheit 451",
+    destaque: true,
     autor: "Ray Bradbury",
     genero: "Clássicos da Literatura",
     preco: "R$ 35,00",
@@ -235,6 +267,7 @@ const LIVROS = [
 
   {
     titulo: "1984",
+    destaque: true,
     autor: "George Orwell",
     genero: "Clássicos da Literatura",
     preco: "R$ 30,00",
@@ -246,6 +279,7 @@ const LIVROS = [
 
   {
     titulo: "A Revolução dos Bichos",
+    destaque: true,
     autor: "George Orwell",
     genero: "Clássicos da Literatura",
     preco: "R$ 30,00",
@@ -366,6 +400,7 @@ const LIVROS = [
 
   {
     titulo: "A Política",
+    destaque: true,
     autor: "Aristóteles",
     genero: "Filosofia",
     preco: "R$ 25,00",
@@ -390,6 +425,7 @@ const LIVROS = [
 
   {
     titulo: "O Príncipe",
+    destaque: true,
     autor: "Nicolau Maquiavel",
     genero: "Filosofia",
     preco: "R$ 14,00",
@@ -404,6 +440,7 @@ const LIVROS = [
 
   {
     titulo: "A Batalha do Apocalipse",
+    destaque: true,
     autor: "Eduardo Spohr",
     genero: "Romance & Literatura",
     preco: "R$ 25,00",
@@ -416,6 +453,7 @@ const LIVROS = [
 
   {
     titulo: "A Hora da Estrela",
+    destaque: true,
     autor: "Clarice Lispector",
     genero: "Romance & Literatura",
     preco: "R$ 40,00",
@@ -428,6 +466,7 @@ const LIVROS = [
 
   {
     titulo: "O Príncipe Cruel",
+    destaque: true,
     autor: "Holly Black",
     genero: "Romance & Literatura",
     preco: "R$ 55,00",
@@ -454,6 +493,7 @@ const LIVROS = [
 
   {
     titulo: "Saboroso Cadáver",
+    destaque: true,
     autor: "Agustina Bazterrica",
     genero: "Suspense & Terror",
     preco: "R$ 45,00",
@@ -466,6 +506,7 @@ const LIVROS = [
 
   {
     titulo: "O Chamado de Cthulhu e Outros Contos",
+    destaque: true,
     autor: "H. P. Lovecraft",
     genero: "Suspense & Terror",
     preco: "R$ 20,00",
@@ -480,6 +521,7 @@ const LIVROS = [
 
   {
     titulo: "Berserk – Vol. 1",
+    destaque: true,
     autor: "Kentaro Miura",
     genero: "Mangás",
     preco: "R$ 45,00",
@@ -492,6 +534,7 @@ const LIVROS = [
 
   {
     titulo: "The Promised Neverland – Vol. 1",
+    destaque: true,
     autor: "Kaiu Shirai e Posuka Demizu",
     genero: "Mangás",
     preco: "R$ 30,00",
