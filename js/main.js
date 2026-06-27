@@ -663,20 +663,9 @@ function ativarModoPromocao() {
   vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
   vitrine.innerHTML = `
     <div class="vitrine-card">
-      <span class="vitrine-flag" aria-hidden="true"></span>
-      <div class="vitrine-top">
-        <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
-        <span class="vitrine-prazo">⏳ ${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
-      </div>
-      <div class="vitrine-main">
-        <p class="vitrine-ate">Até</p>
-        <p class="vitrine-mega">${PROMOCAO.descontoDupla}<span class="sym">% OFF</span></p>
-        <p class="vitrine-sub">nos seus próximos livros</p>
-      </div>
-      <div class="vitrine-tiers">
-        <span class="vitrine-tier"><b>${PROMOCAO.descontoUm}%</b> em qualquer livro</span>
-        <span class="vitrine-tier destaque"><b>${PROMOCAO.descontoDupla}%</b> levando 2 ou mais</span>
-      </div>
+      <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
+      <span class="vitrine-oferta-line"><strong>${PROMOCAO.descontoUm}% OFF</strong><span class="vitrine-sep">·</span><strong>${PROMOCAO.descontoDupla}%</strong> levando 2+</span>
+      <span class="vitrine-prazo">${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
     </div>
   `;
   topbar.insertAdjacentElement("afterend", vitrine);
