@@ -14,6 +14,7 @@ const ORDEM_GENEROS = [
   "Filosofia",
   "Clássicos da Literatura",
   "Romance & Literatura",
+  "Suspense & Terror",
   "Mangás"
 ];
 

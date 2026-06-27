@@ -26,6 +26,7 @@
               "Filosofia"
               "Clássicos da Literatura"
               "Romance & Literatura"
+              "Suspense & Terror"
               "Mangás"
               (Pode criar um gênero novo: basta escrever aqui e,
                se quiser controlar a ordem, adicioná-lo também na
@@ -303,6 +304,18 @@ const LIVROS = [
     dataAdicao: "2026-06-07"
   },
 
+  {
+    titulo: "O Curioso Caso de Benjamin Button",
+    autor: "F. Scott Fitzgerald",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Benjamin Button nasce como um velho de setenta anos e, ao longo da vida, rejuvenesce em vez de envelhecer. Um conto genial e melancólico de F. Scott Fitzgerald sobre o tempo, a sociedade e o sentido da existência, que inspirou o célebre filme.",
+    imagem: "img/o-curioso-caso-de-benjamin-button.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
   /* ===================== ROMANCE & LITERATURA ===================== */
 
   {
@@ -375,6 +388,18 @@ const LIVROS = [
     dataAdicao: "2026-06-17"
   },
 
+  {
+    titulo: "O Príncipe",
+    autor: "Nicolau Maquiavel",
+    genero: "Filosofia",
+    preco: "R$ 14,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "O mais célebre tratado político de todos os tempos. Com frieza e realismo, Maquiavel analisa como o poder é conquistado e mantido, separando a política da moral e inaugurando o pensamento político moderno. Leitura indispensável para compreender as relações de poder.",
+    imagem: "img/o-principe.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
   /* =================== ROMANCE & LITERATURA =================== */
 
   {
@@ -387,6 +412,94 @@ const LIVROS = [
     sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
     imagem: "img/a-batalha-do-apocalipse.jpg",
     dataAdicao: "2026-06-08"
+  },
+
+  {
+    titulo: "A Hora da Estrela",
+    autor: "Clarice Lispector",
+    genero: "Romance & Literatura",
+    preco: "R$ 40,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "A última obra de Clarice Lispector acompanha Macabéa, uma jovem nordestina pobre e ingênua que tenta sobreviver na cidade grande. Uma narrativa intensa e comovente sobre solidão, existência e a busca por sentido — um dos maiores clássicos da literatura brasileira.",
+    imagem: "img/a-hora-da-estrela.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "O Príncipe Cruel",
+    autor: "Holly Black",
+    genero: "Romance & Literatura",
+    preco: "R$ 55,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal — e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
+    imagem: "img/o-principe-cruel.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  /* ===================== SUSPENSE & TERROR ===================== */
+
+  {
+    titulo: "A Cirurgiã",
+    autor: "Leslie Wolfe",
+    genero: "Suspense & Terror",
+    preco: "R$ 35,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Um suspense psicológico totalmente envolvente e cheio de reviravoltas. Quando uma cirurgiã se vê no centro de uma trama perigosa, antigos segredos vêm à tona e cada página aumenta a tensão. Um thriller que prende o leitor e faz você correr pelas páginas até o final.",
+    imagem: "img/a-cirurgia.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "Saboroso Cadáver",
+    autor: "Agustina Bazterrica",
+    genero: "Suspense & Terror",
+    preco: "R$ 45,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Em um futuro distópico no qual a carne animal se tornou tóxica, a humanidade passa a criar e consumir seres humanos de forma legalizada. Vencedor do Prêmio Clarín de Romance, este perturbador best-seller de Agustina Bazterrica é uma crítica feroz e visceral à sociedade de consumo.",
+    imagem: "img/saboroso-cadaver.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "O Chamado de Cthulhu e Outros Contos",
+    autor: "H. P. Lovecraft",
+    genero: "Suspense & Terror",
+    preco: "R$ 20,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Uma coletânea com os contos mais marcantes de H. P. Lovecraft, mestre do horror cósmico. Entidades ancestrais, cultos secretos e o terror do desconhecido se revelam em histórias que influenciaram gerações de escritores e fãs do gênero.",
+    imagem: "img/o-chamado-de-cthulhu.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  /* ========================== MANGÁS ========================== */
+
+  {
+    titulo: "Berserk – Vol. 1",
+    autor: "Kentaro Miura",
+    genero: "Mangás",
+    preco: "R$ 45,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Em um mundo medieval sombrio e brutal, Guts, o Espadachim Negro, percorre as terras empunhando uma espada gigantesca e caçando demônios em busca de vingança. O primeiro volume da obra-prima de Kentaro Miura, um dos maiores clássicos da dark fantasy de todos os tempos.",
+    imagem: "img/berserk-vol-1.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "The Promised Neverland – Vol. 1",
+    autor: "Kaiu Shirai e Posuka Demizu",
+    genero: "Mangás",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Emma, Norman e Ray vivem felizes no orfanato Grace Field House — até descobrirem a verdade aterrorizante por trás de seu lar perfeito. Agora precisam bolar um plano de fuga ousado antes que seja tarde demais. Primeiro volume de um dos mangás de suspense mais aclamados dos últimos anos, com roteiro de Kaiu Shirai e arte de Posuka Demizu.",
+    imagem: "img/the-promised-neverland-vol-1.jpg",
+    dataAdicao: "2026-06-27"
   }
 
 ];
