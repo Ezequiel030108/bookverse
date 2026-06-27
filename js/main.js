@@ -668,7 +668,7 @@ function ativarModoPromocao() {
         <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
         <span class="vitrine-prazo">${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
       </div>
-      <p class="vitrine-msg">Entrou no clima da Copa? <span aria-hidden="true">⚽</span> Aproveite os descontos especiais nos seus próximos livros!</p>
+      <p class="vitrine-msg">Entrou no clima da Copa? Aproveite os descontos especiais nos seus próximos livros!</p>
       <div class="vitrine-ofertas">
         <div class="vitrine-oferta">
           <span class="vitrine-pct">${PROMOCAO.descontoUm}% OFF</span>
