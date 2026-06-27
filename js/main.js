@@ -664,20 +664,18 @@ function ativarModoPromocao() {
   vitrine.innerHTML = `
     <div class="vitrine-card">
       <span class="vitrine-flag" aria-hidden="true"></span>
-      <div class="vitrine-info">
-        <p class="vitrine-eyebrow"><span class="vitrine-bola" aria-hidden="true">⚽</span> Promoção · ${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</p>
-        <h2 class="vitrine-titulo">${PROMOCAO.nome} <span class="vitrine-trofeu" aria-hidden="true">🏆</span></h2>
-        <p class="vitrine-sub">Entrou no clima da Copa? Leve seus livros com desconto.</p>
+      <div class="vitrine-top">
+        <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
+        <span class="vitrine-prazo">⏳ ${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
       </div>
-      <div class="vitrine-ofertas">
-        <div class="vitrine-oferta">
-          <span class="vitrine-pct">${PROMOCAO.descontoUm}%</span>
-          <span class="vitrine-oferta-txt">off<br>em qualquer livro</span>
-        </div>
-        <div class="vitrine-oferta destaque">
-          <span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span>
-          <span class="vitrine-oferta-txt">off<br>levando 2 ou mais</span>
-        </div>
+      <div class="vitrine-main">
+        <p class="vitrine-ate">Até</p>
+        <p class="vitrine-mega">${PROMOCAO.descontoDupla}<span class="sym">% OFF</span></p>
+        <p class="vitrine-sub">nos seus próximos livros</p>
+      </div>
+      <div class="vitrine-tiers">
+        <span class="vitrine-tier"><b>${PROMOCAO.descontoUm}%</b> em qualquer livro</span>
+        <span class="vitrine-tier destaque"><b>${PROMOCAO.descontoDupla}%</b> levando 2 ou mais</span>
       </div>
     </div>
   `;
