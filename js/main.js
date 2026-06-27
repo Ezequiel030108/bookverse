@@ -429,6 +429,7 @@ function montarHero(destaques, temSemana = true) {
         <div class="hero-texto">
           <h2 class="hero-livro-titulo">${livro.titulo}</h2>
           <p class="hero-livro-autor">${livro.autor}</p>
+          <p class="hero-livro-sinopse">${livro.sinopse || ""}</p>
           <div class="hero-acoes">
             ${precoHeroHTML(livro)}
             <button class="hero-btn" type="button">Ver detalhes</button>
@@ -663,9 +664,20 @@ function ativarModoPromocao() {
   vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
   vitrine.innerHTML = `
     <div class="vitrine-card">
-      <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
-      <span class="vitrine-oferta-line"><strong>${PROMOCAO.descontoUm}% OFF</strong><span class="vitrine-sep">·</span><strong>${PROMOCAO.descontoDupla}%</strong> levando 2+</span>
-      <span class="vitrine-prazo">${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
+      <div class="vitrine-head">
+        <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
+        <span class="vitrine-prazo">${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
+      </div>
+      <div class="vitrine-ofertas">
+        <div class="vitrine-oferta">
+          <span class="vitrine-pct">${PROMOCAO.descontoUm}% OFF</span>
+          <span class="vitrine-oferta-txt">em qualquer livro</span>
+        </div>
+        <div class="vitrine-oferta destaque">
+          <span class="vitrine-pct">${PROMOCAO.descontoDupla}% OFF</span>
+          <span class="vitrine-oferta-txt">levando 2 ou mais</span>
+        </div>
+      </div>
     </div>
   `;
   topbar.insertAdjacentElement("afterend", vitrine);
