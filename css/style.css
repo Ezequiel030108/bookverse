@@ -1198,7 +1198,8 @@ main {
   background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px);
   background-size: 15px 15px; opacity: .5;
 }
-.vitrine-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+.vitrine-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.vitrine-msg { margin: 0 0 12px; font-size: .87rem; line-height: 1.4; color: rgba(255,255,255,.9); max-width: 60ch; }
 .vitrine-tag {
   display: inline-flex; align-items: center; gap: 7px;
   font-family: 'Playfair Display', Georgia, serif; font-weight: 800; font-size: 1.12rem; color: #fff;
