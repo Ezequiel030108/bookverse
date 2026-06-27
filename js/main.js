@@ -10,12 +10,12 @@ const INSTAGRAM_USUARIO = "mybookverse.pb";
 const ORDEM_GENEROS = [
   "Clássicos da Literatura",
   "Romance & Literatura",
+  "Mangás",
   "Finanças & Negócios",
   "Autoajuda & Desenvolvimento Pessoal",
   "Ciência & Curiosidades",
   "Filosofia",
-  "Suspense & Terror",
-  "Mangás"
+  "Suspense & Terror"
 ];
 
 /* Novidades = livros adicionados nos últimos DIAS_NOVIDADE dias (o código
