@@ -615,7 +615,7 @@ function abrirModal(livro) {
     }
     avisoPromo.innerHTML = promo.limitado
       ? `⚽ <strong>${PROMOCAO.nome}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
-      : `⚽ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off) e você ainda ganha ${PROMOCAO.brindeDupla}. Válida até ${dataFimPromo()}.`;
+      : `⚽ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
   } else if (avisoPromo) {
     avisoPromo.remove();
   }
@@ -662,16 +662,22 @@ function ativarModoPromocao() {
   vitrine.className = "vitrine-promo";
   vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
   vitrine.innerHTML = `
-    <div class="vitrine-conteudo">
-      <div class="vitrine-chamada">
-        <p class="vitrine-ate">${ultimoDiaPromo() ? "último dia · " + dataFimPromo() : "até " + dataFimPromo()}</p>
-        <h2 class="vitrine-titulo">${PROMOCAO.nome}&nbsp;<span class="vitrine-icone" aria-hidden="true">⚽</span></h2>
-        <span class="vitrine-trofeu" aria-hidden="true">🏆</span>
+    <div class="vitrine-card">
+      <span class="vitrine-flag" aria-hidden="true"></span>
+      <div class="vitrine-info">
+        <p class="vitrine-eyebrow"><span class="vitrine-bola" aria-hidden="true">⚽</span> Promoção · ${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</p>
+        <h2 class="vitrine-titulo">${PROMOCAO.nome} <span class="vitrine-trofeu" aria-hidden="true">🏆</span></h2>
+        <p class="vitrine-sub">Entrou no clima da Copa? Leve seus livros com desconto.</p>
       </div>
-      <div class="vitrine-regras">
-        <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoUm}%</span> off em qualquer livro</p>
-        <p class="vitrine-regra"><span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span> off em cada um, levando 2 ou mais</p>
-        <p class="vitrine-brinde"><span class="vitrine-brinde-icone" aria-hidden="true">🎁</span> Levando 2 livros ou mais, você ganha ${PROMOCAO.brindeDupla}</p>
+      <div class="vitrine-ofertas">
+        <div class="vitrine-oferta">
+          <span class="vitrine-pct">${PROMOCAO.descontoUm}%</span>
+          <span class="vitrine-oferta-txt">off<br>em qualquer livro</span>
+        </div>
+        <div class="vitrine-oferta destaque">
+          <span class="vitrine-pct">${PROMOCAO.descontoDupla}%</span>
+          <span class="vitrine-oferta-txt">off<br>levando 2 ou mais</span>
+        </div>
       </div>
     </div>
   `;

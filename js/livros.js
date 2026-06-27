@@ -73,10 +73,9 @@
 const PROMOCAO = {
   nome: "Copa do Mundo",
   inicio: "2026-06-11",  // começo do torneio
-  fim: "2026-07-19",     // dia da grande final
+  fim: "2026-06-29",     // último dia da promoção
   descontoUm: 10,        // % off em qualquer livro
-  descontoDupla: 20,     // % off em cada um, levando 2 ou mais
-  brindeDupla: "um marcador de páginas da Copa de brinde"
+  descontoDupla: 20      // % off em cada um, levando 2 ou mais
 };
 
 const LIVROS = [
@@ -478,18 +477,6 @@ const LIVROS = [
   },
 
   /* ===================== SUSPENSE & TERROR ===================== */
-
-  {
-    titulo: "A Cirurgiã",
-    autor: "Leslie Wolfe",
-    genero: "Suspense & Terror",
-    preco: "R$ 35,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "Um suspense psicológico totalmente envolvente e cheio de reviravoltas. Quando uma cirurgiã se vê no centro de uma trama perigosa, antigos segredos vêm à tona e cada página aumenta a tensão. Um thriller que prende o leitor e faz você correr pelas páginas até o final.",
-    imagem: "img/a-cirurgia.jpg",
-    dataAdicao: "2026-06-27"
-  },
 
   {
     titulo: "Saboroso Cadáver",

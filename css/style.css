@@ -223,12 +223,7 @@ body::after {
   filter: drop-shadow(0 0 8px rgba(184,158,255,.5));
 }
 .marca-logo.logo-erro { display: none; }
-.marca-logo-wrap::before {
-  content: "👻";
-  font-size: 1.25rem;
-  position: absolute;
-  z-index: -1;
-}
+/* (emoji de fantasma removido — aparecia deslocado atrás da logo) */
 .marca-textos { display: flex; flex-direction: column; min-width: 0; }
 .marca-nome {
   font-family: 'Playfair Display', Georgia, serif;
@@ -1160,133 +1155,111 @@ main {
 }
 
 /* ============================================================
-   PROMOÇÃO — TEMA COPA DO MUNDO
-   Tudo aqui só aparece quando o JS adiciona .modo-promo / cria
-   os elementos da promoção. Fora do período, nada disso é usado.
+   PROMOÇÃO — TEMA COPA DO MUNDO (cores do Brasil)
+   Só aparece com a promoção ativa; some sozinho fora do período.
    ============================================================ */
 :root {
-  --copa-verde: #15a05a;
-  --copa-verde-esc: #0b6e3c;
-  --copa-verde-prof: #073a22;
-  --copa-ouro: #ffd34d;
+  --br-verde: #009c3b;
+  --br-verde-esc: #007a2f;
+  --br-verde-prof: #04531f;
+  --br-amarelo: #ffdf00;
+  --br-azul: #012169;
 }
 
-/* ---- Vitrine (faixa abaixo do cabeçalho) ---- */
-.vitrine-promo {
+/* ---- Card da promoção (faixa abaixo do cabeçalho) ---- */
+.vitrine-promo { position: relative; z-index: 1; padding: 14px clamp(12px, 3vw, 22px) 2px; }
+.vitrine-card {
   position: relative;
-  z-index: 2;
-  margin: 0 0 6px;
-  padding: 16px clamp(14px, 4vw, 28px);
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 14px 22px;
+  padding: 18px clamp(16px, 4vw, 30px);
+  border-radius: 20px;
   color: #fff;
   background:
-    radial-gradient(120% 140% at 0% 0%, rgba(255,211,77,.18), transparent 55%),
-    linear-gradient(135deg, var(--copa-verde) 0%, var(--copa-verde-esc) 55%, var(--copa-verde-prof) 100%);
-  border-top: 1px solid rgba(255,211,77,.55);
-  border-bottom: 1px solid rgba(255,211,77,.55);
-  box-shadow: 0 10px 26px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.25);
+    radial-gradient(130% 130% at 100% 0%, rgba(255,223,0,.22), transparent 52%),
+    radial-gradient(120% 150% at 0% 100%, rgba(1,33,105,.45), transparent 55%),
+    linear-gradient(135deg, var(--br-verde) 0%, var(--br-verde-esc) 58%, var(--br-verde-prof) 100%);
+  border: 1px solid rgba(255,223,0,.5);
+  box-shadow: 0 18px 42px rgba(0,40,15,.5), inset 0 1px 0 rgba(255,255,255,.16);
   overflow: hidden;
+  isolation: isolate;
 }
-.vitrine-promo::before { /* gramado / linha do campo */
-  content: "";
-  position: absolute; inset: 0;
-  background:
-    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 38px, transparent 38px 76px);
-  pointer-events: none;
+.vitrine-card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: repeating-linear-gradient(118deg, rgba(255,255,255,.05) 0 2px, transparent 2px 30px);
+  opacity: .6;
 }
-.vitrine-conteudo {
-  position: relative;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 28px;
+.vitrine-flag {
+  position: absolute; top: -34px; right: -34px; width: 160px; height: 160px; z-index: -1;
+  background: radial-gradient(circle at 50% 50%, var(--br-azul) 0 24px, transparent 25px), var(--br-amarelo);
+  transform: rotate(45deg); border-radius: 16px; opacity: .16;
 }
-.vitrine-chamada { position: relative; }
-.vitrine-ate {
-  margin: 0;
-  font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--copa-ouro);
+.vitrine-info { position: relative; min-width: 0; }
+.vitrine-eyebrow {
+  margin: 0; display: flex; align-items: center; gap: 7px;
+  font-size: .72rem; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--br-amarelo);
 }
+.vitrine-bola { display: inline-block; animation: bola-gira 6s linear infinite; }
 .vitrine-titulo {
-  margin: 2px 0 0;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 800;
-  font-size: clamp(1.5rem, 5vw, 2.1rem);
-  line-height: 1.05;
-  text-shadow: 0 2px 10px rgba(0,0,0,.4);
+  margin: 4px 0 0; font-family: 'Playfair Display', Georgia, serif; font-weight: 800;
+  font-size: clamp(1.55rem, 5.5vw, 2.25rem); line-height: 1.03; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.4);
 }
-.vitrine-icone { display: inline-block; animation: bola-gira 6s linear infinite; }
-.vitrine-trofeu { position: absolute; top: -6px; right: -26px; font-size: 1.1rem; opacity: .9; }
-@keyframes bola-gira { to { transform: rotate(360deg); } }
+.vitrine-trofeu { font-size: .82em; }
+.vitrine-sub { margin: 6px 0 0; font-size: .86rem; color: rgba(255,255,255,.88); max-width: 42ch; }
 
-.vitrine-regras { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.vitrine-regra { margin: 0; font-size: .92rem; font-weight: 500; }
-.vitrine-pct {
-  display: inline-block;
-  font-weight: 800;
-  color: var(--copa-ouro);
-  font-size: 1.05rem;
-  margin-right: 4px;
+.vitrine-ofertas { position: relative; display: flex; gap: 12px; flex-shrink: 0; }
+.vitrine-oferta {
+  display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 15px;
+  background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.28);
 }
-.vitrine-brinde {
-  margin: 4px 0 0;
-  font-size: .82rem;
-  font-weight: 600;
-  color: #eafff2;
+.vitrine-oferta.destaque {
+  background: linear-gradient(135deg, var(--br-amarelo), #ffc400);
+  border-color: var(--br-amarelo); box-shadow: 0 8px 20px rgba(255,201,0,.38);
 }
-.vitrine-brinde-icone { margin-right: 4px; }
+.vitrine-pct { font-family: 'Playfair Display', Georgia, serif; font-weight: 800; font-size: 1.75rem; line-height: 1; color: #fff; }
+.vitrine-oferta.destaque .vitrine-pct { color: var(--br-verde-prof); }
+.vitrine-oferta-txt { font-size: .68rem; font-weight: 800; line-height: 1.18; text-transform: uppercase; letter-spacing: .4px; color: rgba(255,255,255,.92); }
+.vitrine-oferta.destaque .vitrine-oferta-txt { color: #0a3d1c; }
+@media (max-width: 600px) {
+  .vitrine-card { padding: 16px; gap: 14px; }
+  .vitrine-ofertas { width: 100%; }
+  .vitrine-oferta { flex: 1; justify-content: center; }
+  .vitrine-sub { display: none; }
+}
+@keyframes bola-gira { to { transform: rotate(360deg); } }
 
 /* ---- Preços promocionais no card ---- */
 .info-preco.em-promo { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
 .preco-antigo { color: var(--texto-discreto); text-decoration: line-through; font-size: .82rem; font-weight: 500; }
-.preco-promo { color: var(--copa-ouro); font-weight: 800; }
+.preco-promo { color: var(--br-amarelo); font-weight: 800; }
 .preco-dupla { margin: 1px 0 0; font-size: .74rem; font-weight: 600; color: #7be0a3; }
 
 /* ---- Preço promocional no carrossel (hero) ---- */
+.hero-preco.em-promo { color: var(--br-amarelo); }
 .hero-preco.em-promo s { color: var(--texto-discreto); font-weight: 500; margin-right: 6px; font-size: .85em; }
-.hero-preco.em-promo { color: var(--copa-ouro); }
 
 /* ---- Promoção no modal ---- */
-.modal-preco-antigo { color: var(--texto-discreto); text-decoration: line-through; margin-right: 6px; font-weight: 500; }
+/* preço bem escuro p/ contrastar com o fundo dourado do selo */
+.badge-preco { color: #13100a; }
+.modal-preco-antigo { color: rgba(19,16,10,.55); text-decoration: line-through; margin-right: 6px; font-weight: 600; }
 .modal-promo {
-  margin: 12px 0 0;
-  padding: 11px 13px;
-  font-size: .86rem;
-  line-height: 1.4;
-  color: #eafff2;
-  background: linear-gradient(135deg, rgba(21,160,90,.22), rgba(11,110,60,.22));
-  border: 1px solid rgba(255,211,77,.4);
-  border-radius: var(--raio);
+  margin: 12px 0 0; padding: 11px 13px; font-size: .86rem; line-height: 1.4; color: #eafff2;
+  background: linear-gradient(135deg, rgba(0,156,59,.22), rgba(4,83,31,.22));
+  border: 1px solid rgba(255,223,0,.4); border-radius: var(--raio);
 }
-.modal-promo strong { color: var(--copa-ouro); }
+.modal-promo strong { color: var(--br-amarelo); }
 
-/* ---- Bolas de futebol flutuando no fundo ---- */
+/* ---- Bolas de futebol flutuando no fundo (discreto) ---- */
 .ceu-bolas { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.ceu-bolas span {
-  position: absolute;
-  font-size: 1.5rem;
-  opacity: .12;
-  animation: bola-flutua 13s ease-in-out infinite;
-}
-.ceu-bolas span:nth-child(1) { left: 6%;  top: 22%; animation-delay: 0s;   }
-.ceu-bolas span:nth-child(2) { left: 82%; top: 16%; animation-delay: 1.5s; font-size: 1.1rem; }
-.ceu-bolas span:nth-child(3) { left: 24%; top: 68%; animation-delay: 3s;   }
-.ceu-bolas span:nth-child(4) { left: 68%; top: 54%; animation-delay: 4.5s; font-size: 1.2rem; }
-.ceu-bolas span:nth-child(5) { left: 47%; top: 34%; animation-delay: 6s;   font-size: 1rem;   }
-.ceu-bolas span:nth-child(6) { left: 90%; top: 74%; animation-delay: 7.5s; }
-.ceu-bolas span:nth-child(7) { left: 13%; top: 88%; animation-delay: 9s;   font-size: 1.1rem; }
-@keyframes bola-flutua {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-22px) rotate(180deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vitrine-icone, .ceu-bolas span { animation: none; }
-}
-
-/* No modo promoção, garante que conteúdo fique acima das bolas */
-.modo-promo .topbar, .modo-promo .hero, .modo-promo main, .modo-promo .rodape, .modo-promo .vitrine-promo { position: relative; z-index: 1; }
+.ceu-bolas span { position: absolute; font-size: 1.5rem; opacity: .10; animation: bola-flutua 14s ease-in-out infinite; }
+.ceu-bolas span:nth-child(1) { left: 6%;  top: 24%; animation-delay: 0s;   }
+.ceu-bolas span:nth-child(2) { left: 82%; top: 18%; animation-delay: 1.6s; font-size: 1.1rem; }
+.ceu-bolas span:nth-child(3) { left: 24%; top: 66%; animation-delay: 3.2s; }
+.ceu-bolas span:nth-child(4) { left: 68%; top: 56%; animation-delay: 4.8s; font-size: 1.2rem; }
+.ceu-bolas span:nth-child(5) { left: 47%; top: 36%; animation-delay: 6.4s; font-size: 1rem;   }
+.ceu-bolas span:nth-child(6) { left: 90%; top: 72%; animation-delay: 8s;   }
+.ceu-bolas span:nth-child(7) { left: 13%; top: 86%; animation-delay: 9.6s; font-size: 1.1rem; }
+@keyframes bola-flutua { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-22px) rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) { .vitrine-bola, .ceu-bolas span { animation: none; } }
