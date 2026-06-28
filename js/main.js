@@ -239,6 +239,10 @@ function criarCard(livro, indice, seloNovo) {
       <div class="capa-overlay" aria-hidden="true">
         <span class="overlay-ver">Ver detalhes</span>
       </div>
+      <button class="card-add" type="button" data-add-id="${idLivro(livro)}" aria-label="Adicionar ${livro.titulo} ao carrinho">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Carrinho</span>
+      </button>
     </div>
     <div class="info-livro">
       <h3 class="info-titulo">${livro.titulo}</h3>
@@ -252,6 +256,18 @@ function criarCard(livro, indice, seloNovo) {
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); }
   });
+
+  // Botão "+ Carrinho": adiciona sem abrir o modal.
+  const btnAdd = card.querySelector(".card-add");
+  if (btnAdd) btnAdd.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!window.Carrinho) return;
+    window.Carrinho.add(livro, 1);
+    btnAdd.classList.add("adicionado");
+    setTimeout(() => btnAdd.classList.remove("adicionado"), 900);
+    if (window.lojaToast) window.lojaToast(`"${livro.titulo}" no carrinho`);
+  });
+
   return card;
 }
 
@@ -626,16 +642,17 @@ function abrirModal(livro) {
     ? `<img src="${livro.imagem}" alt="Capa de ${livro.titulo}" />`
     : `<div class="capa-fallback ${varianteFallback(livro.titulo)}">${livro.titulo.charAt(0).toUpperCase()}</div>`;
 
-  const textoBtn = botaoIG.querySelector(".botao-instagram-texto");
-  if (livro.estoque <= 0) {
-    botaoIG.classList.add("desativado");
-    if (textoBtn) textoBtn.textContent = "Indisponível";
-    botaoIG.removeAttribute("href");
-  } else {
-    botaoIG.classList.remove("desativado");
-    if (textoBtn) textoBtn.textContent = "Pedir pelo Instagram";
-    botaoIG.href = linkInstagram();
+  // Botões de compra (carrinho / comprar agora) + Instagram como suporte
+  window.__livroModal = livro;
+  const semEstoque = livro.estoque <= 0;
+  const btnAdd     = document.getElementById("modal-add-carrinho");
+  const btnComprar = document.getElementById("modal-comprar");
+  if (btnAdd) {
+    btnAdd.disabled = semEstoque;
+    btnAdd.textContent = semEstoque ? "Esgotado" : "Adicionar ao carrinho";
   }
+  if (btnComprar) btnComprar.disabled = semEstoque;
+  if (botaoIG) botaoIG.href = linkInstagram();
 
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
@@ -698,6 +715,26 @@ function ativarModoPromocao() {
   const sub = document.querySelector(".rodape-sub");
   if (sub) sub.textContent = "É Copa do Mundo! Feito com paixão para nossos leitores ⚽🏆";
 }
+
+/* ---------- Ações de compra no modal ---------- */
+(function () {
+  const btnAdd     = document.getElementById("modal-add-carrinho");
+  const btnComprar = document.getElementById("modal-comprar");
+  if (btnAdd) btnAdd.addEventListener("click", () => {
+    const l = window.__livroModal;
+    if (!l || l.estoque <= 0 || !window.Carrinho) return;
+    window.Carrinho.add(l, 1);
+    if (window.lojaToast) window.lojaToast(`"${l.titulo}" no carrinho`);
+    fecharModal();
+    if (window.abrirCarrinho) window.abrirCarrinho();
+  });
+  if (btnComprar) btnComprar.addEventListener("click", () => {
+    const l = window.__livroModal;
+    if (!l || l.estoque <= 0 || !window.Carrinho) return;
+    window.Carrinho.add(l, 1);
+    window.location.href = "checkout.html";
+  });
+})();
 
 /* ---------- Inicialização ---------- */
 document.getElementById("ano-atual").textContent = new Date().getFullYear();

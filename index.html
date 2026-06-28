@@ -64,6 +64,15 @@
           </svg>
           <span class="ig-label">@mybookverse.pb</span>
         </a>
+
+        <!-- Carrinho de compras -->
+        <button class="btn-icon btn-carrinho" id="btn-carrinho" type="button" aria-label="Abrir carrinho de compras">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+            <path d="M2.5 3h2l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/>
+          </svg>
+          <span class="carrinho-contador" id="carrinho-contador" hidden>0</span>
+        </button>
       </div>
     </div>
 
@@ -152,17 +161,55 @@
         </div>
       </div>
       <div class="modal-rodape">
-        <a id="botao-instagram" class="botao-instagram" href="#" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+        <div class="modal-acoes">
+          <button id="modal-add-carrinho" class="botao-loja botao-loja-secundario" type="button">Adicionar ao carrinho</button>
+          <button id="modal-comprar" class="botao-loja botao-loja-primario" type="button">Comprar agora</button>
+        </div>
+        <a id="botao-instagram" class="modal-suporte" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
             <path d="M12 2.2c3.2 0 3.6 0 4.85.07 1.17.05 1.8.25 2.22.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.05.41 2.22.06 1.26.07 1.64.07 4.85s0 3.6-.07 4.85c-.05 1.17-.25 1.8-.41 2.22a3.7 3.7 0 0 1-.9 1.38c-.42.42-.82.68-1.38.9-.42.16-1.05.36-2.22.41-1.26.06-1.64.07-4.85.07s-3.6 0-4.85-.07c-1.17-.05-1.8-.25-2.22-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.22C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.85c.05-1.17.25-1.8.41-2.22.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.05-.36 2.22-.41C8.4 2.2 8.8 2.2 12 2.2zm0 5.6a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm5.4-.4a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM12 9.6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z"/>
           </svg>
-          <span class="botao-instagram-texto">Pedir pelo Instagram</span>
+          Dúvidas sobre o livro? Fale no Instagram
         </a>
       </div>
     </div>
   </div>
 
+  <!-- ===== CARRINHO LATERAL (drawer) ===== -->
+  <div class="drawer-fundo" id="drawer-fundo" hidden></div>
+  <aside class="carrinho-drawer" id="carrinho-drawer" hidden role="dialog" aria-modal="true" aria-label="Seu carrinho">
+    <header class="carrinho-head">
+      <h2>Seu carrinho</h2>
+      <button class="carrinho-fechar" id="carrinho-fechar" type="button" aria-label="Fechar carrinho">×</button>
+    </header>
+
+    <div class="carrinho-vazio" id="carrinho-vazio">
+      <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+        <path d="M2.5 3h2l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/>
+      </svg>
+      <p class="carrinho-vazio-titulo">Seu carrinho está vazio</p>
+      <p class="carrinho-vazio-sub">Explore a estante e adicione os livros que quiser levar.</p>
+      <button class="botao-loja botao-loja-secundario" type="button" id="carrinho-continuar">Ver livros</button>
+    </div>
+
+    <div class="carrinho-itens" id="carrinho-itens"></div>
+
+    <footer class="carrinho-rodape" id="carrinho-rodape" hidden>
+      <div class="carrinho-subtotal">
+        <span>Subtotal</span>
+        <strong id="carrinho-subtotal">R$ 0,00</strong>
+      </div>
+      <p class="carrinho-aviso">Frete e entrega são calculados no próximo passo.</p>
+      <a class="botao-loja botao-loja-primario botao-loja-bloco" id="ir-checkout" href="checkout.html">Finalizar compra</a>
+    </footer>
+  </aside>
+
   <script src="js/livros.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/precos.js"></script>
+  <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/loja.js"></script>
 </body>
 </html>

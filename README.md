@@ -1,11 +1,17 @@
 # 📚 Site da Livraria — Guia Completo
 
-Este é o site da sua livraria. Ele mostra os livros disponíveis e, ao clicar em
-um deles, leva o cliente direto para o seu Instagram com uma mensagem já
-escrita perguntando sobre o livro.
+Este é o site da sua livraria. Agora ele é uma **loja de verdade**: o cliente
+navega pela estante, adiciona livros ao **carrinho** e finaliza a compra
+pagando com **Pix** (o QR Code e o "Pix Copia e Cola" são gerados na hora, com
+o valor exato do pedido). O dinheiro cai direto na sua conta — sem taxa e sem
+intermediário.
 
 Você **não precisa saber programar** para mexer no dia a dia. Este guia
 explica tudo passo a passo.
+
+> 💳 **Quer começar a receber pagamentos?** Pule direto para a seção
+> **"💳 Como receber os pagamentos (Pix)"** mais abaixo. É só preencher seus
+> dados no arquivo `js/config.js`.
 
 ---
 
@@ -13,15 +19,130 @@ explica tudo passo a passo.
 
 ```
 projeto livros/
-├── index.html         ← a página em si (raramente vai precisar mexer)
+├── index.html         ← a vitrine (estante de livros)
+├── checkout.html      ← a página de finalizar compra (pagamento)
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
 │   ├── livros.js      ← 👈 É AQUI QUE VOCÊ EDITA OS LIVROS
-│   └── main.js        ← lógica do site (raramente precisa mexer)
+│   ├── config.js      ← 👈 É AQUI QUE VOCÊ LIGA O PIX E O FRETE
+│   ├── precos.js      ← cálculo de preços e promoção (não precisa mexer)
+│   ├── cart.js        ← o carrinho de compras (não precisa mexer)
+│   ├── pix.js         ← gera o "Pix Copia e Cola" (não precisa mexer)
+│   ├── main.js        ← lógica da vitrine (não precisa mexer)
+│   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
+│   ├── checkout.js    ← lógica do pagamento (não precisa mexer)
+│   └── vendor/
+│       └── qrcode.js  ← biblioteca que desenha o QR Code (não precisa mexer)
 ├── img/               ← coloque aqui as fotos das capas
 └── README.md          ← este guia
 ```
+
+---
+
+## 💳 Como receber os pagamentos (Pix)
+
+A loja já está pronta para vender. Falta só **uma coisa**: preencher os dados
+da sua conta para o site gerar o Pix. Não precisa criar conta em lugar nenhum —
+é a chave Pix do seu próprio banco.
+
+### Passo a passo
+
+1. Abra o arquivo `js/config.js`.
+2. Preencha os 3 campos do bloco `pix`:
+
+   ```js
+   pix: {
+     chave: "SUA_CHAVE_PIX",          // CPF, celular (+55...), e-mail ou chave aleatória
+     nomeRecebedor: "SEU NOME",       // o nome que está na conta (máx. 25 letras)
+     cidade: "Juazeirinho"            // sua cidade (máx. 15 letras)
+   },
+   ```
+
+   - **chave** pode ser:
+     - CPF só com números: `"12345678900"`
+     - Celular com +55: `"+5583999998888"`
+     - E-mail: `"voce@email.com"`
+     - Chave aleatória do banco (aquele código comprido)
+   - **nomeRecebedor**: o nome do titular da conta, igual ao do banco.
+   - **cidade**: a cidade da sua conta.
+
+3. Salve o arquivo e publique o site de novo (veja a seção de publicação).
+
+Pronto! No checkout, o cliente clica em **"Gerar Pix"** e o site mostra o
+**QR Code** e o **"Pix Copia e Cola"** com o valor exato do pedido. Ele paga
+pelo app do banco e o dinheiro cai direto na sua conta.
+
+### ✅ Como confirmar que o pagamento caiu
+
+O Pix aqui é **confirmado manualmente** (jeito simples e sem custo):
+
+- Você confere no **app do seu banco** que o valor entrou. Cada pedido tem um
+  **código** (ex.: `BV12AB34`) que ajuda a identificar.
+- O cliente também pode te **enviar o comprovante** pelo WhatsApp/Instagram —
+  na tela de "pedido recebido" aparece um botão pra isso (se você preencher o
+  campo `whatsapp` no `js/config.js`).
+- Só depois de confirmar o pagamento é que você separa e entrega/envia o livro.
+
+> 💡 Enquanto o campo `chave` ficar **vazio**, o botão de pagamento fica
+> desativado (o resto do checkout continua funcionando pra você testar).
+> Quando preencher a chave, o Pix liga sozinho.
+
+---
+
+## 📬 Como receber os pedidos por e-mail
+
+Cada pedido finalizado é enviado **automaticamente para o seu e-mail**, com:
+nome, e-mail e WhatsApp do cliente, forma de entrega, **endereço completo**
+(ou "Entrega a combinar" quando for retirada), itens, valores e o código do
+pedido. Você ainda responde direto pro e-mail do cliente (vem no "responder").
+
+Usamos o **Web3Forms** (gratuito, sem instalar nada e sem expor o seu e-mail).
+
+### Passo a passo (1 minuto)
+
+1. Acesse **https://web3forms.com**
+2. Digite o **e-mail onde quer receber os pedidos** e clique em
+   **"Create Access Key"**.
+3. Você recebe uma **Access Key** nesse e-mail. Copie e cole no `js/config.js`:
+
+   ```js
+   pedidos: {
+     web3formsKey: "COLE_AQUI_A_SUA_CHAVE"
+   },
+   ```
+
+4. Salve e publique o site de novo.
+
+> Enquanto a chave ficar vazia, o envio por e-mail fica desligado (o checkout
+> continua funcionando). O e-mail é enviado quando o cliente toca em
+> **"Já fiz o pagamento"** — vale lembrar o cliente de apertar esse botão
+> depois de pagar.
+>
+> ⚠️ O e-mail avisa do pedido, mas **quem confirma se o Pix caiu é você**, no
+> app do banco (o código do pedido ajuda a casar uma coisa com a outra).
+
+---
+
+## 🚚 Como ajustar o frete e a entrega
+
+Tudo fica no arquivo `js/config.js`, dentro de `frete`. Cada opção é um bloco:
+
+```js
+{
+  id: "correios",
+  titulo: "Envio pelos Correios (todo o Brasil)",
+  descricao: "Enviamos para todo o Brasil...",
+  valor: 15,            // preço do frete (use 0 para grátis)
+  pedeEndereco: true    // true mostra os campos de endereço no checkout
+}
+```
+
+- Para **frete grátis acima de um valor**, ajuste `freteGratisAcima` (ex.: `150`).
+  Use `0` para desligar.
+- Você pode adicionar ou remover opções de entrega copiando/apagando esses blocos.
+- No mesmo arquivo dá para preencher um **WhatsApp** (campo `whatsapp`): aparece
+  um botão na tela de pedido confirmado para o cliente te mandar o comprovante.
 
 ---
 
