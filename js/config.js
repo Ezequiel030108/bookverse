@@ -60,7 +60,7 @@ window.LOJA_CONFIG = {
           na Vercel (MP_ACCESS_TOKEN, WEB3FORMS_KEY) — veja o README,
           seção "⚡ Confirmação automática do Pix". Antes disso, deixe
           em "manual" para o checkout continuar funcionando. */
-    modo: "manual"
+    modo: "mercadopago"
   },
 
   /* ---------- RECEBER PEDIDOS POR E-MAIL ----------
