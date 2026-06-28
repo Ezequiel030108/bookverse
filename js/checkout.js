@@ -41,6 +41,13 @@
   let freteId = opcoesFrete.length ? opcoesFrete[0].id : null;
   let codigoPedido = null;
 
+  // Modo de pagamento: "manual" (Pix gerado no navegador) ou
+  // "mercadopago" (cobrança + confirmação automática via backend).
+  const modoPix = String((CFG.pix && CFG.pix.modo) || "manual").toLowerCase();
+  const usaMercadoPago = modoPix === "mercadopago" || modoPix === "mp";
+  let pagamentoId = null;   // id do pagamento no Mercado Pago
+  let pollTimer = null;     // checagem automática "já caiu?"
+
   function opcaoSelecionada() {
     return opcoesFrete.find(o => o.id === freteId) || opcoesFrete[0] || { valor: 0, pedeEndereco: false };
   }
@@ -207,7 +214,7 @@
 
   function atualizarEstadoPagamento() {
     const ok = validar(false) && !Carrinho.resolver().vazio;
-    const configurado = pixConfigurado();
+    const configurado = usaMercadoPago || pixConfigurado();
     if (avisoConfig) avisoConfig.hidden = configurado;
     if (avisoForm)   avisoForm.hidden = ok || !configurado;
     if (btnGerar)    btnGerar.disabled = !(ok && configurado);
@@ -252,8 +259,12 @@
 
   /* ---------- Pix: gerar / QR / copiar ---------- */
   function resetPix() {
+    pararPolling();
     if (pixArea) pixArea.hidden = true;
     codigoPedido = null;
+    pagamentoId = null;
+    const st = document.getElementById("pix-status");
+    if (st) st.hidden = true;
     if (erroPag) erroPag.hidden = true;
   }
 
@@ -271,12 +282,34 @@
     el.appendChild(img);
   }
 
+  function mostrarPixArea() {
+    pixArea.hidden = false;
+    pixArea.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // QR Code já pronto (imagem PNG), usado no modo Mercado Pago.
+  function renderQRImagem(base64) {
+    const el = document.getElementById("pix-qr");
+    el.innerHTML = "";
+    if (!base64) return;
+    const img = document.createElement("img");
+    img.src = "data:image/png;base64," + base64;
+    img.alt = "QR Code para pagamento via Pix";
+    img.className = "pix-qr-img";
+    el.appendChild(img);
+  }
+
   function gerarPix() {
     if (!validar(true)) {
       if (avisoForm) avisoForm.hidden = false;
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    return usaMercadoPago ? gerarPixMercadoPago() : gerarPixManual();
+  }
+
+  /* ----- Modo manual: Pix gerado no navegador (sem backend) ----- */
+  function gerarPixManual() {
     if (!pixConfigurado()) return;
 
     const { total } = montarPedido();
@@ -300,8 +333,141 @@
     document.getElementById("pix-codigo").value = payload;
     document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
     renderQR(payload);
-    pixArea.hidden = false;
-    pixArea.scrollIntoView({ behavior: "smooth", block: "start" });
+    mostrarPixArea();
+  }
+
+  /* ----- Modo Mercado Pago: cobrança + confirmação automática ----- */
+  async function gerarPixMercadoPago() {
+    const { total } = montarPedido();
+    const cliente = dadosCliente();
+    codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
+
+    if (erroPag) erroPag.hidden = true;
+    let txtBtn;
+    if (btnGerar) { txtBtn = btnGerar.innerHTML; btnGerar.disabled = true; btnGerar.textContent = "Gerando Pix…"; }
+
+    try {
+      const resp = await fetch("/api/criar-pix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          valor: total,
+          codigo: codigoPedido,
+          descricao: `Pedido ${codigoPedido} — ${CFG.nomeLoja || "BookVerse"}`,
+          pagador: { email: cliente.email, nome: cliente.nome },
+          emailPedido: montarEmailBody()
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.qr_code) {
+        throw new Error((data && data.error) || "Falha ao gerar o Pix.");
+      }
+
+      pagamentoId = data.id;
+      document.getElementById("pix-codigo").value = data.qr_code;
+      document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
+      renderQRImagem(data.qr_code_base64);
+      mostrarPixArea();
+      marcarAguardando();
+      salvarPerfilSeLogado();
+      salvarPedidoSeLogado("pendente");
+      iniciarPolling();
+    } catch (e) {
+      if (erroPag) {
+        erroPag.hidden = false;
+        erroPag.textContent = "Não foi possível gerar o Pix agora. Tente novamente em instantes.";
+      }
+    } finally {
+      if (btnGerar) { btnGerar.disabled = false; if (txtBtn) btnGerar.innerHTML = txtBtn; }
+    }
+  }
+
+  function marcarAguardando() {
+    const st = document.getElementById("pix-status");
+    if (st) {
+      st.hidden = false;
+      st.className = "pix-status aguardando";
+      st.innerHTML = "⏳ Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
+    }
+    const btn = document.getElementById("btn-ja-paguei");
+    if (btn) btn.textContent = "Já paguei — verificar agora";
+  }
+
+  function iniciarPolling() {
+    pararPolling();
+    pollTimer = setInterval(() => { checarPagamento(false); }, 4000);
+  }
+  function pararPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  // Consulta o backend se o pagamento já foi aprovado.
+  async function checarPagamento(manual) {
+    if (!pagamentoId) return false;
+    try {
+      const r = await fetch("/api/status-pix?id=" + encodeURIComponent(pagamentoId));
+      const d = await r.json();
+      if (d && d.status === "approved") {
+        pararPolling();
+        await aoConfirmarPagamento();
+        return true;
+      }
+      if (manual) {
+        const st = document.getElementById("pix-status");
+        if (st) {
+          st.className = "pix-status aguardando";
+          st.innerHTML = "Ainda não identificamos o pagamento. Se você acabou de pagar, aguarde alguns segundos 💜";
+        }
+      }
+    } catch (e) { /* silencioso: tenta de novo no próximo ciclo */ }
+    return false;
+  }
+
+  async function aoConfirmarPagamento() {
+    const st = document.getElementById("pix-status");
+    if (st) { st.className = "pix-status confirmado"; st.innerHTML = "✅ Pagamento confirmado!"; }
+    try { await salvarPedidoSeLogado("pago"); } catch (e) {}
+    sucesso(true);
+  }
+
+  /* ----- Conta (Firebase): salvar perfil e pedido, se logado ----- */
+  function salvarPerfilSeLogado() {
+    if (!window.Auth || !window.Auth.usuario || !window.Auth.usuario()) return Promise.resolve();
+    const op = opcaoSelecionada();
+    const perfil = {
+      nome: val("cli-nome"),
+      email: val("cli-email"),
+      telefone: val("cli-tel"),
+      instagram: val("cli-instagram").replace(/^@+/, "")
+    };
+    if (op.pedeEndereco) {
+      perfil.endereco = {
+        cep: val("end-cep"), rua: val("end-rua"), numero: val("end-numero"),
+        complemento: val("end-compl"), bairro: val("end-bairro"),
+        cidade: val("end-cidade"), uf: val("end-uf").toUpperCase()
+      };
+    }
+    return window.Auth.salvarPerfil(perfil).catch(() => {});
+  }
+
+  function salvarPedidoSeLogado(status) {
+    if (!window.Auth || !window.Auth.usuario || !window.Auth.usuario()) return Promise.resolve();
+    const { dados, frete, total } = montarPedido();
+    const cliente = dadosCliente();
+    const pedido = {
+      codigo: codigoPedido,
+      status: status,
+      total: total,
+      subtotal: dados.subtotal,
+      frete: frete,
+      entrega: cliente.entrega,
+      endereco: cliente.endereco || "",
+      pagamentoId: pagamentoId || "",
+      itens: dados.itens.map(i => ({
+        titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
+      }))
+    };
+    return window.Auth.salvarPedido(pedido).catch(() => {});
   }
 
   function copiarPix() {
@@ -322,11 +488,12 @@
     }
   }
 
-  /* ---------- Envio do pedido por e-mail (Web3Forms) ---------- */
-  function enviarPedidoEmail() {
-    const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
-    if (!key) return Promise.resolve();          // e-mail desligado
-
+  /* ---------- Pedido por e-mail (Web3Forms) ----------
+     montarEmailBody() devolve o corpo do e-mail SEM a access_key.
+       - Modo manual: enviado direto pelo navegador (enviarEmailManual).
+       - Modo Mercado Pago: enviado para o backend, que o guarda na
+         cobrança e dispara o e-mail só quando o Pix é confirmado. */
+  function montarEmailBody() {
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
     const loja = CFG.nomeLoja || "BookVerse";
@@ -355,11 +522,10 @@
       `Total: ${Precos.formatarBRL(total)}`,
       cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
       ``,
-      `Pagamento: Pix — confira o recebimento no seu banco (código ${codigoPedido}).`
+      `Pagamento: Pix — código ${codigoPedido}.`
     ].join("\n");
 
-    const body = {
-      access_key: key,
+    return {
       subject: `Novo pedido ${codigoPedido} — ${loja}`,
       from_name: `${loja} — Loja`,
       replyto: cliente.email || "",
@@ -374,7 +540,12 @@
       "Total": Precos.formatarBRL(total),
       "message": mensagem
     };
+  }
 
+  function enviarEmailManual() {
+    const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
+    if (!key) return Promise.resolve();          // e-mail desligado
+    const body = Object.assign({ access_key: key }, montarEmailBody());
     return fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -391,13 +562,27 @@
     }
     const btn = document.getElementById("btn-ja-paguei");
     let original;
+
+    // Modo Mercado Pago: o botão só força uma verificação imediata.
+    // Quem realmente conclui o pedido é a confirmação automática.
+    if (usaMercadoPago) {
+      if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Verificando…"; }
+      await checarPagamento(true);
+      if (btn) { btn.disabled = false; btn.textContent = original; }
+      return;
+    }
+
+    // Modo manual: envia o e-mail (declaração do cliente) e conclui.
     if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Enviando pedido…"; }
-    try { await enviarPedidoEmail(); } catch (e) { /* não bloqueia a conclusão do pedido */ }
+    try { await enviarEmailManual(); } catch (e) { /* não bloqueia a conclusão do pedido */ }
+    try { await salvarPedidoSeLogado("aguardando"); } catch (e) {}
+    try { await salvarPerfilSeLogado(); } catch (e) {}
     if (btn) { btn.disabled = false; btn.textContent = original; }
-    sucesso();
+    sucesso(false);
   }
 
-  function sucesso() {
+  function sucesso(confirmado) {
+    pararPolling();
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
 
@@ -417,7 +602,9 @@
         <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
       <p class="conf-entrega"><strong>Entrega:</strong> ${cliente.entrega}${cliente.endereco ? " — " + cliente.endereco : ""}</p>
-      <p class="conf-aviso">Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante pra agilizar 💜</p>`;
+      <p class="conf-aviso">${confirmado
+        ? "✅ Pagamento confirmado! Já estamos preparando o seu pedido 💜"
+        : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante pra agilizar 💜"}</p>`;
 
     const sub = document.getElementById("confirmacao-sub");
     sub.textContent = `Obrigado, ${cliente.nome || "leitor(a)"}! Recebemos seu pedido.`;
@@ -457,10 +644,41 @@
   const btnPaguei = document.getElementById("btn-ja-paguei");
   if (btnPaguei) btnPaguei.addEventListener("click", finalizar);
 
+  /* ---------- Preenche o formulário com os dados da conta ---------- */
+  function setSeVazio(id, valor) {
+    const el = document.getElementById(id);
+    if (el && !el.value && valor) el.value = valor;
+  }
+
+  function preencherDeConta() {
+    if (!window.Auth || !window.Auth.configurado) return;
+    window.Auth.onChange(async (user) => {
+      if (!user) return;
+      setSeVazio("cli-nome", user.nome);
+      setSeVazio("cli-email", user.email);
+      try {
+        const p = await window.Auth.perfil();
+        if (p) {
+          setSeVazio("cli-nome", p.nome);
+          setSeVazio("cli-email", p.email);
+          setSeVazio("cli-tel", p.telefone);
+          setSeVazio("cli-instagram", p.instagram ? "@" + p.instagram : "");
+          const en = p.endereco || {};
+          setSeVazio("end-cep", en.cep);   setSeVazio("end-rua", en.rua);
+          setSeVazio("end-numero", en.numero); setSeVazio("end-compl", en.complemento);
+          setSeVazio("end-bairro", en.bairro); setSeVazio("end-cidade", en.cidade);
+          setSeVazio("end-uf", en.uf);
+        }
+      } catch (e) {}
+      atualizarEstadoPagamento();
+    });
+  }
+
   function init() {
     if (Carrinho.resolver().vazio) { render(); return; }
     montarEntrega();
     render();
+    preencherDeConta();
     atualizarEstadoPagamento();
   }
 

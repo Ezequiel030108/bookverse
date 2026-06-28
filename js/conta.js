@@ -1,0 +1,167 @@
+/* ============================================================
+   BOOKVERSE — PÁGINA "MINHA CONTA"
+   ------------------------------------------------------------
+   Mostra o login com Google, o perfil do cliente (que preenche
+   o checkout depois) e o histórico de pedidos. Não precisa mexer.
+   ============================================================ */
+
+(function () {
+  const Auth = window.Auth;
+  const CFG = window.LOJA_CONFIG || {};
+  const simbolo = (CFG.moeda && CFG.moeda.simbolo) || "R$";
+
+  const elCarregando = document.getElementById("conta-carregando");
+  const elDesconfig  = document.getElementById("conta-desconfig");
+  const elDeslogado  = document.getElementById("conta-deslogado");
+  const elLogado     = document.getElementById("conta-logado");
+  const elErro       = document.getElementById("conta-erro");
+
+  const anoEl = document.getElementById("ano-atual");
+  if (anoEl) anoEl.textContent = new Date().getFullYear();
+
+  function fmt(v) {
+    const n = Number(v) || 0;
+    return simbolo + " " + n.toFixed(2).replace(".", ",");
+  }
+  function mostrar(el) {
+    [elCarregando, elDesconfig, elDeslogado, elLogado].forEach(x => { if (x) x.hidden = (x !== el); });
+  }
+
+  /* ---------- Contas desligadas ---------- */
+  if (!Auth || !Auth.configurado) {
+    mostrar(elDesconfig);
+    return;
+  }
+
+  /* ---------- Login com Google ---------- */
+  const btnGoogle = document.getElementById("btn-google");
+  if (btnGoogle) {
+    btnGoogle.addEventListener("click", async () => {
+      if (elErro) elErro.hidden = true;
+      btnGoogle.disabled = true;
+      try {
+        await Auth.entrarComGoogle();
+      } catch (e) {
+        if (elErro) {
+          elErro.hidden = false;
+          elErro.textContent = "Não foi possível entrar com o Google. Tente novamente.";
+        }
+      } finally {
+        btnGoogle.disabled = false;
+      }
+    });
+  }
+
+  const btnSair = document.getElementById("btn-sair");
+  if (btnSair) btnSair.addEventListener("click", () => Auth.sair());
+
+  /* ---------- Formulário de perfil ---------- */
+  const formPerfil = document.getElementById("form-perfil");
+  const perfilOk = document.getElementById("perfil-ok");
+  function v(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
+  function set(id, val) { const e = document.getElementById(id); if (e) e.value = val || ""; }
+
+  if (formPerfil) {
+    formPerfil.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const btn = formPerfil.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try {
+        await Auth.salvarPerfil({
+          nome: v("p-nome"),
+          telefone: v("p-tel"),
+          instagram: v("p-instagram").replace(/^@+/, ""),
+          endereco: {
+            cep: v("p-cep"), rua: v("p-rua"), numero: v("p-numero"),
+            complemento: v("p-compl"), bairro: v("p-bairro"),
+            cidade: v("p-cidade"), uf: v("p-uf").toUpperCase()
+          }
+        });
+        if (perfilOk) { perfilOk.hidden = false; setTimeout(() => { perfilOk.hidden = true; }, 2500); }
+      } catch (e) {
+        alert("Não foi possível salvar agora. Tente novamente.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+  }
+
+  /* ---------- Histórico de pedidos ---------- */
+  const STATUS = {
+    pago:        { texto: "Pago",                  classe: "pedido-pago" },
+    pendente:    { texto: "Aguardando pagamento",  classe: "pedido-pendente" },
+    aguardando:  { texto: "Aguardando confirmação", classe: "pedido-pendente" }
+  };
+
+  async function carregarPedidos() {
+    const lista = document.getElementById("lista-pedidos");
+    const vazio = document.getElementById("sem-pedidos");
+    if (!lista) return;
+    lista.innerHTML = "";
+    let pedidos = [];
+    try { pedidos = await Auth.listarPedidos(); } catch (e) { pedidos = []; }
+
+    if (!pedidos.length) {
+      if (vazio) vazio.hidden = false;
+      return;
+    }
+    if (vazio) vazio.hidden = true;
+
+    lista.innerHTML = pedidos.map(p => {
+      const st = STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" };
+      const itens = (p.itens || [])
+        .map(i => `<li>${i.qty}× ${i.titulo}</li>`).join("");
+      const data = p.criadoEm && p.criadoEm.toDate
+        ? p.criadoEm.toDate().toLocaleDateString("pt-BR")
+        : "";
+      return `
+        <article class="pedido-card">
+          <div class="pedido-topo">
+            <span class="pedido-codigo">${p.codigo || "—"}</span>
+            <span class="pedido-status ${st.classe}">${st.texto}</span>
+          </div>
+          ${data ? `<p class="pedido-data">${data}</p>` : ""}
+          <ul class="pedido-itens">${itens}</ul>
+          <div class="pedido-rodape">
+            <span>${p.entrega || ""}</span>
+            <strong>${fmt(p.total)}</strong>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  /* ---------- Reage ao login/logout ---------- */
+  Auth.onChange(async (user) => {
+    // Enquanto ainda não sabemos o estado, segue "Carregando…".
+    if (!user && !Auth.pronto) { mostrar(elCarregando); return; }
+    if (user) {
+      mostrar(elLogado);
+      const fNome = document.getElementById("conta-nome");
+      const fEmail = document.getElementById("conta-email");
+      const fFoto = document.getElementById("conta-foto");
+      if (fNome) fNome.textContent = user.nome || "Leitor(a)";
+      if (fEmail) fEmail.textContent = user.email || "";
+      if (fFoto) fFoto.innerHTML = user.foto ? `<img src="${user.foto}" alt="">` : "";
+
+      // Preenche o formulário: começa com os dados do Google e completa com o perfil salvo.
+      set("p-nome", user.nome);
+      set("p-email", user.email);
+      try {
+        const perfil = await Auth.perfil();
+        if (perfil) {
+          if (perfil.nome) set("p-nome", perfil.nome);
+          set("p-tel", perfil.telefone);
+          set("p-instagram", perfil.instagram ? "@" + perfil.instagram : "");
+          const en = perfil.endereco || {};
+          set("p-cep", en.cep); set("p-rua", en.rua); set("p-numero", en.numero);
+          set("p-compl", en.complemento); set("p-bairro", en.bairro);
+          set("p-cidade", en.cidade); set("p-uf", en.uf);
+        }
+      } catch (e) {}
+
+      carregarPedidos();
+    } else {
+      mostrar(elDeslogado);
+    }
+  });
+})();
