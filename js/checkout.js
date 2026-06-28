@@ -127,6 +127,9 @@
     } else {
       elFrete.textContent = Precos.formatarBRL(frete);
     }
+    // Sem nenhuma opção paga: escondemos a linha "Frete" (não cobramos frete).
+    const elLinhaFrete = document.getElementById("resumo-linha-frete");
+    if (elLinhaFrete) elLinhaFrete.hidden = !opcoesFrete.some(o => o.valor > 0);
     elTotal.textContent = Precos.formatarBRL(dados.subtotal + frete);
   }
 
@@ -617,7 +620,7 @@
       <ul class="conf-itens">${linhas}</ul>
       <dl class="conf-totais">
         <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(dados.subtotal)}</dd></div>
-        <div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>
+        ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
         <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
       <p class="conf-entrega"><strong>Entrega:</strong> ${cliente.entrega}${cliente.endereco ? " — " + cliente.endereco : ""}</p>
