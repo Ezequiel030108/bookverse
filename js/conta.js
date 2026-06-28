@@ -42,9 +42,21 @@
       try {
         await Auth.entrarComGoogle();
       } catch (e) {
+        console.error("[BookVerse] Erro no login Google:", e);
         if (elErro) {
           elErro.hidden = false;
-          elErro.textContent = "Não foi possível entrar com o Google. Tente novamente.";
+          const code = (e && e.code) || "";
+          let msg = "Não foi possível entrar com o Google. Tente novamente.";
+          if (code === "auth/unauthorized-domain") {
+            msg = "Este site ainda não está autorizado no Firebase. (Lojista: adicione este domínio em Authentication → Settings → Authorized domains.)";
+          } else if (code === "auth/operation-not-allowed") {
+            msg = "O login com Google não está ativado. (Lojista: ative o provedor Google em Authentication → Sign-in method.)";
+          } else if (code === "auth/popup-blocked") {
+            msg = "Seu navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.";
+          } else if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+            msg = "A janela de login foi fechada antes de concluir. Tente novamente.";
+          }
+          elErro.textContent = code ? msg + " [" + code + "]" : msg;
         }
       } finally {
         btnGoogle.disabled = false;
