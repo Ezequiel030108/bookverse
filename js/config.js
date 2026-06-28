@@ -43,8 +43,8 @@ window.LOJA_CONFIG = {
      que o pagamento caiu (o cliente também pode te enviar o comprovante
      pelo WhatsApp/Instagram). */
   pix: {
-    chave: "",
-    nomeRecebedor: "",
+    chave: "13377347488",
+    nomeRecebedor: "Cauan Batista da Costa",
     cidade: "Juazeirinho"
   },
 
