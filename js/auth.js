@@ -53,7 +53,9 @@
     async salvarPerfil(d)   { await prontoPromise; return impl.salvarPerfil(d); },
     async salvarPedido(p)   { await prontoPromise; return impl.salvarPedido(p); },
     async atualizarStatusPedido(c, s) { await prontoPromise; return impl.atualizarStatusPedido(c, s); },
-    async listarPedidos()   { await prontoPromise; return impl.listarPedidos(); }
+    async listarPedidos()   { await prontoPromise; return impl.listarPedidos(); },
+    async salvarCarrinho(c) { await prontoPromise; return impl.salvarCarrinho(c); },
+    async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); }
   };
   window.Auth = Auth;
 
@@ -89,7 +91,9 @@
       salvarPerfil: async () => {},
       salvarPedido: async () => {},
       atualizarStatusPedido: async () => {},
-      listarPedidos: async () => []
+      listarPedidos: async () => [],
+      salvarCarrinho: async () => {},
+      lerCarrinho: async () => null
     };
     Auth.pronto = true;
     resolverPronto();
@@ -120,7 +124,8 @@
       impl = {
         entrarComGoogle: async () => { alert("Não foi possível conectar ao login agora. Tente novamente."); },
         sair: async () => {}, perfil: async () => null, salvarPerfil: async () => {},
-        salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, listarPedidos: async () => []
+        salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, listarPedidos: async () => [],
+        salvarCarrinho: async () => {}, lerCarrinho: async () => null
       };
       Auth.pronto = true;
       notificar();
@@ -183,6 +188,19 @@
         const snap = await db.collection("users").doc(usuarioAtual.uid)
           .collection("pedidos").orderBy("criadoEm", "desc").limit(50).get();
         return snap.docs.map(d => d.data());
+      },
+
+      // Carrinho guardado na conta (campo "carrinho" do documento do usuário).
+      salvarCarrinho: async function (itens) {
+        if (!usuarioAtual) return;
+        await db.collection("users").doc(usuarioAtual.uid)
+          .set({ carrinho: Array.isArray(itens) ? itens : [] }, { merge: true });
+      },
+      lerCarrinho: async function () {
+        if (!usuarioAtual) return null;
+        const doc = await db.collection("users").doc(usuarioAtual.uid).get();
+        const data = doc.exists ? doc.data() : null;
+        return data && Array.isArray(data.carrinho) ? data.carrinho : null;
       }
     };
 

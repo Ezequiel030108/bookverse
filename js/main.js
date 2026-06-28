@@ -262,6 +262,7 @@ function criarCard(livro, indice, seloNovo) {
   if (btnAdd) btnAdd.addEventListener("click", (e) => {
     e.stopPropagation();
     if (!window.Carrinho) return;
+    if (window.podeUsarCarrinho && !window.podeUsarCarrinho()) return;
     window.Carrinho.add(livro, 1);
     btnAdd.classList.add("adicionado");
     setTimeout(() => btnAdd.classList.remove("adicionado"), 900);
@@ -723,6 +724,7 @@ function ativarModoPromocao() {
   if (btnAdd) btnAdd.addEventListener("click", () => {
     const l = window.__livroModal;
     if (!l || l.estoque <= 0 || !window.Carrinho) return;
+    if (window.podeUsarCarrinho && !window.podeUsarCarrinho()) return;
     window.Carrinho.add(l, 1);
     if (window.lojaToast) window.lojaToast(`"${l.titulo}" no carrinho`);
     fecharModal();
@@ -731,6 +733,7 @@ function ativarModoPromocao() {
   if (btnComprar) btnComprar.addEventListener("click", () => {
     const l = window.__livroModal;
     if (!l || l.estoque <= 0 || !window.Carrinho) return;
+    if (window.podeUsarCarrinho && !window.podeUsarCarrinho()) return;
     window.Carrinho.add(l, 1);
     window.location.href = "checkout.html";
   });
