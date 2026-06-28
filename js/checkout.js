@@ -30,6 +30,7 @@
   const form         = document.getElementById("form-entrega");
   const avisoForm    = document.getElementById("aviso-form");
   const avisoConfig  = document.getElementById("aviso-config");
+  const avisoLogin   = document.getElementById("aviso-login");
   const erroPag      = document.getElementById("pagamento-erro");
   const btnGerar     = document.getElementById("btn-gerar-pix");
   const pixArea      = document.getElementById("pix-area");
@@ -62,6 +63,15 @@
 
   function pixConfigurado() {
     return !!(CFG.pix && String(CFG.pix.chave || "").trim());
+  }
+
+  // Só exige conta quando o login está configurado e a opção está ligada.
+  function exigeConta() {
+    return !!(CFG.pedidos && CFG.pedidos.exigirConta) &&
+           !!(window.Auth && window.Auth.configurado);
+  }
+  function usuarioLogado() {
+    return !!(window.Auth && window.Auth.usuario && window.Auth.usuario());
   }
 
   /* ---------- Render do resumo ---------- */
@@ -215,9 +225,11 @@
   function atualizarEstadoPagamento() {
     const ok = validar(false) && !Carrinho.resolver().vazio;
     const configurado = usaMercadoPago || pixConfigurado();
+    const logado = !exigeConta() || usuarioLogado();
     if (avisoConfig) avisoConfig.hidden = configurado;
-    if (avisoForm)   avisoForm.hidden = ok || !configurado;
-    if (btnGerar)    btnGerar.disabled = !(ok && configurado);
+    if (avisoLogin)  avisoLogin.hidden = logado;
+    if (avisoForm)   avisoForm.hidden = ok || !configurado || !logado;
+    if (btnGerar)    btnGerar.disabled = !(ok && configurado && logado);
 
     const { total } = montarPedido();
     const bv = document.getElementById("btn-pix-valor");
@@ -300,6 +312,13 @@
   }
 
   function gerarPix() {
+    if (exigeConta() && !usuarioLogado()) {
+      if (avisoLogin) {
+        avisoLogin.hidden = false;
+        avisoLogin.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
     if (!validar(true)) {
       if (avisoForm) avisoForm.hidden = false;
       form.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -643,6 +662,12 @@
   if (btnCopiar) btnCopiar.addEventListener("click", copiarPix);
   const btnPaguei = document.getElementById("btn-ja-paguei");
   if (btnPaguei) btnPaguei.addEventListener("click", finalizar);
+  const btnLoginCheckout = document.getElementById("btn-login-checkout");
+  if (btnLoginCheckout) btnLoginCheckout.addEventListener("click", async () => {
+    btnLoginCheckout.disabled = true;
+    try { await window.Auth.entrarComGoogle(); } catch (e) {}
+    btnLoginCheckout.disabled = false;
+  });
 
   /* ---------- Preenche o formulário com os dados da conta ---------- */
   function setSeVazio(id, valor) {
@@ -653,24 +678,25 @@
   function preencherDeConta() {
     if (!window.Auth || !window.Auth.configurado) return;
     window.Auth.onChange(async (user) => {
-      if (!user) return;
-      setSeVazio("cli-nome", user.nome);
-      setSeVazio("cli-email", user.email);
-      try {
-        const p = await window.Auth.perfil();
-        if (p) {
-          setSeVazio("cli-nome", p.nome);
-          setSeVazio("cli-email", p.email);
-          setSeVazio("cli-tel", p.telefone);
-          setSeVazio("cli-instagram", p.instagram ? "@" + p.instagram : "");
-          const en = p.endereco || {};
-          setSeVazio("end-cep", en.cep);   setSeVazio("end-rua", en.rua);
-          setSeVazio("end-numero", en.numero); setSeVazio("end-compl", en.complemento);
-          setSeVazio("end-bairro", en.bairro); setSeVazio("end-cidade", en.cidade);
-          setSeVazio("end-uf", en.uf);
-        }
-      } catch (e) {}
-      atualizarEstadoPagamento();
+      if (user) {
+        setSeVazio("cli-nome", user.nome);
+        setSeVazio("cli-email", user.email);
+        try {
+          const p = await window.Auth.perfil();
+          if (p) {
+            setSeVazio("cli-nome", p.nome);
+            setSeVazio("cli-email", p.email);
+            setSeVazio("cli-tel", p.telefone);
+            setSeVazio("cli-instagram", p.instagram ? "@" + p.instagram : "");
+            const en = p.endereco || {};
+            setSeVazio("end-cep", en.cep);   setSeVazio("end-rua", en.rua);
+            setSeVazio("end-numero", en.numero); setSeVazio("end-compl", en.complemento);
+            setSeVazio("end-bairro", en.bairro); setSeVazio("end-cidade", en.cidade);
+            setSeVazio("end-uf", en.uf);
+          }
+        } catch (e) {}
+      }
+      atualizarEstadoPagamento();   // reavalia o botão a cada login/logout
     });
   }
 

@@ -73,9 +73,42 @@
   function v(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
   function set(id, val) { const e = document.getElementById(id); if (e) e.value = val || ""; }
 
+  /* Validação de WhatsApp (mesma regra do checkout). */
+  function soDigitos(x) { return String(x || "").replace(/\D/g, ""); }
+  function whatsappNacional(x) {
+    let d = soDigitos(x);
+    if ((d.length === 12 || d.length === 13) && d.indexOf("55") === 0) d = d.slice(2);
+    return d;
+  }
+  function whatsappValido(x) { return /^[1-9][0-9]9\d{8}$/.test(whatsappNacional(x)); }
+  function marcarWhatsErro(erro) {
+    const tel = document.getElementById("p-tel");
+    const dica = document.getElementById("p-dica-whats");
+    if (tel) tel.classList.toggle("invalido", erro);
+    if (dica) {
+      dica.classList.toggle("erro", erro);
+      dica.textContent = erro
+        ? "Número de WhatsApp inválido. Use DDD + número, ex.: (83) 9 9999-8888."
+        : "Com DDD — ex.: (83) 9 9999-8888.";
+    }
+  }
+  const elTel = document.getElementById("p-tel");
+  if (elTel) elTel.addEventListener("input", () => {
+    if (elTel.classList.contains("invalido") && whatsappValido(elTel.value)) marcarWhatsErro(false);
+  });
+
   if (formPerfil) {
     formPerfil.addEventListener("submit", async (ev) => {
       ev.preventDefault();
+      // WhatsApp: se preenchido, precisa ser um celular válido.
+      const tel = v("p-tel");
+      if (tel && !whatsappValido(tel)) {
+        marcarWhatsErro(true);
+        const el = document.getElementById("p-tel");
+        if (el) el.focus();
+        return;
+      }
+      marcarWhatsErro(false);
       const btn = formPerfil.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
       try {
