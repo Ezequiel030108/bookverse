@@ -137,14 +137,42 @@
   window.lojaToast = toast;
   window.abrirCarrinho = abrirDrawer;
 
+  /* ---------- Aviso "precisa de conta" (modal bloqueante) ---------- */
+  const avisoConta = document.getElementById("aviso-conta");
+  function abrirAvisoConta() {
+    if (!avisoConta) { toast("Crie sua conta para adicionar livros 💜"); return; }
+    avisoConta.hidden = false;
+    requestAnimationFrame(() => avisoConta.classList.add("aberto"));
+    document.body.style.overflow = "hidden";
+  }
+  function fecharAvisoConta() {
+    if (!avisoConta) return;
+    avisoConta.classList.remove("aberto");
+    document.body.style.overflow = "";
+    setTimeout(() => { avisoConta.hidden = true; }, 250);
+  }
+  if (avisoConta) {
+    avisoConta.querySelectorAll("[data-fechar-aviso]").forEach(el =>
+      el.addEventListener("click", fecharAvisoConta));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !avisoConta.hidden) fecharAvisoConta();
+    });
+    const btnG = document.getElementById("aviso-conta-google");
+    if (btnG) btnG.addEventListener("click", async () => {
+      btnG.disabled = true;
+      try { if (window.Auth) await window.Auth.entrarComGoogle(); } catch (e) {}
+      btnG.disabled = false;
+      if (window.Auth && window.Auth.usuario()) fecharAvisoConta();
+    });
+  }
+
   /* ---------- Carrinho exige conta ---------- */
   // Só permite usar o carrinho com o cliente logado (quando o login
-  // está configurado). Caso contrário, mostra uma mensagem pedindo
-  // para criar/entrar na conta.
+  // está configurado). Caso contrário, abre o modal pedindo conta.
   function podeUsarCarrinho() {
     if (!(window.Auth && window.Auth.configurado)) return true; // contas desligadas
     if (window.Auth.usuario()) return true;                     // logado
-    toast("Crie sua conta (botão “Entrar”, no topo) para adicionar livros 💜");
+    abrirAvisoConta();
     return false;
   }
   window.podeUsarCarrinho = podeUsarCarrinho;
