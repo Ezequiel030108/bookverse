@@ -1,11 +1,16 @@
 # 📚 Site da Livraria — Guia Completo
 
-Este é o site da sua livraria. Ele mostra os livros disponíveis e, ao clicar em
-um deles, leva o cliente direto para o seu Instagram com uma mensagem já
-escrita perguntando sobre o livro.
+Este é o site da sua livraria. Agora ele é uma **loja de verdade**: o cliente
+navega pela estante, adiciona livros ao **carrinho** e finaliza a compra
+pagando com **PayPal** (cartão de crédito também funciona, mesmo sem o cliente
+ter conta). O pagamento cai direto na sua conta PayPal.
 
 Você **não precisa saber programar** para mexer no dia a dia. Este guia
 explica tudo passo a passo.
+
+> 💳 **Quer começar a receber pagamentos?** Pule direto para a seção
+> **"💳 Como receber os pagamentos (PayPal)"** mais abaixo. É só colar uma
+> chave no arquivo `js/config.js`.
 
 ---
 
@@ -13,15 +18,84 @@ explica tudo passo a passo.
 
 ```
 projeto livros/
-├── index.html         ← a página em si (raramente vai precisar mexer)
+├── index.html         ← a vitrine (estante de livros)
+├── checkout.html      ← a página de finalizar compra (pagamento)
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
 │   ├── livros.js      ← 👈 É AQUI QUE VOCÊ EDITA OS LIVROS
-│   └── main.js        ← lógica do site (raramente precisa mexer)
+│   ├── config.js      ← 👈 É AQUI QUE VOCÊ LIGA O PAYPAL E O FRETE
+│   ├── precos.js      ← cálculo de preços e promoção (não precisa mexer)
+│   ├── cart.js        ← o carrinho de compras (não precisa mexer)
+│   ├── main.js        ← lógica da vitrine (não precisa mexer)
+│   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
+│   └── checkout.js    ← lógica do pagamento (não precisa mexer)
 ├── img/               ← coloque aqui as fotos das capas
 └── README.md          ← este guia
 ```
+
+---
+
+## 💳 Como receber os pagamentos (PayPal)
+
+A loja já está pronta para vender. Falta só **uma coisa**: dizer para ela qual
+é a sua conta PayPal. Isso é feito com o **Client ID** — uma chave pública
+(pode ficar no site sem problema) que identifica a sua conta.
+
+### Passo a passo
+
+1. Acesse **https://developer.paypal.com/dashboard/applications/live** e
+   entre com a conta PayPal da sua livraria (a conta que vai **receber** o
+   dinheiro).
+2. Crie um aplicativo (botão **"Create App"**) ou abra um que já exista.
+3. Copie o **"Client ID"** que aparece na tela.
+4. Abra o arquivo `js/config.js` e cole o Client ID aqui:
+
+   ```js
+   paypal: {
+     clientId: "COLE_AQUI_O_SEU_CLIENT_ID",
+     ambiente: "producao"
+   },
+   ```
+
+5. Salve o arquivo e publique o site de novo (veja a seção de publicação).
+
+Pronto! A partir daí, todo pagamento feito no checkout cai na sua conta PayPal.
+Você recebe um **e-mail do próprio PayPal** a cada venda e pode ver tudo no
+painel em https://www.paypal.com.
+
+### 🧪 Modo demonstração (enquanto o Client ID está vazio)
+
+Se o campo `clientId` ficar **vazio**, a loja funciona em **modo
+demonstração**: o cliente percorre todo o checkout e vê a tela de "Pedido
+confirmado", mas **nenhuma cobrança é feita**. Isso serve para você testar a
+loja inteira antes de ligar o pagamento de verdade. Quando colar o seu Client
+ID, o modo demonstração desliga sozinho.
+
+> ℹ️ A moeda usada é o **Real (BRL)**. Se um dia precisar mudar, é o campo
+> `moeda` no `js/config.js`.
+
+---
+
+## 🚚 Como ajustar o frete e a entrega
+
+Tudo fica no arquivo `js/config.js`, dentro de `frete`. Cada opção é um bloco:
+
+```js
+{
+  id: "correios",
+  titulo: "Envio pelos Correios (todo o Brasil)",
+  descricao: "Enviamos para todo o Brasil...",
+  valor: 15,            // preço do frete (use 0 para grátis)
+  pedeEndereco: true    // true mostra os campos de endereço no checkout
+}
+```
+
+- Para **frete grátis acima de um valor**, ajuste `freteGratisAcima` (ex.: `150`).
+  Use `0` para desligar.
+- Você pode adicionar ou remover opções de entrega copiando/apagando esses blocos.
+- No mesmo arquivo dá para preencher um **WhatsApp** (campo `whatsapp`): aparece
+  um botão na tela de pedido confirmado para o cliente te mandar o comprovante.
 
 ---
 

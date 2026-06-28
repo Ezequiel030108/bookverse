@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0524" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Finalizar compra · BookVerse</title>
+  <meta name="description" content="Finalize sua compra na BookVerse com pagamento seguro." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="pagina-checkout">
+
+  <div class="ceu-global" aria-hidden="true">
+    <span class="meteoro meteoro-1"></span>
+    <span class="meteoro meteoro-2"></span>
+    <span class="meteoro meteoro-3"></span>
+  </div>
+
+  <!-- ===== BARRA SUPERIOR ===== -->
+  <header class="topbar topbar-checkout" id="topbar">
+    <div class="topbar-linha">
+      <a class="marca" href="index.html" aria-label="Voltar à BookVerse">
+        <span class="marca-logo-wrap" aria-hidden="true">
+          <img class="marca-logo" src="img/logo.png" alt="" onerror="this.classList.add('logo-erro')">
+        </span>
+        <span class="marca-textos">
+          <span class="marca-nome">BookVerse</span>
+          <span class="marca-local">Finalizar compra</span>
+        </span>
+      </a>
+      <a class="link-voltar" href="index.html">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        <span>Continuar comprando</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="checkout-wrap" id="main">
+
+    <!-- ===== CARRINHO VAZIO ===== -->
+    <section class="checkout-vazio" id="checkout-vazio" hidden>
+      <h1>Seu carrinho está vazio</h1>
+      <p>Adicione alguns livros antes de finalizar a compra.</p>
+      <a class="botao-loja botao-loja-primario" href="index.html">Ver a estante</a>
+    </section>
+
+    <!-- ===== CHECKOUT ===== -->
+    <div class="checkout-grid" id="checkout-grid" hidden>
+
+      <!-- Coluna principal: dados + pagamento -->
+      <div class="checkout-principal">
+        <h1 class="checkout-titulo">Finalizar compra</h1>
+
+        <form id="form-entrega" class="checkout-bloco" novalidate>
+          <h2 class="checkout-subtitulo"><span class="passo-num">1</span> Seus dados</h2>
+
+          <div class="campo">
+            <label for="cli-nome">Nome completo</label>
+            <input type="text" id="cli-nome" name="nome" autocomplete="name" required placeholder="Como devemos te chamar?" />
+          </div>
+
+          <div class="campo-linha">
+            <div class="campo">
+              <label for="cli-email">E-mail</label>
+              <input type="email" id="cli-email" name="email" autocomplete="email" required placeholder="voce@email.com" />
+            </div>
+            <div class="campo">
+              <label for="cli-tel">WhatsApp / Telefone</label>
+              <input type="tel" id="cli-tel" name="telefone" autocomplete="tel" inputmode="tel" placeholder="(83) 90000-0000" />
+            </div>
+          </div>
+
+          <h2 class="checkout-subtitulo"><span class="passo-num">2</span> Entrega</h2>
+          <div class="entrega-opcoes" id="entrega-opcoes" role="radiogroup" aria-label="Forma de entrega"></div>
+
+          <div class="endereco-campos" id="endereco-campos" hidden>
+            <div class="campo-linha">
+              <div class="campo campo-cep">
+                <label for="end-cep">CEP</label>
+                <input type="text" id="end-cep" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="58000-000" />
+              </div>
+              <div class="campo campo-cresce">
+                <label for="end-rua">Rua / Logradouro</label>
+                <input type="text" id="end-rua" name="rua" autocomplete="address-line1" placeholder="Rua, avenida..." />
+              </div>
+            </div>
+            <div class="campo-linha">
+              <div class="campo campo-num">
+                <label for="end-numero">Número</label>
+                <input type="text" id="end-numero" name="numero" inputmode="numeric" placeholder="123" />
+              </div>
+              <div class="campo campo-cresce">
+                <label for="end-compl">Complemento <span class="opcional">(opcional)</span></label>
+                <input type="text" id="end-compl" name="complemento" autocomplete="address-line2" placeholder="Apto, bloco, referência..." />
+              </div>
+            </div>
+            <div class="campo-linha">
+              <div class="campo campo-cresce">
+                <label for="end-bairro">Bairro</label>
+                <input type="text" id="end-bairro" name="bairro" placeholder="Bairro" />
+              </div>
+              <div class="campo campo-cresce">
+                <label for="end-cidade">Cidade</label>
+                <input type="text" id="end-cidade" name="cidade" autocomplete="address-level2" placeholder="Cidade" />
+              </div>
+              <div class="campo campo-uf">
+                <label for="end-uf">UF</label>
+                <input type="text" id="end-uf" name="uf" maxlength="2" autocomplete="address-level1" placeholder="PB" />
+              </div>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="cli-obs">Observações <span class="opcional">(opcional)</span></label>
+            <textarea id="cli-obs" name="observacoes" rows="2" placeholder="Algo que devemos saber sobre o pedido?"></textarea>
+          </div>
+        </form>
+
+        <section class="checkout-bloco" id="bloco-pagamento">
+          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento</h2>
+
+          <p class="pagamento-intro">Pagamento processado com segurança pelo <strong>PayPal</strong> — você pode usar cartão de crédito mesmo sem ter conta.</p>
+
+          <div class="pagamento-aviso" id="aviso-form" hidden>
+            Preencha seus dados acima para liberar o pagamento.
+          </div>
+
+          <div class="pagamento-demo" id="aviso-demo" hidden>
+            <strong>Modo demonstração ativo.</strong>
+            Nenhuma cobrança será feita. Para receber pagamentos de verdade, adicione seu
+            <em>Client ID</em> do PayPal em <code>js/config.js</code>.
+          </div>
+
+          <div id="paypal-buttons" class="paypal-container"></div>
+          <div id="paypal-demo" class="paypal-demo" hidden></div>
+
+          <p class="pagamento-erro" id="pagamento-erro" hidden></p>
+        </section>
+      </div>
+
+      <!-- Coluna lateral: resumo do pedido -->
+      <aside class="checkout-resumo" aria-label="Resumo do pedido">
+        <div class="resumo-caixa">
+          <h2 class="resumo-titulo">Resumo do pedido</h2>
+          <div class="resumo-itens" id="resumo-itens"></div>
+
+          <div class="resumo-promo" id="resumo-promo" hidden></div>
+
+          <dl class="resumo-totais">
+            <div class="resumo-linha"><dt>Subtotal</dt><dd id="resumo-subtotal">R$ 0,00</dd></div>
+            <div class="resumo-linha"><dt>Frete</dt><dd id="resumo-frete">—</dd></div>
+            <div class="resumo-linha resumo-total"><dt>Total</dt><dd id="resumo-total">R$ 0,00</dd></div>
+          </dl>
+
+          <p class="resumo-seguro">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Compra segura · seus dados não são compartilhados
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ===== CONFIRMAÇÃO ===== -->
+    <section class="confirmacao" id="confirmacao" hidden>
+      <div class="confirmacao-caixa">
+        <div class="confirmacao-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h1>Pedido confirmado!</h1>
+        <p class="confirmacao-sub" id="confirmacao-sub">Obrigado pela sua compra. 💜</p>
+        <div class="confirmacao-detalhes" id="confirmacao-detalhes"></div>
+        <div class="confirmacao-acoes">
+          <a class="botao-loja botao-loja-secundario" href="index.html">Voltar à loja</a>
+          <a class="botao-loja botao-loja-primario" id="confirmacao-whats" target="_blank" rel="noopener" hidden>Enviar comprovante</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="rodape">
+    <p>© <span id="ano-atual"></span> BookVerse · Juazeirinho</p>
+    <p class="rodape-sub">Feito com carinho para nossos leitores ✦</p>
+  </footer>
+
+  <script src="js/livros.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/precos.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>
