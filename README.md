@@ -115,12 +115,14 @@ Usamos o **Web3Forms** (gratuito, sem instalar nada e sem expor o seu e-mail).
 4. Salve e publique o site de novo.
 
 > Enquanto a chave ficar vazia, o envio por e-mail fica desligado (o checkout
-> continua funcionando). O e-mail é enviado quando o cliente toca em
-> **"Já fiz o pagamento"** — vale lembrar o cliente de apertar esse botão
-> depois de pagar.
+> continua funcionando). O e-mail é enviado **assim que o cliente gera o Pix**
+> — assim você recebe o pedido mesmo que ele esqueça de tocar em "Já fiz o
+> pagamento" ou feche a página depois de pagar.
 >
-> ⚠️ O e-mail avisa do pedido, mas **quem confirma se o Pix caiu é você**, no
-> app do banco (o código do pedido ajuda a casar uma coisa com a outra).
+> ⚠️ O e-mail avisa do pedido (status "aguardando pagamento"), mas **quem
+> confirma se o Pix caiu é você**, no app do banco (o código do pedido ajuda a
+> casar uma coisa com a outra). Se o cliente gerar o Pix e não pagar, você tem
+> o WhatsApp dele para dar um toque.
 
 ---
 

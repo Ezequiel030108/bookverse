@@ -40,6 +40,8 @@
   const opcoesFrete = (CFG.frete && CFG.frete.opcoes) || [];
   let freteId = opcoesFrete.length ? opcoesFrete[0].id : null;
   let codigoPedido = null;
+  let emailEnviado = false;          // já avisamos o lojista deste pedido?
+  let totalEmailEnviado = null;      // total do último e-mail enviado
 
   function opcaoSelecionada() {
     return opcoesFrete.find(o => o.id === freteId) || opcoesFrete[0] || { valor: 0, pedeEndereco: false };
@@ -254,6 +256,7 @@
   function resetPix() {
     if (pixArea) pixArea.hidden = true;
     codigoPedido = null;
+    emailEnviado = false;            // o pedido mudou: avisar de novo ao regerar
     if (erroPag) erroPag.hidden = true;
   }
 
@@ -302,6 +305,14 @@
     renderQR(payload);
     pixArea.hidden = false;
     pixArea.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Avisa o lojista por e-mail JÁ na geração do Pix — assim o pedido nunca
+    // se perde, mesmo que o cliente não toque em "Já fiz o pagamento".
+    if (!emailEnviado || total !== totalEmailEnviado) {
+      enviarPedidoEmail()
+        .then(() => { emailEnviado = true; totalEmailEnviado = total; })
+        .catch(() => {});
+    }
   }
 
   function copiarPix() {
@@ -355,7 +366,7 @@
       `Total: ${Precos.formatarBRL(total)}`,
       cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
       ``,
-      `Pagamento: Pix — confira o recebimento no seu banco (código ${codigoPedido}).`
+      `Pagamento: Pix — AGUARDANDO confirmação. Confira o recebimento no seu banco (código ${codigoPedido}).`
     ].join("\n");
 
     const body = {
@@ -389,11 +400,15 @@
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    // O e-mail normalmente já saiu na geração do Pix. Aqui é só uma rede de
+    // segurança: se aquele envio tiver falhado, tentamos de novo agora.
     const btn = document.getElementById("btn-ja-paguei");
     let original;
-    if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Enviando pedido…"; }
-    try { await enviarPedidoEmail(); } catch (e) { /* não bloqueia a conclusão do pedido */ }
-    if (btn) { btn.disabled = false; btn.textContent = original; }
+    if (!emailEnviado) {
+      if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Enviando pedido…"; }
+      try { await enviarPedidoEmail(); emailEnviado = true; } catch (e) { /* não bloqueia a conclusão */ }
+      if (btn) { btn.disabled = false; btn.textContent = original; }
+    }
     sucesso();
   }
 
