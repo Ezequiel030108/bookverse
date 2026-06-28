@@ -302,18 +302,6 @@ const LIVROS = [
   },
 
   {
-    titulo: "As Aventuras de Sherlock Holmes – Vol. 1",
-    autor: "Arthur Conan Doyle",
-    genero: "Clássicos da Literatura",
-    preco: "R$ 30,00",
-    estoque: 1,
-    estado: "Quase novo",
-    sinopse: "O primeiro volume das aventuras do mais famoso detetive de todos os tempos. Ao lado do fiel Dr. Watson, Sherlock Holmes usa sua genialidade dedutiva para desvendar mistérios intrigantes nas ruas da Londres vitoriana.",
-    imagem: "img/sherlock-holmes-vol-1.jpg",
-    dataAdicao: "2026-06-07"
-  },
-
-  {
     titulo: "As Aventuras de Sherlock Holmes – Vol. 2",
     autor: "Arthur Conan Doyle",
     genero: "Clássicos da Literatura",
@@ -529,19 +517,6 @@ const LIVROS = [
     estado: "Estado perfeito",
     sinopse: "Em um mundo medieval sombrio e brutal, Guts, o Espadachim Negro, percorre as terras empunhando uma espada gigantesca e caçando demônios em busca de vingança. O primeiro volume da obra-prima de Kentaro Miura, um dos maiores clássicos da dark fantasy de todos os tempos.",
     imagem: "img/berserk-vol-1.jpg",
-    dataAdicao: "2026-06-27"
-  },
-
-  {
-    titulo: "The Promised Neverland – Vol. 1",
-    destaque: true,
-    autor: "Kaiu Shirai e Posuka Demizu",
-    genero: "Mangás",
-    preco: "R$ 30,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "Emma, Norman e Ray vivem felizes no orfanato Grace Field House — até descobrirem a verdade aterrorizante por trás de seu lar perfeito. Agora precisam bolar um plano de fuga ousado antes que seja tarde demais. Primeiro volume de um dos mangás de suspense mais aclamados dos últimos anos, com roteiro de Kaiu Shirai e arte de Posuka Demizu.",
-    imagem: "img/the-promised-neverland-vol-1.jpg",
     dataAdicao: "2026-06-27"
   }
 
