@@ -155,7 +155,7 @@
   function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
 
   function camposObrigatorios() {
-    const obrig = ["cli-nome", "cli-email"];
+    const obrig = ["cli-nome", "cli-email", "cli-tel"];
     if (opcaoSelecionada().pedeEndereco) {
       obrig.push("end-cep", "end-rua", "end-numero", "end-bairro", "end-cidade", "end-uf");
     }
@@ -163,17 +163,45 @@
   }
   function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
+  /* WhatsApp brasileiro: aceita com/sem +55; exige celular com DDD (11 dígitos). */
+  function soDigitos(v) { return String(v || "").replace(/\D/g, ""); }
+  function whatsappNacional(v) {
+    let d = soDigitos(v);
+    if ((d.length === 12 || d.length === 13) && d.indexOf("55") === 0) d = d.slice(2);
+    return d;
+  }
+  function whatsappValido(v) { return /^[1-9][0-9]9\d{8}$/.test(whatsappNacional(v)); }
+
+  function campoRuim(id) {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    if (id === "cli-email") return !el.value.trim() || !emailValido(el.value.trim());
+    if (id === "cli-tel")   return !whatsappValido(el.value);
+    return !el.value.trim();
+  }
+
+  function atualizarDicaWhats() {
+    const tel = document.getElementById("cli-tel");
+    const dica = document.getElementById("dica-whats");
+    if (!tel || !dica) return;
+    const erro = tel.value.trim().length > 0 && !whatsappValido(tel.value);
+    dica.classList.toggle("erro", erro);
+    dica.textContent = erro
+      ? "Número de WhatsApp inválido. Use DDD + número, ex.: (83) 9 9999-8888."
+      : "Com DDD — é o nosso principal contato com você.";
+  }
+
   function validar(marcar) {
     let ok = true;
     camposObrigatorios().forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const vazio = !el.value.trim();
-      const emailRuim = id === "cli-email" && el.value.trim() && !emailValido(el.value.trim());
-      const ruim = vazio || emailRuim;
+      const ruim = campoRuim(id);
       if (ruim) ok = false;
-      if (marcar) el.classList.toggle("invalido", ruim);
+      if (marcar) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle("invalido", ruim);
+      }
     });
+    if (marcar) atualizarDicaWhats();
     return ok;
   }
 
@@ -190,9 +218,9 @@
   }
 
   form.addEventListener("input", (e) => {
-    if (e.target.classList.contains("invalido") && e.target.value.trim()) {
-      e.target.classList.remove("invalido");
-    }
+    const t = e.target;
+    if (t.classList.contains("invalido") && !campoRuim(t.id)) t.classList.remove("invalido");
+    if (t.id === "cli-tel") atualizarDicaWhats();
     atualizarEstadoPagamento();
   });
 
@@ -206,8 +234,12 @@
 
   function dadosCliente() {
     const op = opcaoSelecionada();
+    let instagram = val("cli-instagram").replace(/^@+/, "").trim();
+    if (instagram) instagram = "@" + instagram;
     const c = {
       nome: val("cli-nome"), email: val("cli-email"), telefone: val("cli-tel"),
+      whatsappLink: "https://wa.me/55" + whatsappNacional(val("cli-tel")),
+      instagram: instagram,
       entrega: op.titulo, observacoes: val("cli-obs")
     };
     if (op.pedeEndereco) {
@@ -309,7 +341,8 @@
       ``,
       `Cliente: ${cliente.nome}`,
       `E-mail: ${cliente.email}`,
-      `WhatsApp/Telefone: ${cliente.telefone || "(não informado)"}`,
+      `WhatsApp: ${cliente.telefone}  (abrir: ${cliente.whatsappLink})`,
+      cliente.instagram ? `Instagram: ${cliente.instagram}` : "",
       ``,
       `Entrega: ${cliente.entrega}`,
       `Endereço: ${cliente.endereco || "Entrega a combinar (retirada local)"}`,
@@ -333,7 +366,9 @@
       "Código do pedido": codigoPedido,
       "Cliente": cliente.nome,
       "E-mail do cliente": cliente.email,
-      "WhatsApp/Telefone": cliente.telefone || "(não informado)",
+      "WhatsApp": cliente.telefone,
+      "Abrir no WhatsApp": cliente.whatsappLink,
+      "Instagram": cliente.instagram || "—",
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
       "Total": Precos.formatarBRL(total),
@@ -349,6 +384,11 @@
 
   /* ---------- Confirmação ---------- */
   async function finalizar() {
+    if (!validar(true)) {
+      if (avisoForm) avisoForm.hidden = false;
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     const btn = document.getElementById("btn-ja-paguei");
     let original;
     if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Enviando pedido…"; }

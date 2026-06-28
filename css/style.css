@@ -1639,6 +1639,8 @@ main {
   box-shadow: 0 0 0 3px rgba(184,158,255,.22);
 }
 .campo input.invalido { border-color: #ff7a8a; box-shadow: 0 0 0 3px rgba(255,122,138,.18); }
+.campo-dica { margin-top: 2px; font-size: .76rem; color: var(--texto-discreto); line-height: 1.35; }
+.campo-dica.erro { color: #ff9aa6; }
 .campo-linha { display: flex; gap: 12px; flex-wrap: wrap; }
 .campo-linha .campo { flex: 1 1 140px; }
 .campo-cep { flex: 0 0 120px; }
