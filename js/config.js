@@ -34,7 +34,7 @@ window.LOJA_CONFIG = {
      "finalizar" um pedido de teste, mas NENHUM dinheiro é cobrado.
      Assim você consegue ver tudo funcionando antes de ir ao ar. */
   paypal: {
-    clientId: "",          // <- cole aqui o seu Client ID de PRODUÇÃO
+    clientId: "ARyOHmCBVy10t18zd4JxX-60hRSOLEDlIvqcyuX1-wK2J1Jb9nJRJeFdCGFUiWYdHxXhtAYUdJlzjj5y",
     ambiente: "producao"   // "producao" = paypal.com (deixe assim)
   },
 
