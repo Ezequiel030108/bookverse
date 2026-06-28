@@ -1966,3 +1966,101 @@ main {
   .checkout-wrap { padding-top: 26px; }
 }
 
+/* ============================================================
+   CONTAS (login com Google) + STATUS DO PIX AUTOMÁTICO
+   ============================================================ */
+
+/* Botão de conta na barra superior */
+.conta-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  color: var(--texto-claro);
+  text-decoration: none;
+  font-size: .85rem; font-weight: 600;
+  min-height: 40px;
+}
+.conta-btn:hover { border-color: var(--lavanda); }
+.conta-btn-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
+  color: var(--lavanda-clara);
+}
+.conta-btn-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.conta-btn-label { white-space: nowrap; }
+@media (max-width: 560px) {
+  .conta-btn-label { display: none; }
+  .conta-btn { padding: 6px; }
+}
+
+/* Status do pagamento (modo Mercado Pago) */
+.pix-status {
+  margin: 14px 0 0; padding: 12px 14px; border-radius: var(--raio);
+  font-size: .9rem; font-weight: 600; text-align: center; line-height: 1.4;
+}
+.pix-status.aguardando {
+  background: rgba(255, 217, 102, .12);
+  border: 1px solid rgba(255, 217, 102, .35);
+  color: var(--estrela-clara);
+}
+.pix-status.confirmado {
+  background: rgba(122, 223, 130, .14);
+  border: 1px solid rgba(122, 223, 130, .4);
+  color: #b6f0bd;
+}
+
+/* Página "Minha conta" */
+.conta-wrap { max-width: 720px; margin: 0 auto; }
+.conta-carregando { text-align: center; color: var(--texto-suave); padding: 30px 0; }
+
+.conta-login { text-align: center; }
+.conta-login p { color: var(--texto-suave); }
+
+.botao-google {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin: 10px auto 0;
+  padding: 12px 20px; border-radius: var(--raio);
+  background: #fff; color: #1f1f1f; font-weight: 600;
+  border: 1px solid #dadce0;
+}
+.botao-google:hover { background: #f5f5f5; }
+.botao-google:disabled { opacity: .6; cursor: default; }
+
+.conta-perfil-head { display: flex; align-items: center; gap: 14px; }
+.conta-perfil-id { flex: 1; min-width: 0; }
+.conta-avatar-grande {
+  width: 52px; height: 52px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
+}
+.conta-avatar-grande img { width: 100%; height: 100%; object-fit: cover; }
+.conta-nome { margin: 0; font-weight: 700; color: var(--texto-claro); }
+.conta-email { margin: 2px 0 0; font-size: .82rem; color: var(--texto-suave); word-break: break-all; }
+.conta-ajuda { font-size: .82rem; color: var(--texto-suave); margin: 0 0 12px; }
+.conta-sub { font-size: .95rem; color: var(--texto-claro); margin: 18px 0 10px; }
+.conta-salvo { color: #b6f0bd; font-weight: 600; margin: 10px 0 0; }
+
+/* Lista de pedidos */
+.lista-pedidos { display: grid; gap: 12px; }
+.pedido-card {
+  background: var(--vidro); border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio); padding: 14px;
+}
+.pedido-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pedido-codigo { font-weight: 700; color: var(--texto-claro); }
+.pedido-status { font-size: .74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.pedido-status.pedido-pago { background: rgba(122,223,130,.16); color: #b6f0bd; }
+.pedido-status.pedido-pendente { background: rgba(255,217,102,.14); color: var(--estrela-clara); }
+.pedido-data { margin: 4px 0 0; font-size: .76rem; color: var(--texto-discreto); }
+.pedido-itens { list-style: none; margin: 10px 0; padding: 0; font-size: .85rem; color: var(--texto-suave); }
+.pedido-itens li { padding: 2px 0; }
+.pedido-rodape {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid rgba(184,158,255,.15); padding-top: 10px;
+  font-size: .85rem; color: var(--texto-suave);
+}
+.pedido-rodape strong { color: var(--estrela); font-size: 1rem; }
+

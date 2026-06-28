@@ -45,7 +45,22 @@ window.LOJA_CONFIG = {
   pix: {
     chave: "13377347488",
     nomeRecebedor: "Cauan Batista da Costa",
-    cidade: "Juazeirinho"
+    cidade: "Juazeirinho",
+
+    /* COMO O PIX FUNCIONA:
+       - "manual"      → o site gera o Pix no navegador com a SUA chave
+                         acima. Cai direto no seu banco, sem taxa. A
+                         confirmação é manual (você confere no app) e o
+                         e-mail chega quando o cliente toca "Já paguei".
+       - "mercadopago" → o Pix é criado pelo Mercado Pago e o pagamento é
+                         confirmado AUTOMATICAMENTE. O e-mail do pedido
+                         chega no momento exato em que o dinheiro cai.
+
+       👉 Só mude para "mercadopago" DEPOIS de configurar as variáveis
+          na Vercel (MP_ACCESS_TOKEN, WEB3FORMS_KEY) — veja o README,
+          seção "⚡ Confirmação automática do Pix". Antes disso, deixe
+          em "manual" para o checkout continuar funcionando. */
+    modo: "mercadopago"
   },
 
   /* ---------- RECEBER PEDIDOS POR E-MAIL ----------
@@ -64,6 +79,24 @@ window.LOJA_CONFIG = {
      (o checkout continua funcionando normalmente). */
   pedidos: {
     web3formsKey: "5306d669-6b95-4729-85ba-3c256ec61142"
+  },
+
+  /* ---------- LOGIN COM GOOGLE / CONTAS (Firebase) ----------
+     Opcional. Permite que o cliente crie conta com o Google, tenha os
+     dados preenchidos no checkout e veja o histórico de pedidos.
+
+     Enquanto estes campos ficarem vazios, a parte de contas fica
+     DESLIGADA (o botão "Entrar" nem aparece) e o site funciona normal.
+
+     Para ligar: crie um projeto no Firebase (gratuito), ative o login
+     com Google e o Firestore, e cole aqui os dados do "app web". Passo
+     a passo no README, seção "👤 Login com Google e histórico de pedidos".
+     Atenção: estes dados são PÚBLICOS por natureza (podem ficar no site). */
+  firebase: {
+    apiKey: "AIzaSyBkD1A6yvhUJPWhs6qe-EwqzRjXekDh8PU",
+    authDomain: "bookverse-69878.firebaseapp.com",
+    projectId: "bookverse-69878",
+    appId: "1:784486720606:web:7cefa1b2c002ddbe4e40cf"
   },
 
   /* ---------- ENTREGA / FRETE ----------

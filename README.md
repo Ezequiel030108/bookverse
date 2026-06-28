@@ -21,14 +21,21 @@ explica tudo passo a passo.
 projeto livros/
 ├── index.html         ← a vitrine (estante de livros)
 ├── checkout.html      ← a página de finalizar compra (pagamento)
+├── conta.html         ← a página "Minha conta" (login Google + pedidos)
+├── api/               ← backend (Vercel) — Pix automático
+│   ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
+│   ├── status-pix.js  ← o checkout pergunta "já caiu?"
+│   └── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
 │   ├── livros.js      ← 👈 É AQUI QUE VOCÊ EDITA OS LIVROS
-│   ├── config.js      ← 👈 É AQUI QUE VOCÊ LIGA O PIX E O FRETE
+│   ├── config.js      ← 👈 É AQUI QUE VOCÊ LIGA PIX, FRETE, LOGIN
 │   ├── precos.js      ← cálculo de preços e promoção (não precisa mexer)
 │   ├── cart.js        ← o carrinho de compras (não precisa mexer)
 │   ├── pix.js         ← gera o "Pix Copia e Cola" (não precisa mexer)
+│   ├── auth.js        ← login com Google e contas (não precisa mexer)
+│   ├── conta.js       ← lógica da página "Minha conta" (não precisa mexer)
 │   ├── main.js        ← lógica da vitrine (não precisa mexer)
 │   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
 │   ├── checkout.js    ← lógica do pagamento (não precisa mexer)
@@ -119,8 +126,125 @@ Usamos o **Web3Forms** (gratuito, sem instalar nada e sem expor o seu e-mail).
 > **"Já fiz o pagamento"** — vale lembrar o cliente de apertar esse botão
 > depois de pagar.
 >
-> ⚠️ O e-mail avisa do pedido, mas **quem confirma se o Pix caiu é você**, no
-> app do banco (o código do pedido ajuda a casar uma coisa com a outra).
+> ⚠️ No modo **manual** (padrão), o e-mail avisa do pedido, mas **quem confirma
+> se o Pix caiu é você**, no app do banco. Se quiser que o e-mail só chegue
+> **quando o dinheiro realmente cair**, veja a seção a seguir.
+
+---
+
+## ⚡ Confirmação automática do Pix (Mercado Pago)
+
+Por padrão a loja usa o Pix **manual** (cai direto no seu banco, sem taxa, e
+você confere o pagamento no app). Se preferir, dá para ligar a **confirmação
+automática**: o Pix é criado pelo **Mercado Pago** e o **e-mail do pedido chega
+no exato momento em que o dinheiro cai** — mesmo que o cliente feche o site.
+
+> 💡 Trade-off: o Mercado Pago cobra uma **pequena taxa por Pix recebido** e o
+> dinheiro passa pela conta dele antes de você sacar para o banco. Em troca,
+> você não precisa conferir pagamento manualmente.
+
+Tudo já está programado (pastas `api/`). Falta só **você** ligar:
+
+### Passo a passo
+
+1. **Crie uma conta no Mercado Pago** e pegue o seu **Access Token de produção**:
+   em <https://www.mercadopago.com.br/developers> → *Suas integrações* → crie uma
+   aplicação → *Credenciais de produção* → copie o **Access Token**
+   (começa com `APP_USR-...`). **Esse token é secreto — nunca coloque no código.**
+
+2. **No painel da Vercel** (o site já está hospedado lá), abra o projeto →
+   **Settings → Environment Variables** e crie:
+
+   | Nome | Valor |
+   |---|---|
+   | `MP_ACCESS_TOKEN` | seu Access Token do Mercado Pago |
+   | `WEB3FORMS_KEY` | a mesma chave do Web3Forms que está no `js/config.js` |
+   | `MP_WEBHOOK_SECRET` | *(opcional)* segredo da assinatura do webhook (ver passo 4) |
+
+3. No `js/config.js`, mude o **modo** do Pix para `"mercadopago"`:
+
+   ```js
+   pix: {
+     ...
+     modo: "mercadopago"   // era "manual"
+   }
+   ```
+
+4. *(Opcional, mais seguro)* No Mercado Pago, em *Webhooks*, aponte para
+   `https://SEU-SITE.vercel.app/api/webhook-mp`, gere a **assinatura secreta** e
+   cole o valor em `MP_WEBHOOK_SECRET` (passo 2). Sem isso já funciona — o
+   servidor sempre confere o pagamento direto no Mercado Pago antes de enviar
+   o e-mail —, mas a assinatura adiciona uma camada extra de proteção.
+
+5. **Publique de novo** (a Vercel republica sozinha quando você salva no GitHub).
+
+Pronto! No checkout, ao gerar o Pix, a tela fica *"Aguardando o pagamento…"* e
+vira *"Pagamento confirmado!"* sozinha quando o cliente paga — e o **e-mail do
+pedido chega nesse instante**.
+
+> Para **voltar ao modo manual** a qualquer momento, é só trocar
+> `modo: "manual"` no `js/config.js`.
+
+---
+
+## 👤 Login com Google e histórico de pedidos
+
+A loja pode ter **contas de cliente**: a pessoa entra com a conta **Google**,
+tem os dados preenchidos automaticamente no checkout e vê o **histórico de
+pedidos**. Tudo isso é **opcional** — enquanto não for configurado, o botão
+"Entrar" nem aparece e o site funciona normalmente.
+
+Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
+
+### Passo a passo
+
+1. Acesse <https://console.firebase.google.com> e clique em **Adicionar projeto**
+   (pode desativar o Google Analytics, não é necessário).
+
+2. Dentro do projeto, crie um **App da Web** (ícone `</>`). O Firebase mostra um
+   bloco `firebaseConfig` com `apiKey`, `authDomain`, `projectId`, `appId`, etc.
+   **Copie esses valores** para o bloco `firebase` do `js/config.js`:
+
+   ```js
+   firebase: {
+     apiKey: "AIza...",
+     authDomain: "seu-projeto.firebaseapp.com",
+     projectId: "seu-projeto",
+     appId: "1:1234567890:web:abcdef..."
+   },
+   ```
+   > Esses dados são **públicos** por natureza — pode deixá-los no site sem medo.
+
+3. No menu **Build → Authentication → Sign-in method**, ative o provedor
+   **Google**.
+
+4. Em **Authentication → Settings → Authorized domains**, adicione o domínio do
+   seu site (ex.: `seu-site.vercel.app`) para o login funcionar lá.
+
+5. No menu **Build → Firestore Database**, clique em **Criar banco de dados**
+   (modo de produção). Depois, na aba **Regras (Rules)**, cole as regras abaixo
+   para que **cada cliente só veja os próprios dados**:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{uid} {
+         allow read, write: if request.auth != null && request.auth.uid == uid;
+         match /pedidos/{pedido} {
+           allow read, write: if request.auth != null && request.auth.uid == uid;
+         }
+       }
+     }
+   }
+   ```
+
+6. **Salve e publique o site.** Agora aparece o botão **"Entrar"** no topo. O
+   cliente entra com o Google, salva os dados na página **Minha conta** e os
+   pedidos passam a aparecer no histórico.
+
+> Os pedidos confirmados pelo Pix automático (seção acima) são marcados como
+> **"Pago"** no histórico assim que o cliente conclui o pagamento.
 
 ---
 
