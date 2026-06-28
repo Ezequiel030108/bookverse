@@ -90,6 +90,40 @@ O Pix aqui é **confirmado manualmente** (jeito simples e sem custo):
 
 ---
 
+## 📬 Como receber os pedidos por e-mail
+
+Cada pedido finalizado é enviado **automaticamente para o seu e-mail**, com:
+nome, e-mail e WhatsApp do cliente, forma de entrega, **endereço completo**
+(ou "Entrega a combinar" quando for retirada), itens, valores e o código do
+pedido. Você ainda responde direto pro e-mail do cliente (vem no "responder").
+
+Usamos o **Web3Forms** (gratuito, sem instalar nada e sem expor o seu e-mail).
+
+### Passo a passo (1 minuto)
+
+1. Acesse **https://web3forms.com**
+2. Digite o **e-mail onde quer receber os pedidos** e clique em
+   **"Create Access Key"**.
+3. Você recebe uma **Access Key** nesse e-mail. Copie e cole no `js/config.js`:
+
+   ```js
+   pedidos: {
+     web3formsKey: "COLE_AQUI_A_SUA_CHAVE"
+   },
+   ```
+
+4. Salve e publique o site de novo.
+
+> Enquanto a chave ficar vazia, o envio por e-mail fica desligado (o checkout
+> continua funcionando). O e-mail é enviado quando o cliente toca em
+> **"Já fiz o pagamento"** — vale lembrar o cliente de apertar esse botão
+> depois de pagar.
+>
+> ⚠️ O e-mail avisa do pedido, mas **quem confirma se o Pix caiu é você**, no
+> app do banco (o código do pedido ajuda a casar uma coisa com a outra).
+
+---
+
 ## 🚚 Como ajustar o frete e a entrega
 
 Tudo fica no arquivo `js/config.js`, dentro de `frete`. Cada opção é um bloco:

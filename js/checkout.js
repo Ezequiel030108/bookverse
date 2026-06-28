@@ -290,7 +290,73 @@
     }
   }
 
+  /* ---------- Envio do pedido por e-mail (Web3Forms) ---------- */
+  function enviarPedidoEmail() {
+    const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
+    if (!key) return Promise.resolve();          // e-mail desligado
+
+    const { dados, frete, total } = montarPedido();
+    const cliente = dadosCliente();
+    const loja = CFG.nomeLoja || "BookVerse";
+
+    const itensTxt = dados.itens
+      .map(i => `${i.qty}x ${i.livro.titulo} (${i.livro.autor}) — ${Precos.formatarBRL(i.precoLinha)}`)
+      .join("\n");
+
+    const mensagem = [
+      `NOVO PEDIDO — ${loja}`,
+      `Código: ${codigoPedido}`,
+      ``,
+      `Cliente: ${cliente.nome}`,
+      `E-mail: ${cliente.email}`,
+      `WhatsApp/Telefone: ${cliente.telefone || "(não informado)"}`,
+      ``,
+      `Entrega: ${cliente.entrega}`,
+      `Endereço: ${cliente.endereco || "Entrega a combinar (retirada local)"}`,
+      ``,
+      `Itens:`,
+      itensTxt,
+      ``,
+      `Subtotal: ${Precos.formatarBRL(dados.subtotal)}`,
+      `Frete: ${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}`,
+      `Total: ${Precos.formatarBRL(total)}`,
+      cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
+      ``,
+      `Pagamento: Pix — confira o recebimento no seu banco (código ${codigoPedido}).`
+    ].join("\n");
+
+    const body = {
+      access_key: key,
+      subject: `Novo pedido ${codigoPedido} — ${loja}`,
+      from_name: `${loja} — Loja`,
+      replyto: cliente.email || "",
+      "Código do pedido": codigoPedido,
+      "Cliente": cliente.nome,
+      "E-mail do cliente": cliente.email,
+      "WhatsApp/Telefone": cliente.telefone || "(não informado)",
+      "Entrega": cliente.entrega,
+      "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
+      "Total": Precos.formatarBRL(total),
+      "message": mensagem
+    };
+
+    return fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(body)
+    });
+  }
+
   /* ---------- Confirmação ---------- */
+  async function finalizar() {
+    const btn = document.getElementById("btn-ja-paguei");
+    let original;
+    if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Enviando pedido…"; }
+    try { await enviarPedidoEmail(); } catch (e) { /* não bloqueia a conclusão do pedido */ }
+    if (btn) { btn.disabled = false; btn.textContent = original; }
+    sucesso();
+  }
+
   function sucesso() {
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
@@ -349,7 +415,7 @@
   const btnCopiar = document.getElementById("btn-copiar-pix");
   if (btnCopiar) btnCopiar.addEventListener("click", copiarPix);
   const btnPaguei = document.getElementById("btn-ja-paguei");
-  if (btnPaguei) btnPaguei.addEventListener("click", sucesso);
+  if (btnPaguei) btnPaguei.addEventListener("click", finalizar);
 
   function init() {
     if (Carrinho.resolver().vazio) { render(); return; }

@@ -48,6 +48,24 @@ window.LOJA_CONFIG = {
     cidade: "Juazeirinho"
   },
 
+  /* ---------- RECEBER PEDIDOS POR E-MAIL ----------
+     Quando o cliente finaliza, o pedido é enviado para o SEU e-mail
+     automaticamente (com nome, e-mail e WhatsApp do cliente, forma de
+     entrega, endereço ou "entrega a combinar", itens e total).
+
+     Usamos o serviço gratuito Web3Forms (não precisa instalar nada):
+       1. Acesse https://web3forms.com
+       2. Digite o e-mail onde quer RECEBER os pedidos e clique em
+          "Create Access Key".
+       3. Você recebe uma chave (Access Key) nesse e-mail. Copie e cole
+          abaixo, entre as aspas.
+
+     Enquanto a chave ficar vazia, o envio por e-mail fica desligado
+     (o checkout continua funcionando normalmente). */
+  pedidos: {
+    web3formsKey: ""
+  },
+
   /* ---------- ENTREGA / FRETE ----------
      Cada opção aparece como uma escolha no checkout.
      - valor: 0 significa grátis.
