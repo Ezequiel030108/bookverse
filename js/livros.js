@@ -543,19 +543,6 @@ const LIVROS = [
     sinopse: "Emma, Norman e Ray vivem felizes no orfanato Grace Field House — até descobrirem a verdade aterrorizante por trás de seu lar perfeito. Agora precisam bolar um plano de fuga ousado antes que seja tarde demais. Primeiro volume de um dos mangás de suspense mais aclamados dos últimos anos, com roteiro de Kaiu Shirai e arte de Posuka Demizu.",
     imagem: "img/the-promised-neverland-vol-1.jpg",
     dataAdicao: "2026-06-27"
-  },
-
-  {
-    titulo: "Demon Slayer – Vol. 1",
-    destaque: true,
-    autor: "Koyoharu Gotouge",
-    genero: "Mangás",
-    preco: "R$ 50,00",
-    estoque: 1,
-    estado: "Ótimo estado",
-    sinopse: "Depois de ter a família massacrada por um demônio e ver a irmã, Nezuko, transformada em um deles, Tanjiro Kamado parte numa jornada para se tornar um caçador de demônios e devolver a humanidade à irmã. O primeiro volume de Kimetsu no Yaiba (Demon Slayer), de Koyoharu Gotouge — um dos maiores fenômenos dos mangás.",
-    imagem: "img/demon-slayer-vol-1.jpg",
-    dataAdicao: "2026-06-27"
   }
 
 ];
