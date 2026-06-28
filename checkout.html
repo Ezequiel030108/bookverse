@@ -126,22 +126,42 @@
         </form>
 
         <section class="checkout-bloco" id="bloco-pagamento">
-          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento</h2>
+          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento via Pix</h2>
 
-          <p class="pagamento-intro">Pagamento processado com segurança pelo <strong>PayPal</strong> — você pode usar cartão de crédito mesmo sem ter conta.</p>
+          <p class="pagamento-intro">Pague com <strong>Pix</strong> pelo app do seu banco — cai na hora. Gere o código abaixo e escaneie o <strong>QR Code</strong> ou use o <strong>Pix Copia e Cola</strong>.</p>
 
           <div class="pagamento-aviso" id="aviso-form" hidden>
-            Preencha seus dados acima para liberar o pagamento.
+            Preencha seus dados acima para gerar o Pix.
           </div>
 
-          <div class="pagamento-demo" id="aviso-demo" hidden>
-            <strong>Modo demonstração ativo.</strong>
-            Nenhuma cobrança será feita. Para receber pagamentos de verdade, adicione seu
-            <em>Client ID</em> do PayPal em <code>js/config.js</code>.
+          <div class="pagamento-demo" id="aviso-config" hidden>
+            <strong>Pix ainda não configurado.</strong>
+            Adicione sua chave Pix em <code>js/config.js</code> para ativar o pagamento.
           </div>
 
-          <div id="paypal-buttons" class="paypal-container"></div>
-          <div id="paypal-demo" class="paypal-demo" hidden></div>
+          <button type="button" id="btn-gerar-pix" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
+            Gerar Pix de <span id="btn-pix-valor">R$ 0,00</span>
+          </button>
+
+          <div class="pix-area" id="pix-area" hidden>
+            <p class="pix-instrucao-topo">Escaneie o QR Code no app do seu banco:</p>
+            <div class="pix-qr" id="pix-qr" aria-label="QR Code do Pix"></div>
+            <p class="pix-valor-label">Valor a pagar: <strong id="pix-valor-total">R$ 0,00</strong></p>
+
+            <p class="pix-ou">ou copie o código <strong>Pix Copia e Cola</strong>:</p>
+            <div class="pix-copia">
+              <input type="text" id="pix-codigo" readonly aria-label="Código Pix Copia e Cola" />
+              <button type="button" id="btn-copiar-pix" class="botao-loja botao-loja-secundario">Copiar</button>
+            </div>
+
+            <ol class="pix-passos">
+              <li>Abra o app do seu banco e entre na área <strong>Pix</strong>.</li>
+              <li>Escolha <strong>Ler QR Code</strong> ou <strong>Pix Copia e Cola</strong>.</li>
+              <li>Confirme o valor e finalize o pagamento.</li>
+            </ol>
+
+            <button type="button" id="btn-ja-paguei" class="botao-loja botao-loja-primario botao-loja-bloco">Já fiz o pagamento</button>
+          </div>
 
           <p class="pagamento-erro" id="pagamento-erro" hidden></p>
         </section>
@@ -196,6 +216,8 @@
   <script src="js/config.js"></script>
   <script src="js/precos.js"></script>
   <script src="js/cart.js"></script>
+  <script src="js/vendor/qrcode.js"></script>
+  <script src="js/pix.js"></script>
   <script src="js/checkout.js"></script>
 </body>
 </html>

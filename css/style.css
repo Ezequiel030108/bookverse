@@ -1722,8 +1722,6 @@ main {
   border-radius: 5px;
   font-size: .85em;
 }
-.paypal-container { min-height: 50px; }
-.paypal-demo { margin-top: 4px; }
 .pagamento-erro {
   margin: 12px 0 0;
   padding: 11px 14px;
@@ -1732,6 +1730,72 @@ main {
   border: 1px solid rgba(255,122,138,.4);
   color: #ffb3bd;
   font-size: .85rem;
+}
+
+/* ---------- Área do Pix ---------- */
+.pix-area {
+  margin-top: 16px;
+  padding: 18px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--vidro-borda);
+  background: rgba(10,5,36,.4);
+  text-align: center;
+  animation: surgir .3s ease both;
+}
+.pix-instrucao-topo { margin: 0 0 12px; font-size: .9rem; color: var(--texto-suave); }
+.pix-qr {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.pix-qr-img {
+  width: 220px;
+  height: 220px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 14px;
+  image-rendering: pixelated;
+  box-shadow: 0 8px 22px rgba(0,0,0,.45);
+}
+.pix-valor-label { margin: 0 0 16px; font-size: .95rem; color: var(--texto-suave); }
+.pix-valor-label strong { color: var(--estrela); font-size: 1.15rem; font-weight: 800; }
+.pix-ou { margin: 0 0 8px; font-size: .85rem; color: var(--texto-suave); }
+.pix-copia {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.pix-copia input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--vidro-borda);
+  background: rgba(10,5,36,.6);
+  color: var(--texto-suave);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .8rem;
+  text-overflow: ellipsis;
+}
+.pix-copia .botao-loja { min-height: 0; padding: 11px 16px; flex-shrink: 0; }
+.botao-loja.copiado { background: linear-gradient(135deg, #8effc0, #34d17f); color: #07351f; }
+.pix-passos {
+  text-align: left;
+  margin: 0 0 18px;
+  padding-left: 20px;
+  color: var(--texto-suave);
+  font-size: .88rem;
+  line-height: 1.6;
+}
+.pix-passos li { margin-bottom: 4px; }
+.pix-passos strong { color: var(--texto-claro); }
+.conf-aviso {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(184,158,255,.15);
+  font-size: .84rem;
+  color: var(--lavanda-clara);
+  line-height: 1.5;
 }
 
 /* ---------- Resumo do pedido ---------- */

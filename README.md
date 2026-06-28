@@ -2,15 +2,16 @@
 
 Este é o site da sua livraria. Agora ele é uma **loja de verdade**: o cliente
 navega pela estante, adiciona livros ao **carrinho** e finaliza a compra
-pagando com **PayPal** (cartão de crédito também funciona, mesmo sem o cliente
-ter conta). O pagamento cai direto na sua conta PayPal.
+pagando com **Pix** (o QR Code e o "Pix Copia e Cola" são gerados na hora, com
+o valor exato do pedido). O dinheiro cai direto na sua conta — sem taxa e sem
+intermediário.
 
 Você **não precisa saber programar** para mexer no dia a dia. Este guia
 explica tudo passo a passo.
 
 > 💳 **Quer começar a receber pagamentos?** Pule direto para a seção
-> **"💳 Como receber os pagamentos (PayPal)"** mais abaixo. É só colar uma
-> chave no arquivo `js/config.js`.
+> **"💳 Como receber os pagamentos (Pix)"** mais abaixo. É só preencher seus
+> dados no arquivo `js/config.js`.
 
 ---
 
@@ -24,56 +25,68 @@ projeto livros/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
 │   ├── livros.js      ← 👈 É AQUI QUE VOCÊ EDITA OS LIVROS
-│   ├── config.js      ← 👈 É AQUI QUE VOCÊ LIGA O PAYPAL E O FRETE
+│   ├── config.js      ← 👈 É AQUI QUE VOCÊ LIGA O PIX E O FRETE
 │   ├── precos.js      ← cálculo de preços e promoção (não precisa mexer)
 │   ├── cart.js        ← o carrinho de compras (não precisa mexer)
+│   ├── pix.js         ← gera o "Pix Copia e Cola" (não precisa mexer)
 │   ├── main.js        ← lógica da vitrine (não precisa mexer)
 │   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
-│   └── checkout.js    ← lógica do pagamento (não precisa mexer)
+│   ├── checkout.js    ← lógica do pagamento (não precisa mexer)
+│   └── vendor/
+│       └── qrcode.js  ← biblioteca que desenha o QR Code (não precisa mexer)
 ├── img/               ← coloque aqui as fotos das capas
 └── README.md          ← este guia
 ```
 
 ---
 
-## 💳 Como receber os pagamentos (PayPal)
+## 💳 Como receber os pagamentos (Pix)
 
-A loja já está pronta para vender. Falta só **uma coisa**: dizer para ela qual
-é a sua conta PayPal. Isso é feito com o **Client ID** — uma chave pública
-(pode ficar no site sem problema) que identifica a sua conta.
+A loja já está pronta para vender. Falta só **uma coisa**: preencher os dados
+da sua conta para o site gerar o Pix. Não precisa criar conta em lugar nenhum —
+é a chave Pix do seu próprio banco.
 
 ### Passo a passo
 
-1. Acesse **https://developer.paypal.com/dashboard/applications/live** e
-   entre com a conta PayPal da sua livraria (a conta que vai **receber** o
-   dinheiro).
-2. Crie um aplicativo (botão **"Create App"**) ou abra um que já exista.
-3. Copie o **"Client ID"** que aparece na tela.
-4. Abra o arquivo `js/config.js` e cole o Client ID aqui:
+1. Abra o arquivo `js/config.js`.
+2. Preencha os 3 campos do bloco `pix`:
 
    ```js
-   paypal: {
-     clientId: "COLE_AQUI_O_SEU_CLIENT_ID",
-     ambiente: "producao"
+   pix: {
+     chave: "SUA_CHAVE_PIX",          // CPF, celular (+55...), e-mail ou chave aleatória
+     nomeRecebedor: "SEU NOME",       // o nome que está na conta (máx. 25 letras)
+     cidade: "Juazeirinho"            // sua cidade (máx. 15 letras)
    },
    ```
 
-5. Salve o arquivo e publique o site de novo (veja a seção de publicação).
+   - **chave** pode ser:
+     - CPF só com números: `"12345678900"`
+     - Celular com +55: `"+5583999998888"`
+     - E-mail: `"voce@email.com"`
+     - Chave aleatória do banco (aquele código comprido)
+   - **nomeRecebedor**: o nome do titular da conta, igual ao do banco.
+   - **cidade**: a cidade da sua conta.
 
-Pronto! A partir daí, todo pagamento feito no checkout cai na sua conta PayPal.
-Você recebe um **e-mail do próprio PayPal** a cada venda e pode ver tudo no
-painel em https://www.paypal.com.
+3. Salve o arquivo e publique o site de novo (veja a seção de publicação).
 
-### 🧪 Modo demonstração (enquanto o Client ID está vazio)
+Pronto! No checkout, o cliente clica em **"Gerar Pix"** e o site mostra o
+**QR Code** e o **"Pix Copia e Cola"** com o valor exato do pedido. Ele paga
+pelo app do banco e o dinheiro cai direto na sua conta.
 
-Se o campo `clientId` ficar **vazio**, a loja funciona em **modo
-demonstração**: o cliente percorre todo o checkout e vê a tela de "Pedido
-confirmado", mas **nenhuma cobrança é feita**. Isso serve para você testar a
-loja inteira antes de ligar o pagamento de verdade. Quando colar o seu Client
-ID, o modo demonstração desliga sozinho.
+### ✅ Como confirmar que o pagamento caiu
 
-> ℹ️ A moeda usada é o **Real (BRL)**. Se um dia precisar mudar, é o campo
-> `moeda` no `js/config.js`.
+O Pix aqui é **confirmado manualmente** (jeito simples e sem custo):
+
+- Você confere no **app do seu banco** que o valor entrou. Cada pedido tem um
+  **código** (ex.: `BV12AB34`) que ajuda a identificar.
+- O cliente também pode te **enviar o comprovante** pelo WhatsApp/Instagram —
+  na tela de "pedido recebido" aparece um botão pra isso (se você preencher o
+  campo `whatsapp` no `js/config.js`).
+- Só depois de confirmar o pagamento é que você separa e entrega/envia o livro.
+
+> 💡 Enquanto o campo `chave` ficar **vazio**, o botão de pagamento fica
+> desativado (o resto do checkout continua funcionando pra você testar).
+> Quando preencher a chave, o Pix liga sozinho.
 
 ---
 

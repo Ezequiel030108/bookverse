@@ -1,7 +1,7 @@
 /* ============================================================
    BOOKVERSE — CONFIGURAÇÃO DA LOJA
    ------------------------------------------------------------
-   É AQUI que você liga a loja ao seu PayPal e ajusta frete,
+   É AQUI que você liga a loja ao seu Pix e ajusta frete,
    contatos e moeda. Você NÃO precisa saber programar: basta
    trocar os textos entre aspas. Leia os comentários de cada
    item com calma.
@@ -19,23 +19,33 @@ window.LOJA_CONFIG = {
   whatsapp: "",
 
   /* ---------- Moeda ---------- */
-  // O PayPal precisa de uma moeda. O Brasil usa BRL (Real).
+  // Moeda usada nos preços e no Pix. O Brasil usa BRL (Real).
   moeda: { codigo: "BRL", simbolo: "R$" },
 
-  /* ---------- PAGAMENTO (PayPal) ----------
-     👉 PARA RECEBER PAGAMENTOS DE VERDADE:
-     1. Acesse https://developer.paypal.com/dashboard/applications/live
-     2. Crie (ou abra) um aplicativo na sua conta PayPal de empresa.
-     3. Copie o "Client ID" (é uma chave pública, pode ficar no site).
-     4. Cole esse Client ID abaixo, entre as aspas, e salve.
+  /* ---------- PAGAMENTO (Pix) ----------
+     👉 PARA RECEBER PAGAMENTOS:
+     Preencha os 3 campos abaixo com os dados da SUA conta. O site
+     gera o QR Code e o "Pix Copia e Cola" com o valor do pedido, e
+     o dinheiro cai direto na sua conta — sem taxa, sem intermediário.
 
-     Enquanto o campo estiver vazio, a loja funciona em MODO
-     DEMONSTRAÇÃO: o cliente consegue percorrer todo o checkout e
-     "finalizar" um pedido de teste, mas NENHUM dinheiro é cobrado.
-     Assim você consegue ver tudo funcionando antes de ir ao ar. */
-  paypal: {
-    clientId: "ARyOHmCBVy10t18zd4JxX-60hRSOLEDlIvqcyuX1-wK2J1Jb9nJRJeFdCGFUiWYdHxXhtAYUdJlzjj5y",
-    ambiente: "producao"   // "producao" = paypal.com (deixe assim)
+     - chave: sua chave Pix. Pode ser:
+         • CPF (só números): "12345678900"
+         • Celular (com +55): "+5583999998888"
+         • E-mail: "voce@email.com"
+         • Chave aleatória do banco (aquele código comprido)
+     - nomeRecebedor: o nome que está na conta (igual ao do banco). Máx. 25 letras.
+     - cidade: a cidade da conta. Máx. 15 letras.
+
+     Enquanto a "chave" estiver vazia, o pagamento fica desativado
+     (o resto do checkout funciona normalmente para você testar).
+
+     ⚠️ A confirmação do Pix é MANUAL: você confere no app do seu banco
+     que o pagamento caiu (o cliente também pode te enviar o comprovante
+     pelo WhatsApp/Instagram). */
+  pix: {
+    chave: "",
+    nomeRecebedor: "",
+    cidade: "Juazeirinho"
   },
 
   /* ---------- ENTREGA / FRETE ----------

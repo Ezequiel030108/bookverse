@@ -1,13 +1,13 @@
 /* ============================================================
-   BOOKVERSE — CHECKOUT
+   BOOKVERSE — CHECKOUT (pagamento via Pix)
    ------------------------------------------------------------
    Monta o resumo do pedido, valida os dados do cliente, calcula
-   o frete e processa o pagamento pelo PayPal.
+   o frete e gera o pagamento por Pix (QR Code + "Pix Copia e
+   Cola") com o valor exato do pedido.
 
-   - Se houver um Client ID do PayPal em js/config.js, o pagamento
-     é REAL e cai na sua conta PayPal.
-   - Se o Client ID estiver vazio, entra em MODO DEMONSTRAÇÃO:
-     o pedido é "finalizado" para você testar, mas nada é cobrado.
+   A confirmação do Pix é manual: o cliente paga pelo app do
+   banco e o lojista confere o recebimento. Os dados da conta que
+   recebe ficam em js/config.js (chave Pix, nome e cidade).
 
    Não precisa mexer aqui.
    ============================================================ */
@@ -16,7 +16,6 @@
   const Precos   = window.Precos;
   const Carrinho = window.Carrinho;
   const CFG      = window.LOJA_CONFIG || {};
-  const MOEDA    = (CFG.moeda && CFG.moeda.codigo) || "BRL";
 
   /* ---------- Referências ---------- */
   const elGrid       = document.getElementById("checkout-grid");
@@ -30,17 +29,17 @@
   const elEndereco   = document.getElementById("endereco-campos");
   const form         = document.getElementById("form-entrega");
   const avisoForm    = document.getElementById("aviso-form");
-  const avisoDemo    = document.getElementById("aviso-demo");
+  const avisoConfig  = document.getElementById("aviso-config");
   const erroPag      = document.getElementById("pagamento-erro");
-  const contPaypal   = document.getElementById("paypal-buttons");
-  const contDemo     = document.getElementById("paypal-demo");
+  const btnGerar     = document.getElementById("btn-gerar-pix");
+  const pixArea      = document.getElementById("pix-area");
 
   document.getElementById("ano-atual").textContent = new Date().getFullYear();
 
   /* ---------- Estado ---------- */
   const opcoesFrete = (CFG.frete && CFG.frete.opcoes) || [];
   let freteId = opcoesFrete.length ? opcoesFrete[0].id : null;
-  let paypalActions = null;
+  let codigoPedido = null;
 
   function opcaoSelecionada() {
     return opcoesFrete.find(o => o.id === freteId) || opcoesFrete[0] || { valor: 0, pedeEndereco: false };
@@ -52,6 +51,10 @@
     const limite = CFG.frete && CFG.frete.freteGratisAcima;
     if (op.valor > 0 && limite && subtotal >= limite) return 0;
     return op.valor || 0;
+  }
+
+  function pixConfigurado() {
+    return !!(CFG.pix && String(CFG.pix.chave || "").trim());
   }
 
   /* ---------- Render do resumo ---------- */
@@ -139,6 +142,7 @@
         elEntrega.querySelectorAll(".entrega-opcao").forEach(l =>
           l.classList.toggle("selecionada", l.dataset.id === freteId));
         elEndereco.hidden = !opcaoSelecionada().pedeEndereco;
+        resetPix();        // o valor mudou: refazer o Pix
         render();
         atualizarEstadoPagamento();
       });
@@ -175,10 +179,14 @@
 
   function atualizarEstadoPagamento() {
     const ok = validar(false) && !Carrinho.resolver().vazio;
-    if (avisoForm) avisoForm.hidden = ok;
-    if (paypalActions) { ok ? paypalActions.enable() : paypalActions.disable(); }
-    const btnDemo = document.getElementById("btn-demo");
-    if (btnDemo) btnDemo.disabled = !ok;
+    const configurado = pixConfigurado();
+    if (avisoConfig) avisoConfig.hidden = configurado;
+    if (avisoForm)   avisoForm.hidden = ok || !configurado;
+    if (btnGerar)    btnGerar.disabled = !(ok && configurado);
+
+    const { total } = montarPedido();
+    const bv = document.getElementById("btn-pix-valor");
+    if (bv) bv.textContent = Precos.formatarBRL(total);
   }
 
   form.addEventListener("input", (e) => {
@@ -188,7 +196,7 @@
     atualizarEstadoPagamento();
   });
 
-  /* ---------- Dados do pedido (para o PayPal e o resumo) ---------- */
+  /* ---------- Dados do pedido ---------- */
   function montarPedido() {
     const dados = Carrinho.resolver();
     const frete = valorFrete(dados.subtotal);
@@ -210,42 +218,83 @@
     return c;
   }
 
-  /* ---------- PayPal: criação do pedido ---------- */
-  function criarOrderPayload() {
-    const { dados, frete, total } = montarPedido();
-    return {
-      purchase_units: [{
-        description: "Pedido " + (CFG.nomeLoja || "BookVerse"),
-        amount: {
-          currency_code: MOEDA,
-          value: total.toFixed(2),
-          breakdown: {
-            item_total: { currency_code: MOEDA, value: dados.subtotal.toFixed(2) },
-            shipping:   { currency_code: MOEDA, value: frete.toFixed(2) }
-          }
-        },
-        items: dados.itens.map(i => ({
-          name: String(i.livro.titulo).slice(0, 127),
-          description: String(i.livro.autor || "").slice(0, 127),
-          quantity: String(i.qty),
-          unit_amount: { currency_code: MOEDA, value: i.precoUnit.toFixed(2) },
-          category: "PHYSICAL_GOODS"
-        }))
-      }],
-      application_context: {
-        brand_name: CFG.nomeLoja || "BookVerse",
-        shipping_preference: "NO_SHIPPING",
-        user_action: "PAY_NOW"
-      }
-    };
+  /* ---------- Pix: gerar / QR / copiar ---------- */
+  function resetPix() {
+    if (pixArea) pixArea.hidden = true;
+    codigoPedido = null;
+    if (erroPag) erroPag.hidden = true;
   }
 
-  /* ---------- Sucesso ---------- */
-  function sucesso(info) {
+  function renderQR(payload) {
+    const el = document.getElementById("pix-qr");
+    el.innerHTML = "";
+    if (typeof qrcode === "undefined") return;
+    const qr = qrcode(0, "M");
+    qr.addData(payload, "Byte");
+    qr.make();
+    const img = document.createElement("img");
+    img.src = qr.createDataURL(6, 16);
+    img.alt = "QR Code para pagamento via Pix";
+    img.className = "pix-qr-img";
+    el.appendChild(img);
+  }
+
+  function gerarPix() {
+    if (!validar(true)) {
+      if (avisoForm) avisoForm.hidden = false;
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!pixConfigurado()) return;
+
+    const { total } = montarPedido();
+    codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
+
+    const payload = window.Pix.gerarPayload({
+      chave: CFG.pix.chave,
+      nome:  CFG.pix.nomeRecebedor,
+      cidade: CFG.pix.cidade,
+      valor: total,
+      txid: codigoPedido
+    });
+
+    if (!window.Pix.validar(payload)) {
+      erroPag.hidden = false;
+      erroPag.textContent = "Não foi possível gerar o Pix. Confira a chave Pix em js/config.js.";
+      return;
+    }
+    erroPag.hidden = true;
+
+    document.getElementById("pix-codigo").value = payload;
+    document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
+    renderQR(payload);
+    pixArea.hidden = false;
+    pixArea.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function copiarPix() {
+    const campo = document.getElementById("pix-codigo");
+    const btn = document.getElementById("btn-copiar-pix");
+    const texto = campo.value;
+    const feedback = () => {
+      if (!btn) return;
+      const original = btn.textContent;
+      btn.textContent = "Copiado!";
+      btn.classList.add("copiado");
+      setTimeout(() => { btn.textContent = original; btn.classList.remove("copiado"); }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(feedback).catch(() => { campo.select(); document.execCommand("copy"); feedback(); });
+    } else {
+      campo.select(); document.execCommand("copy"); feedback();
+    }
+  }
+
+  /* ---------- Confirmação ---------- */
+  function sucesso() {
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
 
-    // Monta o painel de confirmação ANTES de limpar o carrinho.
     const linhas = dados.itens.map(i =>
       `<li><span>${i.qty}× ${i.livro.titulo}</span><span>${Precos.formatarBRL(i.precoLinha)}</span></li>`).join("");
 
@@ -253,131 +302,59 @@
     det.innerHTML = `
       <div class="conf-pedido">
         <p class="conf-rotulo">Código do pedido</p>
-        <p class="conf-codigo">${info.orderId || "—"}</p>
+        <p class="conf-codigo">${codigoPedido || "—"}</p>
       </div>
       <ul class="conf-itens">${linhas}</ul>
       <dl class="conf-totais">
         <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(dados.subtotal)}</dd></div>
         <div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>
-        <div class="conf-total"><dt>Total pago</dt><dd>${Precos.formatarBRL(total)}</dd></div>
+        <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
-      <p class="conf-entrega"><strong>Entrega:</strong> ${cliente.entrega}${cliente.endereco ? " — " + cliente.endereco : ""}</p>`;
+      <p class="conf-entrega"><strong>Entrega:</strong> ${cliente.entrega}${cliente.endereco ? " — " + cliente.endereco : ""}</p>
+      <p class="conf-aviso">Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante pra agilizar 💜</p>`;
 
     const sub = document.getElementById("confirmacao-sub");
-    sub.textContent = `Obrigado, ${cliente.nome || "leitor(a)"}! Recebemos seu pedido e já vamos preparar tudo. 💜`;
+    sub.textContent = `Obrigado, ${cliente.nome || "leitor(a)"}! Recebemos seu pedido.`;
 
-    // Link opcional para enviar o comprovante no WhatsApp.
+    // Botão para enviar o comprovante (WhatsApp, ou Instagram como alternativa).
     const elWhats = document.getElementById("confirmacao-whats");
-    if (CFG.whatsapp) {
-      const msg = `Olá! Acabei de comprar na ${CFG.nomeLoja || "BookVerse"}.%0A%0A` +
-        dados.itens.map(i => `• ${i.qty}× ${i.livro.titulo}`).join("%0A") +
+    if (elWhats) {
+      const resumoMsg = dados.itens.map(i => `• ${i.qty}× ${i.livro.titulo}`).join("%0A");
+      const corpo = `Olá! Acabei de pagar via Pix na ${CFG.nomeLoja || "BookVerse"}.%0A%0A` +
+        resumoMsg +
         `%0A%0ATotal: ${Precos.formatarBRL(total)}` +
         `%0AEntrega: ${cliente.entrega}` +
-        `%0APedido: ${info.orderId || ""}` +
-        `%0ANome: ${cliente.nome}`;
-      elWhats.href = `https://wa.me/${CFG.whatsapp}?text=${msg}`;
-      elWhats.hidden = false;
+        `%0APedido: ${codigoPedido || ""}` +
+        `%0ANome: ${cliente.nome}` +
+        `%0A%0A(vou anexar o comprovante)`;
+      if (CFG.whatsapp) {
+        elWhats.href = `https://wa.me/${CFG.whatsapp}?text=${corpo}`;
+        elWhats.hidden = false;
+      } else if (CFG.instagram) {
+        elWhats.href = `https://ig.me/m/${CFG.instagram}`;
+        elWhats.hidden = false;
+      }
     }
 
     Carrinho.limpar();
 
     document.getElementById("checkout-grid").hidden = true;
     document.getElementById("checkout-vazio").hidden = true;
-    const conf = document.getElementById("confirmacao");
-    conf.hidden = false;
+    document.getElementById("confirmacao").hidden = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function mostrarErro(msg) {
-    erroPag.hidden = false;
-    erroPag.textContent = msg;
-  }
-
-  /* ---------- Inicialização do pagamento ---------- */
-  const clientId = (CFG.paypal && CFG.paypal.clientId || "").trim();
-
-  function carregarSDK(id) {
-    return new Promise((resolve, reject) => {
-      if (window.paypal) return resolve(window.paypal);
-      const s = document.createElement("script");
-      s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(id)}` +
-              `&currency=${MOEDA}&intent=capture&components=buttons&disable-funding=paylater`;
-      s.onload = () => window.paypal ? resolve(window.paypal) : reject(new Error("SDK indisponível"));
-      s.onerror = () => reject(new Error("Não foi possível carregar o PayPal"));
-      document.head.appendChild(s);
-    });
-  }
-
-  function iniciarPayPalReal() {
-    avisoDemo.hidden = true;
-    carregarSDK(clientId).then(paypal => {
-      paypal.Buttons({
-        style: { layout: "vertical", color: "gold", shape: "pill", label: "paypal", height: 48 },
-        onInit: function (data, actions) {
-          paypalActions = actions;
-          atualizarEstadoPagamento();
-        },
-        onClick: function (data, actions) {
-          if (!validar(true)) {
-            avisoForm.hidden = false;
-            form.scrollIntoView({ behavior: "smooth", block: "center" });
-            return actions.reject ? actions.reject() : undefined;
-          }
-          return actions.resolve ? actions.resolve() : undefined;
-        },
-        createOrder: function (data, actions) {
-          erroPag.hidden = true;
-          return actions.order.create(criarOrderPayload());
-        },
-        onApprove: function (data, actions) {
-          return actions.order.capture().then(details => {
-            const cap = details && details.purchase_units &&
-              details.purchase_units[0].payments &&
-              details.purchase_units[0].payments.captures &&
-              details.purchase_units[0].payments.captures[0];
-            sucesso({ orderId: (cap && cap.id) || details.id });
-          });
-        },
-        onError: function (err) {
-          mostrarErro("Houve um problema ao processar o pagamento. Tente novamente ou fale com a gente pelo Instagram.");
-          console.error("PayPal:", err);
-        }
-      }).render("#paypal-buttons").catch(() => {
-        mostrarErro("Não foi possível iniciar o pagamento do PayPal. Confira sua conexão e o Client ID em js/config.js.");
-      });
-    }).catch(() => {
-      mostrarErro("Não foi possível carregar o PayPal. Verifique sua conexão com a internet.");
-    });
-  }
-
-  function iniciarDemo() {
-    avisoDemo.hidden = false;
-    contPaypal.hidden = true;
-    contDemo.hidden = false;
-    contDemo.innerHTML = `
-      <button type="button" id="btn-demo" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
-        Finalizar pedido (demonstração)
-      </button>`;
-    const btn = document.getElementById("btn-demo");
-    btn.addEventListener("click", () => {
-      if (!validar(true)) {
-        avisoForm.hidden = false;
-        form.scrollIntoView({ behavior: "smooth", block: "center" });
-        return;
-      }
-      const id = "DEMO-" + Date.now().toString(36).toUpperCase();
-      sucesso({ orderId: id });
-    });
-    atualizarEstadoPagamento();
-  }
-
   /* ---------- Liga tudo ---------- */
+  if (btnGerar) btnGerar.addEventListener("click", gerarPix);
+  const btnCopiar = document.getElementById("btn-copiar-pix");
+  if (btnCopiar) btnCopiar.addEventListener("click", copiarPix);
+  const btnPaguei = document.getElementById("btn-ja-paguei");
+  if (btnPaguei) btnPaguei.addEventListener("click", sucesso);
+
   function init() {
     if (Carrinho.resolver().vazio) { render(); return; }
     montarEntrega();
     render();
-    if (clientId) iniciarPayPalReal();
-    else iniciarDemo();
     atualizarEstadoPagamento();
   }
 
