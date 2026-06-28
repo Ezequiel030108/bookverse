@@ -2064,3 +2064,47 @@ main {
 }
 .pedido-rodape strong { color: var(--estrela); font-size: 1rem; }
 
+
+/* ============================================================
+   AVISO "PRECISA DE CONTA" — modal bloqueante
+   ============================================================ */
+.aviso-conta {
+  position: fixed; inset: 0; z-index: 500;
+  display: grid; place-items: center; padding: 20px;
+}
+.aviso-conta[hidden] { display: none; }
+.aviso-conta-fundo {
+  position: absolute; inset: 0;
+  background: rgba(5, 2, 18, .72);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  opacity: 0; transition: opacity .25s ease;
+}
+.aviso-conta.aberto .aviso-conta-fundo { opacity: 1; }
+.aviso-conta-caixa {
+  position: relative; z-index: 1; width: min(420px, 100%);
+  background: linear-gradient(180deg, var(--indigo), var(--noite));
+  border: 1px solid var(--vidro-borda); border-radius: 16px;
+  padding: 30px 24px 24px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.6);
+  transform: translateY(14px) scale(.97); opacity: 0;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.aviso-conta.aberto .aviso-conta-caixa { transform: none; opacity: 1; }
+.aviso-conta-x {
+  position: absolute; top: 10px; right: 12px;
+  width: 34px; height: 34px; font-size: 1.6rem; line-height: 1;
+  color: var(--texto-suave); border-radius: 50%;
+}
+.aviso-conta-x:hover { background: rgba(255,255,255,.08); color: var(--texto-claro); }
+.aviso-conta-icone {
+  width: 56px; height: 56px; margin: 2px auto 14px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--lavanda-clara);
+  background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
+}
+.aviso-conta-caixa h2 {
+  font-family: 'Playfair Display', serif;
+  margin: 0 0 8px; color: var(--texto-claro); font-size: 1.4rem;
+}
+.aviso-conta-caixa p { color: var(--texto-suave); margin: 0 0 18px; font-size: .92rem; line-height: 1.5; }
+.aviso-conta-acoes { display: grid; gap: 10px; }
+.aviso-conta-acoes .botao-google { width: 100%; justify-content: center; margin: 0; }

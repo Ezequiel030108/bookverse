@@ -38,6 +38,16 @@
     ouvintes.forEach(cb => { try { cb(usuarioAtual); } catch (e) {} });
   }
 
+  // Remove dados locais (carrinho etc.) ao sair da conta — em qualquer página.
+  function limparDadosLocais() {
+    try {
+      Object.keys(localStorage).forEach(k => {
+        if (k && k.toLowerCase().indexOf("bookverse") === 0) localStorage.removeItem(k);
+      });
+    } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent("bookverse:logout")); } catch (e) {}
+  }
+
   const Auth = {
     configurado,
     pronto: false,        // true quando já sabemos se está logado ou não
@@ -48,7 +58,7 @@
     },
     usuario() { return usuarioAtual; },
     async entrarComGoogle() { await prontoPromise; return impl.entrarComGoogle(); },
-    async sair()            { await prontoPromise; return impl.sair(); },
+    async sair()            { await prontoPromise; const r = await impl.sair(); limparDadosLocais(); return r; },
     async perfil()          { await prontoPromise; return impl.perfil(); },
     async salvarPerfil(d)   { await prontoPromise; return impl.salvarPerfil(d); },
     async salvarPedido(p)   { await prontoPromise; return impl.salvarPedido(p); },

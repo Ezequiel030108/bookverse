@@ -127,3 +127,8 @@ window.Carrinho = (function () {
 
 /* Disponibiliza o gerador de id para os outros scripts. */
 window.idLivro = window.Carrinho.idLivro;
+
+/* Ao sair da conta, esvazia o carrinho em memória também. */
+document.addEventListener("bookverse:logout", function () {
+  if (window.Carrinho) window.Carrinho.limpar();
+});
