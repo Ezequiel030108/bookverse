@@ -2108,3 +2108,21 @@ main {
 .aviso-conta-caixa p { color: var(--texto-suave); margin: 0 0 18px; font-size: .92rem; line-height: 1.5; }
 .aviso-conta-acoes { display: grid; gap: 10px; }
 .aviso-conta-acoes .botao-google { width: 100%; justify-content: center; margin: 0; }
+
+/* ============================================================
+   CHECKOUT — DADOS VINDOS DA CONTA (somente leitura)
+   ============================================================ */
+.dados-conta-nota {
+  margin: -4px 0 14px; font-size: .82rem; color: var(--texto-suave);
+}
+.dados-conta-nota a { color: var(--lavanda); font-weight: 600; }
+.campo input.campo-bloqueado,
+.campo textarea.campo-bloqueado {
+  background: rgba(20, 9, 58, .55);
+  color: var(--texto-suave);
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.campo input.campo-bloqueado:focus {
+  outline: none; border-color: var(--vidro-borda);
+}
