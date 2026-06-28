@@ -143,11 +143,13 @@
     const vazio = document.getElementById("sem-pedidos");
     if (!lista) return;
     lista.innerHTML = "";
+    // Sempre mostramos algo: começa em "Carregando…".
+    if (vazio) { vazio.hidden = false; vazio.textContent = "Carregando seus pedidos…"; }
     let pedidos = [];
     try { pedidos = await Auth.listarPedidos(); } catch (e) { pedidos = []; }
 
     if (!pedidos.length) {
-      if (vazio) vazio.hidden = false;
+      if (vazio) { vazio.hidden = false; vazio.textContent = "Você ainda não fez nenhum pedido por aqui."; }
       return;
     }
     if (vazio) vazio.hidden = true;
@@ -188,6 +190,9 @@
       if (fEmail) fEmail.textContent = user.email || "";
       if (fFoto) fFoto.innerHTML = user.foto ? `<img src="${user.foto}" alt="">` : "";
 
+      // Carrega os pedidos já (independente do perfil, que pode demorar).
+      carregarPedidos();
+
       // Preenche o formulário: começa com os dados do Google e completa com o perfil salvo.
       set("p-nome", user.nome);
       set("p-email", user.email);
@@ -203,8 +208,6 @@
           set("p-cidade", en.cidade); set("p-uf", en.uf);
         }
       } catch (e) {}
-
-      carregarPedidos();
     } else {
       mostrar(elDeslogado);
     }
