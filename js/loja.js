@@ -137,6 +137,45 @@
   window.lojaToast = toast;
   window.abrirCarrinho = abrirDrawer;
 
+  /* ---------- Carrinho exige conta ---------- */
+  // Só permite usar o carrinho com o cliente logado (quando o login
+  // está configurado). Caso contrário, mostra uma mensagem pedindo
+  // para criar/entrar na conta.
+  function podeUsarCarrinho() {
+    if (!(window.Auth && window.Auth.configurado)) return true; // contas desligadas
+    if (window.Auth.usuario()) return true;                     // logado
+    toast("Crie sua conta (botão “Entrar”, no topo) para adicionar livros 💜");
+    return false;
+  }
+  window.podeUsarCarrinho = podeUsarCarrinho;
+
+  /* ---------- Sincroniza o carrinho com a conta (Firestore) ---------- */
+  if (window.Auth && window.Auth.configurado) {
+    let carrinhoPronto = false;
+    let salvarTimer;
+    window.Auth.onChange(async (user) => {
+      if (!window.Auth.pronto) return;     // ainda não sabemos o estado
+      carrinhoPronto = false;
+      if (user) {
+        try {
+          const remoto = await window.Auth.lerCarrinho();
+          if (remoto) Carrinho.substituir(remoto);
+        } catch (e) {}
+        carrinhoPronto = true;             // a partir daqui, mudanças são salvas
+      } else {
+        Carrinho.limpar();                 // sem conta: carrinho vazio
+      }
+    });
+    document.addEventListener("carrinho:mudou", () => {
+      if (!carrinhoPronto || !window.Auth.usuario()) return;
+      clearTimeout(salvarTimer);
+      salvarTimer = setTimeout(() => {
+        const itens = Carrinho.resolver().itens.map(i => ({ id: i.id, qty: i.qty }));
+        window.Auth.salvarCarrinho(itens).catch(() => {});
+      }, 600);
+    });
+  }
+
   /* ---------- Liga tudo ---------- */
   Carrinho.assinar(render);
 })();

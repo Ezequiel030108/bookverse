@@ -114,7 +114,15 @@ window.Carrinho = (function () {
   function limpar() { estado = []; salvar(estado); }
   function totalItens() { return resolver().totalItens; }
 
-  return { idLivro, assinar, resolver, add, definirQty, remover, limpar, totalItens };
+  /* Substitui o carrinho inteiro (usado ao sincronizar com a conta). */
+  function substituir(itens) {
+    estado = (Array.isArray(itens) ? itens : [])
+      .filter(i => i && i.id && i.qty > 0)
+      .map(i => ({ id: i.id, qty: i.qty }));
+    salvar(estado);
+  }
+
+  return { idLivro, assinar, resolver, add, definirQty, remover, limpar, totalItens, substituir };
 })();
 
 /* Disponibiliza o gerador de id para os outros scripts. */

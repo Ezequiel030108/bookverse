@@ -111,22 +111,22 @@ window.LOJA_CONFIG = {
   frete: {
     opcoes: [
       {
-        id: "retirada",
-        titulo: "Combinar retirada/entrega local",
-        descricao: "A gente combina local e horário pelo Instagram — sem custo de entrega.",
+        id: "combinar",
+        titulo: "Combinar entrega",
+        descricao: "Entramos em contato pelo WhatsApp para combinar local e horário da entrega. Opção ideal para quem estuda na ECIT Deputado Genival Matias — a mesma escola de parte da nossa equipe. 💜",
         valor: 0,
         pedeEndereco: false
       },
       {
-        id: "correios",
-        titulo: "Envio pelos Correios (todo o Brasil)",
-        descricao: "Enviamos para todo o Brasil. O prazo é combinado após a confirmação.",
-        valor: 15,
+        id: "domicilio",
+        titulo: "Entrega a domicílio (somente em Juazeirinho)",
+        descricao: "Levamos o pedido até você, no endereço cadastrado na sua conta (confira e edite abaixo, se precisar). Disponível apenas em Juazeirinho.",
+        valor: 0,
         pedeEndereco: true
       }
     ],
-    // Frete grátis quando o subtotal for igual ou maior que este valor.
-    // Use 0 (ou null) para desligar o frete grátis.
-    freteGratisAcima: 150
+    // Não cobramos frete: todas as opções acima têm valor 0.
+    // (0 ou null aqui também desliga o aviso de "frete grátis acima de X".)
+    freteGratisAcima: 0
   }
 };
