@@ -63,7 +63,7 @@ window.LOJA_CONFIG = {
      Enquanto a chave ficar vazia, o envio por e-mail fica desligado
      (o checkout continua funcionando normalmente). */
   pedidos: {
-    web3formsKey: ""
+    web3formsKey: "5306d669-6b95-4729-85ba-3c256ec61142"
   },
 
   /* ---------- ENTREGA / FRETE ----------
