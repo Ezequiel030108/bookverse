@@ -208,6 +208,14 @@
           set("p-cidade", en.cidade); set("p-uf", en.uf);
         }
       } catch (e) {}
+
+      // Scroll automático para a seção de pedidos, se solicitado
+      if (window.location.search.includes("sec=pedidos")) {
+        setTimeout(() => {
+          const secaoPedidos = document.getElementById("secao-pedidos");
+          if (secaoPedidos) secaoPedidos.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
     } else {
       mostrar(elDeslogado);
     }

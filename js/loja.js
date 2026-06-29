@@ -160,7 +160,13 @@
     const btnG = document.getElementById("aviso-conta-google");
     if (btnG) btnG.addEventListener("click", async () => {
       btnG.disabled = true;
-      try { if (window.Auth) await window.Auth.entrarComGoogle(); } catch (e) {}
+      try { 
+        if (window.Auth && window.Auth.loginEOnboarding) {
+          await window.Auth.loginEOnboarding();
+        } else if (window.Auth) {
+          await window.Auth.entrarComGoogle(); 
+        }
+      } catch (e) {}
       btnG.disabled = false;
       if (window.Auth && window.Auth.usuario()) fecharAvisoConta();
     });
@@ -169,9 +175,10 @@
   /* ---------- Carrinho exige conta ---------- */
   // Só permite usar o carrinho com o cliente logado (quando o login
   // está configurado). Caso contrário, abre o modal pedindo conta.
-  function podeUsarCarrinho() {
+  function podeUsarCarrinho(acao = "") {
     if (!(window.Auth && window.Auth.configurado)) return true; // contas desligadas
     if (window.Auth.usuario()) return true;                     // logado
+    if (acao) sessionStorage.setItem("bookverse_pendingAction", acao);
     abrirAvisoConta();
     return false;
   }
