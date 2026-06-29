@@ -118,11 +118,9 @@
       });
 
       if (modo === "onboarding") {
-        // Confirma e leva de volta para onde a pessoa estava (ou a loja).
-        let destino = "index.html";
-        try { destino = sessionStorage.getItem("bookverse_retorno") || "index.html"; } catch (e) {}
+        // Mostra "Cadastro completo!" e permanece até a pessoa clicar em
+        // "Continuar" (que leva de volta para onde ela estava).
         entrarModoOk();
-        setTimeout(() => { window.location.href = destino; }, 1100);
       } else if (perfilOk) {
         perfilOk.hidden = false;
         setTimeout(() => { perfilOk.hidden = true; }, 2500);
