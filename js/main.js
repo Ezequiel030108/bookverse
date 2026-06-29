@@ -776,8 +776,31 @@ function ativarModoPromocao() {
   });
 })();
 
+/* Carrega os livros cadastrados pelo admin (Firestore) e os junta ao catálogo. */
+function carregarCatalogo() {
+  if (!(window.Auth && window.Auth.configurado && window.Auth.lerCatalogo)) return;
+  window.Auth.lerCatalogo().then(extras => {
+    if (!Array.isArray(extras) || !extras.length) return;
+    const idDe = window.idLivro || (l => l.id);
+    const existentes = new Set(LIVROS.map(idDe));
+    let mudou = false;
+    extras.forEach(l => {
+      if (!l || !l.id || existentes.has(l.id)) return;
+      LIVROS.push(l);
+      existentes.add(l.id);
+      mudou = true;
+    });
+    if (mudou) {
+      const termo = (campoBusca && campoBusca.value) || "";
+      renderizar(termo);
+      carregarDisponibilidade();
+    }
+  }).catch(() => {});
+}
+
 /* ---------- Inicialização ---------- */
 document.getElementById("ano-atual").textContent = new Date().getFullYear();
 ativarModoPromocao();
 renderizar("");
 carregarDisponibilidade();   // esconde reservados/vendidos quando a lista carrega
+carregarCatalogo();          // adiciona os livros cadastrados pelo admin

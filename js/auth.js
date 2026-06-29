@@ -87,6 +87,9 @@
     async reservarLivros(ids)  { await prontoPromise; return impl.reservarLivros(ids); },
     async marcarVendidos(ids)  { await prontoPromise; return impl.marcarVendidos(ids); },
     async liberarLivros(ids)   { await prontoPromise; return impl.liberarLivros(ids); },
+    async lerCatalogo()        { await prontoPromise; return impl.lerCatalogo(); },
+    async adicionarLivro(l)    { await prontoPromise; return impl.adicionarLivro(l); },
+    async removerLivro(id)     { await prontoPromise; return impl.removerLivro(id); },
     async apagarConta()        { await prontoPromise; const r = await impl.apagarConta(); limparDadosLocais(); return r; }
   };
   window.Auth = Auth;
@@ -191,6 +194,9 @@
       reservarLivros: async () => {},
       marcarVendidos: async () => {},
       liberarLivros: async () => {},
+      lerCatalogo: async () => [],
+      adicionarLivro: async () => {},
+      removerLivro: async () => {},
       apagarConta: async () => {}
     };
     Auth.pronto = true;
@@ -226,7 +232,8 @@
         ouvirPedidos: async () => () => {},
         salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false,
         lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {},
-        liberarLivros: async () => {}, apagarConta: async () => {}
+        liberarLivros: async () => {}, lerCatalogo: async () => [], adicionarLivro: async () => {}, removerLivro: async () => {},
+        apagarConta: async () => {}
       };
       Auth.pronto = true;
       notificar();
@@ -408,6 +415,24 @@
           ? comTimeout(db.collection("disponibilidade").doc(id).delete(), 8000).catch(() => {})
           : Promise.resolve()));
       },
+
+      // Livros cadastrados pelo admin (coleção "catalogo") — leitura pública.
+      lerCatalogo: async function () {
+        try {
+          const snap = await comTimeout(db.collection("catalogo").get(), 8000);
+          return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+        } catch (e) { return []; }
+      },
+      adicionarLivro: async function (livro) {
+        if (!usuarioAtual || !livro || !livro.id) return;
+        await comTimeout(db.collection("catalogo").doc(livro.id)
+          .set(Object.assign({}, semUndefined(livro), { criadoEm: stamp() }), { merge: true }), 12000);
+      },
+      removerLivro: async function (id) {
+        if (!usuarioAtual || !id) return;
+        await comTimeout(db.collection("catalogo").doc(id).delete(), 8000).catch(() => {});
+      },
+
       apagarConta: async function () {
         if (!usuarioAtual) return;
         const uid = usuarioAtual.uid;

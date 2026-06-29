@@ -358,6 +358,8 @@
   let dispMapaAdmin = {};
   let adminCarregado = false;
   let adminFiltro = "";
+  let livrosCatalogo = [];                 // livros adicionados pelo admin (Firestore)
+  let idsCatalogo = new Set();             // ids removíveis (vindos do catálogo)
 
   function estadoDoLivro(id) {
     const d = dispMapaAdmin[id];
@@ -372,8 +374,11 @@
   }
 
   function listaLivrosAdmin() {
-    if (typeof LIVROS === "undefined" || !Array.isArray(LIVROS)) return [];
-    return LIVROS.slice();
+    const base = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS.slice() : [];
+    const idDe = window.idLivro || (l => l.id);
+    const vistos = new Set(base.map(idDe));
+    livrosCatalogo.forEach(l => { if (l && l.id && !vistos.has(l.id)) { base.push(l); vistos.add(l.id); } });
+    return base;
   }
 
   function renderAdmin() {
@@ -432,6 +437,13 @@
         br.textContent = "Repor na loja"; br.dataset.acao = "repor"; br.dataset.id = id;
         acoes.appendChild(br);
       }
+      // Livros adicionados pelo admin podem ser removidos de vez.
+      if (idsCatalogo.has(id)) {
+        const bx = document.createElement("button");
+        bx.type = "button"; bx.className = "admin-btn admin-btn-remover";
+        bx.textContent = "Remover"; bx.dataset.acao = "remover"; bx.dataset.id = id;
+        acoes.appendChild(bx);
+      }
 
       card.appendChild(capa); card.appendChild(info); card.appendChild(acoes);
       lista.appendChild(card);
@@ -442,11 +454,23 @@
     const p = document.createElement("p"); p.className = "conta-ajuda"; p.textContent = texto; return p;
   }
 
+  function preencherGeneros() {
+    const dl = document.getElementById("generos-sugeridos");
+    if (!dl || dl.children.length) return;
+    const base = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS : [];
+    const generos = [];
+    base.forEach(l => { const g = l.genero || ""; if (g && generos.indexOf(g) < 0) generos.push(g); });
+    generos.forEach(g => { const o = document.createElement("option"); o.value = g; dl.appendChild(o); });
+  }
+
   async function carregarAdmin() {
     const carregando = document.getElementById("admin-carregando");
+    preencherGeneros();
     if (!adminCarregado) {
       if (carregando) { carregando.hidden = false; carregando.textContent = "Carregando catálogo…"; }
       try { dispMapaAdmin = await Auth.lerDisponibilidade(); } catch (e) { dispMapaAdmin = {}; }
+      try { livrosCatalogo = await Auth.lerCatalogo(); } catch (e) { livrosCatalogo = []; }
+      idsCatalogo = new Set((livrosCatalogo || []).map(l => l && l.id).filter(Boolean));
       adminCarregado = true;
     }
     if (carregando) carregando.hidden = true;
@@ -465,19 +489,158 @@
     const id = btn.dataset.id;
     const acao = btn.dataset.acao;
     if (!id || !acao) return;
+    if (acao === "remover") {
+      if (!window.confirm("Remover este livro da loja permanentemente?")) return;
+    }
     const original = btn.textContent;
     btn.disabled = true; btn.textContent = "Salvando…";
     try {
       if (acao === "vender") {
         await Auth.marcarVendidos([id]);
         dispMapaAdmin[id] = { estado: "vendido" };
-      } else {
+      } else if (acao === "repor") {
         await Auth.liberarLivros([id]);
+        delete dispMapaAdmin[id];
+      } else if (acao === "remover") {
+        await Auth.removerLivro(id);
+        await Auth.liberarLivros([id]);          // limpa disponibilidade órfã
+        livrosCatalogo = livrosCatalogo.filter(l => l.id !== id);
+        idsCatalogo.delete(id);
         delete dispMapaAdmin[id];
       }
       renderAdmin();
     } catch (err) {
       btn.disabled = false; btn.textContent = original;
+    }
+  });
+
+  /* ---------- Adicionar livro (formulário) ---------- */
+  let fotoBase64 = "";   // capa comprimida em base64 (data URL)
+
+  // Comprime a imagem escolhida no próprio navegador (máx ~520px, JPEG) para
+  // caber bem no Firestore e carregar rápido na loja.
+  function comprimirImagem(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("img"));
+        img.onload = () => {
+          const max = 520;
+          let w = img.width, h = img.height;
+          if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+          else if (h >= w && h > max) { w = Math.round(w * max / h); h = max; }
+          const cv = document.createElement("canvas");
+          cv.width = w; cv.height = h;
+          cv.getContext("2d").drawImage(img, 0, 0, w, h);
+          resolve(cv.toDataURL("image/jpeg", 0.72));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const inpFoto = document.getElementById("livro-foto");
+  const fotoPreview = document.getElementById("livro-foto-preview");
+  if (inpFoto) inpFoto.addEventListener("change", async () => {
+    const file = inpFoto.files && inpFoto.files[0];
+    if (!file) return;
+    try {
+      fotoBase64 = await comprimirImagem(file);
+      if (fotoPreview) { fotoPreview.innerHTML = ""; const im = document.createElement("img"); im.src = fotoBase64; im.alt = ""; fotoPreview.appendChild(im); }
+    } catch (e) {
+      fotoBase64 = "";
+    }
+  });
+
+  // Gerar sinopse com IA
+  const btnGerar = document.getElementById("btn-gerar-sinopse");
+  const sinopseDica = document.getElementById("sinopse-dica");
+  if (btnGerar) btnGerar.addEventListener("click", async () => {
+    const titulo = v("livro-titulo");
+    const autor = v("livro-autor");
+    const genero = v("livro-genero");
+    if (!titulo) { if (sinopseDica) { sinopseDica.hidden = false; sinopseDica.classList.add("erro"); sinopseDica.textContent = "Preencha o título primeiro."; } return; }
+    const original = btnGerar.textContent;
+    btnGerar.disabled = true; btnGerar.textContent = "Gerando…";
+    if (sinopseDica) sinopseDica.hidden = true;
+    try {
+      const r = await fetch("/api/gerar-sinopse", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo: titulo, autor: autor, genero: genero })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.sinopse) throw new Error((d && d.error) || "falha");
+      const ta = document.getElementById("livro-sinopse");
+      if (ta) ta.value = d.sinopse;
+      if (sinopseDica) { sinopseDica.hidden = false; sinopseDica.classList.remove("erro"); sinopseDica.textContent = "Sinopse gerada — você pode editá-la."; }
+    } catch (e) {
+      if (sinopseDica) { sinopseDica.hidden = false; sinopseDica.classList.add("erro"); sinopseDica.textContent = "Não foi possível gerar agora. Escreva à mão ou tente de novo."; }
+    } finally {
+      btnGerar.disabled = false; btnGerar.textContent = original;
+    }
+  });
+
+  // Salvar o novo livro
+  function slugLivro(t, a) {
+    return String((t || "") + "-" + (a || ""))
+      .toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  function precoBR(n) {
+    const v = Number(n) || 0;
+    return "R$ " + v.toFixed(2).replace(".", ",");
+  }
+
+  const formLivro = document.getElementById("form-livro");
+  const livroErro = document.getElementById("livro-erro");
+  const livroOk = document.getElementById("livro-ok");
+  const btnSalvarLivro = document.getElementById("btn-salvar-livro");
+  if (formLivro) formLivro.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const titulo = v("livro-titulo");
+    const autor = v("livro-autor");
+    const precoNum = parseFloat(String(v("livro-preco")).replace(",", "."));
+    if (livroErro) livroErro.hidden = true;
+    if (!titulo || !autor || !(precoNum > 0)) {
+      if (livroErro) { livroErro.hidden = false; livroErro.textContent = "Preencha título, autor e um preço válido."; }
+      return;
+    }
+    const id = slugLivro(titulo, autor) || ("livro-" + Date.now().toString(36));
+    const estoque = Math.max(1, parseInt(v("livro-estoque"), 10) || 1);
+    const livro = {
+      id: id,
+      titulo: titulo,
+      autor: autor,
+      genero: v("livro-genero") || "Outros",
+      preco: precoBR(precoNum),
+      estoque: estoque,
+      estado: v("livro-estado") || "Estado perfeito",
+      sinopse: v("livro-sinopse"),
+      imagem: fotoBase64 || "",
+      destaque: true,
+      dataAdicao: new Date().toISOString().slice(0, 10)
+    };
+    if (btnSalvarLivro) { btnSalvarLivro.disabled = true; btnSalvarLivro.textContent = "Adicionando…"; }
+    try {
+      await Auth.adicionarLivro(livro);
+      // Atualiza a lista local do admin
+      livrosCatalogo = livrosCatalogo.filter(l => l.id !== id);
+      livrosCatalogo.push(livro);
+      idsCatalogo.add(id);
+      renderAdmin();
+      formLivro.reset();
+      fotoBase64 = "";
+      if (fotoPreview) fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
+      if (livroOk) { livroOk.hidden = false; setTimeout(() => { livroOk.hidden = true; }, 3000); }
+      const det = document.getElementById("admin-add");
+      if (det) det.open = false;
+    } catch (e) {
+      if (livroErro) { livroErro.hidden = false; livroErro.textContent = "Não foi possível adicionar o livro agora. Tente novamente."; }
+    } finally {
+      if (btnSalvarLivro) { btnSalvarLivro.disabled = false; btnSalvarLivro.textContent = "Adicionar livro à loja"; }
     }
   });
 

@@ -54,6 +54,13 @@ button { font: inherit; cursor: pointer; color: inherit; border: 0; background: 
 a { color: inherit; }
 input { font: inherit; }
 
+/* Sem caixa azul/cinza ao tocar ou clicar em botões/links (mobile e desktop) */
+button, a, summary, label, [role="button"], input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+/* Remove o contorno ao clicar/tocar, mantendo-o só para navegação por teclado */
+:focus:not(:focus-visible) { outline: none; }
+
 /* Foco visível e consistente (acessibilidade via teclado) */
 :focus-visible {
   outline: 2px solid var(--estrela);
@@ -2403,11 +2410,50 @@ main {
 .admin-btn-repor:hover  { background: rgba(122,223,130,.22); }
 .admin-btn-vender { border-color: rgba(255,90,90,.45); color: #ff9090; background: rgba(255,90,90,.1); }
 .admin-btn-vender:hover { background: rgba(255,90,90,.22); }
+.admin-btn-remover { border-color: rgba(255,150,90,.45); color: #ffb27a; background: rgba(255,150,90,.1); }
+.admin-btn-remover:hover { background: rgba(255,150,90,.22); }
+.admin-acoes { display: flex; flex-direction: column; gap: 6px; }
 @media (max-width: 420px) {
   .admin-item { flex-wrap: wrap; }
   .admin-acoes { width: 100%; }
   .admin-btn { width: 100%; }
 }
+
+/* ---- Adicionar livro (formulário do admin) ---- */
+.admin-add {
+  margin: 6px 0 18px; border: 1px solid var(--vidro-borda); border-radius: var(--raio);
+  background: rgba(20, 9, 58, .35); overflow: hidden;
+}
+.admin-add > summary {
+  cursor: pointer; padding: 14px 16px; font-weight: 700; color: var(--lavanda-clara);
+  list-style: none; user-select: none;
+}
+.admin-add > summary::-webkit-details-marker { display: none; }
+.admin-add[open] > summary { border-bottom: 1px solid var(--vidro-borda); }
+.admin-add-form { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.admin-foto-wrap { display: flex; align-items: center; gap: 14px; }
+.admin-foto-preview {
+  width: 84px; height: 120px; flex: none; border-radius: 8px; overflow: hidden;
+  display: grid; place-items: center; text-align: center;
+  background: rgba(10,5,36,.5); border: 1px dashed var(--vidro-borda);
+}
+.admin-foto-preview img { width: 100%; height: 100%; object-fit: cover; }
+.admin-foto-vazio { font-size: .72rem; color: var(--texto-discreto); padding: 4px; }
+.admin-foto-botao {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--vidro-borda); background: var(--vidro); color: var(--texto-claro);
+  font-size: .84rem; font-weight: 600;
+}
+.admin-foto-botao:hover { border-color: var(--lavanda); }
+.admin-ia-btn { margin-top: 8px; width: 100%; }
+.admin-add-form textarea {
+  width: 100%; resize: vertical; font: inherit; font-size: 16px;
+  color: var(--texto-claro); background: rgba(10,5,36,.6);
+  border: 1px solid var(--vidro-borda); border-radius: 10px; padding: 10px 12px;
+}
+.admin-add-form textarea:focus { outline: none; border-color: var(--lavanda); }
 
 /* ============================================================
    ZONA DE PERIGO — Apagar conta
