@@ -252,6 +252,40 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
 > Os pedidos confirmados pelo Pix automático (seção acima) são marcados como
 > **"Pago"** no histórico assim que o cliente conclui o pagamento.
 
+### Trocar o nome que aparece na tela de login do Google
+
+Por padrão, quando o cliente clica em **Entrar**, o Google mostra algo como
+*"para continuar para **bookverse-69878.firebaseapp.com**"* — o nome do projeto
+com um monte de número. Para mostrar o **domínio da loja** no lugar
+(*"para continuar para **bookverse-livros.vercel.app**"*), o site já vem
+preparado: o `js/config.js` usa `authDomain: "bookverse-livros.vercel.app"` e o
+arquivo `vercel.json` "espelha" os arquivos de login do Firebase para esse
+domínio.
+
+Para o login continuar funcionando com essa troca, faça **dois passos** uma vez:
+
+1. **No Firebase** — em **Authentication → Settings → Authorized domains**,
+   confirme que `bookverse-livros.vercel.app` está na lista (adicione se não
+   estiver).
+
+2. **No Google Cloud** — abra
+   <https://console.cloud.google.com/apis/credentials>, selecione o projeto
+   `bookverse-69878`, clique no **OAuth 2.0 Client ID** do tipo *Web*, e em
+   **URIs de redirecionamento autorizados** adicione exatamente:
+
+   ```
+   https://bookverse-livros.vercel.app/__/auth/handler
+   ```
+
+   (a linha `https://bookverse-69878.firebaseapp.com/__/auth/handler` já existe;
+   é só **acrescentar** a nova, sem apagar a antiga). Salve.
+
+> ⚠️ Sem esses dois passos o login para de funcionar. Se algum dia o domínio do
+> site mudar, troque o `authDomain` (em `js/config.js`) e o endereço do
+> `vercel.json`, e repita os dois passos acima com o novo domínio. Para voltar
+> ao padrão, é só usar `authDomain: "bookverse-69878.firebaseapp.com"` de novo e
+> apagar o `vercel.json`.
+
 ---
 
 ## 🚚 Como ajustar o frete e a entrega

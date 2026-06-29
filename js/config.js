@@ -108,7 +108,13 @@ window.LOJA_CONFIG = {
      Atenção: estes dados são PÚBLICOS por natureza (podem ficar no site). */
   firebase: {
     apiKey: "AIzaSyBkD1A6yvhUJPWhs6qe-EwqzRjXekDh8PU",
-    authDomain: "bookverse-69878.firebaseapp.com",
+    // authDomain é o endereço que o Google mostra na tela de login
+    // ("para continuar para ..."). Apontamos para o domínio da loja
+    // (bookverse-livros.vercel.app) em vez do padrão ...firebaseapp.com.
+    // Para isso funcionar, o vercel.json espelha os arquivos de login
+    // (/__/auth/...) e o domínio precisa estar autorizado no Firebase e
+    // como "URI de redirecionamento" no Google Cloud. Veja o README.
+    authDomain: "bookverse-livros.vercel.app",
     projectId: "bookverse-69878",
     appId: "1:784486720606:web:7cefa1b2c002ddbe4e40cf"
   },
