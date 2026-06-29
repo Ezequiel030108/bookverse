@@ -2249,3 +2249,6 @@ main {
 .dados-conta-editar:hover { border-color: var(--lavanda); background: rgba(74,43,181,.3); }
 .dados-conta-editar svg { color: var(--lavanda); }
 @media (max-width: 480px) { .dados-conta-grid { grid-template-columns: 1fr; } }
+
+/* Livro de unidade única: sem seletor de quantidade no carrinho */
+.qty-unica { font-size: .76rem; color: var(--texto-discreto); font-weight: 600; }

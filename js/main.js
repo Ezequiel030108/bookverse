@@ -747,7 +747,8 @@ function ativarModoPromocao() {
     const l = window.__livroModal;
     if (!l || l.estoque <= 0 || !window.Carrinho) return;
     if (window.podeUsarCarrinho && !window.podeUsarCarrinho({ tipo: "comprar", id: window.idLivro(l) })) return;
-    window.Carrinho.add(l, 1);
+    // Compra direta: leva só este livro ao checkout, sem mexer no carrinho.
+    try { sessionStorage.setItem("bookverse_compra_direta", JSON.stringify({ id: window.idLivro(l), qty: 1 })); } catch (e) {}
     window.location.href = "checkout.html";
   });
 })();

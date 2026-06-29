@@ -49,6 +49,15 @@
   let pollTimer = null;     // checagem automática "já caiu?"
   let contaCarregada = false; // true quando os dados da conta já chegaram
 
+  // "Comprar agora" = compra direta de UM livro, sem usar o carrinho.
+  let compraDireta = null;
+  try { compraDireta = JSON.parse(sessionStorage.getItem("bookverse_compra_direta") || "null"); } catch (e) {}
+
+  // Fonte dos itens do pedido: a compra direta (1 livro) ou o carrinho.
+  function dadosPedido() {
+    return compraDireta ? Carrinho.resolverLista([compraDireta], false) : Carrinho.resolver();
+  }
+
   function opcaoSelecionada() {
     return opcoesFrete.find(o => o.id === freteId) || opcoesFrete[0] || { valor: 0, pedeEndereco: false };
   }
@@ -73,7 +82,7 @@
 
   /* ---------- Render do resumo ---------- */
   function render() {
-    const dados = Carrinho.resolver();
+    const dados = dadosPedido();
 
     if (dados.vazio) {
       elGrid.hidden = true;
@@ -223,7 +232,7 @@
   }
 
   function atualizarEstadoPagamento() {
-    const ok = validar(false) && !Carrinho.resolver().vazio;
+    const ok = validar(false) && !dadosPedido().vazio;
     const configurado = usaMercadoPago || pixConfigurado();
     const carregado = !exigeConta() || contaCarregada;  // espera os dados da conta
     if (avisoConfig) avisoConfig.hidden = configurado;
@@ -246,7 +255,7 @@
 
   /* ---------- Dados do pedido ---------- */
   function montarPedido() {
-    const dados = Carrinho.resolver();
+    const dados = dadosPedido();
     const frete = valorFrete(dados.subtotal);
     const total = dados.subtotal + frete;
     return { dados, frete, total };
@@ -642,7 +651,13 @@
       }
     }
 
-    Carrinho.limpar();
+    // Compra direta: não mexe no carrinho, só encerra a compra avulsa.
+    // Compra pelo carrinho: esvazia o carrinho.
+    if (compraDireta) {
+      try { sessionStorage.removeItem("bookverse_compra_direta"); } catch (e) {}
+    } else {
+      Carrinho.limpar();
+    }
 
     document.getElementById("checkout-grid").hidden = true;
     document.getElementById("checkout-vazio").hidden = true;
@@ -736,7 +751,7 @@
 
   function init() {
     protegerCheckout();
-    if (Carrinho.resolver().vazio) { render(); return; }
+    if (dadosPedido().vazio) { render(); return; }
     montarEntrega();
     render();
     preencherDeConta();

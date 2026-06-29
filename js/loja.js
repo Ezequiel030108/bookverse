@@ -44,6 +44,11 @@
   drawerFundo.addEventListener("click", fecharDrawer);
   const continuar = document.getElementById("carrinho-continuar");
   if (continuar) continuar.addEventListener("click", fecharDrawer);
+  // Finalizar pelo carrinho leva o carrinho inteiro: cancela qualquer
+  // "compra direta" pendente para não misturar os fluxos.
+  if (irCheckout) irCheckout.addEventListener("click", () => {
+    try { sessionStorage.removeItem("bookverse_compra_direta"); } catch (e) {}
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !drawer.hidden) fecharDrawer();
   });
@@ -78,7 +83,16 @@
     vazioEl.hidden = true;
     rodapeEl.hidden = false;
 
-    itensEl.innerHTML = dados.itens.map(item => `
+    itensEl.innerHTML = dados.itens.map(item => {
+      // Livros com 1 unidade não têm seletor de quantidade.
+      const controleQty = item.livro.estoque <= 1
+        ? `<span class="qty-unica">Unidade única</span>`
+        : `<div class="qty-stepper" role="group" aria-label="Quantidade">
+            <button type="button" data-acao="menos" aria-label="Diminuir quantidade">−</button>
+            <span class="qty-valor">${item.qty}</span>
+            <button type="button" data-acao="mais" aria-label="Aumentar quantidade" ${item.qty >= item.livro.estoque ? "disabled" : ""}>+</button>
+          </div>`;
+      return `
       <div class="carrinho-item" data-id="${item.id}">
         <div class="carrinho-item-capa">${typeof capaHTML === "function" ? capaHTML(item.livro) : ""}</div>
         <div class="carrinho-item-info">
@@ -87,15 +101,11 @@
           ${precoLinhaHTML(item)}
         </div>
         <div class="carrinho-item-controles">
-          <div class="qty-stepper" role="group" aria-label="Quantidade">
-            <button type="button" data-acao="menos" aria-label="Diminuir quantidade">−</button>
-            <span class="qty-valor">${item.qty}</span>
-            <button type="button" data-acao="mais" aria-label="Aumentar quantidade" ${item.qty >= item.livro.estoque ? "disabled" : ""}>+</button>
-          </div>
+          ${controleQty}
           <button type="button" class="carrinho-remover" data-acao="remover" aria-label="Remover ${item.livro.titulo}">Remover</button>
         </div>
-      </div>
-    `).join("");
+      </div>`;
+    }).join("");
 
     subtotalEl.textContent = Precos.formatarBRL(dados.subtotal);
   }
@@ -205,11 +215,19 @@
     if (!completo) return;                       // aguarda o onboarding (não força aqui)
 
     try { sessionStorage.removeItem("bookverse_acao_pendente"); } catch (e) {}
+
+    // "Comprar agora": compra direta, sem mexer no carrinho.
+    if (pend.tipo === "comprar") {
+      try { sessionStorage.setItem("bookverse_compra_direta", JSON.stringify({ id: pend.id, qty: 1 })); } catch (e) {}
+      window.location.href = "checkout.html";
+      return;
+    }
+
+    // "Adicionar ao carrinho".
     const livro = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS))
       ? LIVROS.find(l => window.idLivro(l) === pend.id) : null;
     if (!livro) return;
     Carrinho.add(livro, 1);
-    if (pend.tipo === "comprar") { window.location.href = "checkout.html"; return; }
     toast(`"${livro.titulo}" no carrinho`);
     abrirDrawer();
   }
