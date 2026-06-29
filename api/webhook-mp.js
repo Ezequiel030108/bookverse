@@ -21,6 +21,7 @@
 
 const crypto = require("crypto");
 const MP_API = "https://api.mercadopago.com";
+const { aplicarHeaders } = require("./_seguranca");
 
 function lerBody(req) {
   let b = req.body;
@@ -86,6 +87,7 @@ async function enviarEmail(pagamento) {
 }
 
 module.exports = async (req, res) => {
+  aplicarHeaders(res);
   // O Mercado Pago às vezes faz um GET de teste.
   if (req.method === "GET") { res.status(200).json({ ok: true }); return; }
   if (req.method !== "POST") { res.status(405).end(); return; }

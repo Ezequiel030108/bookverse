@@ -145,12 +145,19 @@
 
   /* ---------- Menu (abas) ---------- */
   function abrirTab(tab) {
-    const ehDados = tab !== "pedidos";
-    if (painelDados) painelDados.hidden = !ehDados;
-    if (painelPedidos) painelPedidos.hidden = ehDados;
+    const abaDados   = tab === "dados" || (tab !== "pedidos" && tab !== "admin");
+    const abaPedidos = tab === "pedidos";
+    const abaAdmin   = tab === "admin";
+    if (painelDados) painelDados.hidden = !abaDados;
+    if (painelPedidos) painelPedidos.hidden = !abaPedidos;
+    const painelAdmin = document.getElementById("painel-admin");
+    if (painelAdmin) painelAdmin.hidden = !abaAdmin;
     document.querySelectorAll(".conta-menu-item").forEach(b =>
-      b.classList.toggle("ativo", b.dataset.tab === (ehDados ? "dados" : "pedidos")));
-    if (!ehDados) carregarPedidos();
+      b.classList.toggle("ativo", b.dataset.tab === tab));
+    // Saiu da aba de pedidos: encerra o listener em tempo real (evita leak).
+    if (!abaPedidos && cancelarOuvirPedidos) { cancelarOuvirPedidos(); cancelarOuvirPedidos = null; }
+    if (abaPedidos) carregarPedidos();
+    if (abaAdmin) carregarAdmin();
   }
   document.querySelectorAll(".conta-menu-item").forEach(b =>
     b.addEventListener("click", () => abrirTab(b.dataset.tab)));
@@ -168,6 +175,7 @@
     if (dadosAjuda) dadosAjuda.hidden = true;
     if (btnSalvar) btnSalvar.textContent = "Concluir cadastro";
     if (zonaPerigo) zonaPerigo.hidden = true;
+    const pa = document.getElementById("painel-admin"); if (pa) pa.hidden = true;
   }
   function entrarModoDashboard() {
     modo = "dashboard";
@@ -179,7 +187,17 @@
     if (dadosAjuda) dadosAjuda.hidden = false;
     if (btnSalvar) btnSalvar.textContent = "Salvar alterações";
     if (zonaPerigo) zonaPerigo.hidden = false;
-    abrirTab(location.hash === "#pedidos" ? "pedidos" : "dados");
+
+    // Aba de administração: só para e-mails autorizados.
+    const adminBtn = document.querySelector(".conta-menu-admin");
+    const admin = ehAdmin(Auth.usuario());
+    if (adminBtn) adminBtn.hidden = !admin;
+    adminCarregado = false;   // recarrega disponibilidade a cada abertura do painel
+
+    let abaInicial = "dados";
+    if (location.hash === "#pedidos") abaInicial = "pedidos";
+    else if (location.hash === "#admin" && admin) abaInicial = "admin";
+    abrirTab(abaInicial);
   }
   function entrarModoOk() {
     if (onbIntro) onbIntro.hidden = true;
@@ -187,6 +205,7 @@
     if (contaMenu) contaMenu.hidden = true;
     if (painelDados) painelDados.hidden = true;
     if (painelPedidos) painelPedidos.hidden = true;
+    const paOk = document.getElementById("painel-admin"); if (paOk) paOk.hidden = true;
     if (onbOk) onbOk.hidden = false;
     const okNome = document.getElementById("ok-nome");
     if (okNome) okNome.textContent = (v("p-nome") || "leitor(a)").split(" ")[0];
@@ -324,6 +343,144 @@
     });
   })();
 
+  /* ---------- Administração da loja ---------- */
+  const adminEmails = ((CFG.admin && CFG.admin.emails) || [])
+    .map(e => String(e || "").trim().toLowerCase()).filter(Boolean);
+  function ehAdmin(user) {
+    return !!(user && user.email && adminEmails.indexOf(String(user.email).toLowerCase()) >= 0);
+  }
+
+  const ESTADO_ADMIN = {
+    vendido:    { texto: "Vendido",     classe: "admin-tag-vendido" },
+    reservado:  { texto: "Reservado",   classe: "admin-tag-reservado" },
+    disponivel: { texto: "Disponível",  classe: "admin-tag-disponivel" }
+  };
+  let dispMapaAdmin = {};
+  let adminCarregado = false;
+  let adminFiltro = "";
+
+  function estadoDoLivro(id) {
+    const d = dispMapaAdmin[id];
+    if (!d) return "disponivel";
+    if (d.estado === "vendido") return "vendido";
+    // reserva expira em 30 min
+    if (d.estado === "reservado") {
+      if (d.ate && Date.now() > Number(d.ate)) return "disponivel";
+      return "reservado";
+    }
+    return "disponivel";
+  }
+
+  function listaLivrosAdmin() {
+    if (typeof LIVROS === "undefined" || !Array.isArray(LIVROS)) return [];
+    return LIVROS.slice();
+  }
+
+  function renderAdmin() {
+    const lista = document.getElementById("admin-lista");
+    if (!lista) return;
+    const idDe = window.idLivro || (l => l.id);
+    const termo = adminFiltro.toLowerCase();
+    const livros = listaLivrosAdmin().filter(l => {
+      if (!termo) return true;
+      return ((l.titulo || "") + " " + (l.autor || "")).toLowerCase().indexOf(termo) >= 0;
+    });
+
+    if (!livros.length) {
+      lista.innerHTML = "";
+      lista.appendChild(criarAvisoVazio("Nenhum livro encontrado."));
+      return;
+    }
+
+    lista.innerHTML = "";
+    livros.forEach(l => {
+      const id = idDe(l);
+      const est = estadoDoLivro(id);
+      const tag = ESTADO_ADMIN[est] || ESTADO_ADMIN.disponivel;
+
+      const card = document.createElement("article");
+      card.className = "admin-item";
+
+      const capa = document.createElement("div");
+      capa.className = "admin-capa";
+      if (l.imagem) {
+        const img = document.createElement("img");
+        img.src = l.imagem; img.alt = ""; img.loading = "lazy";
+        capa.appendChild(img);
+      } else {
+        capa.textContent = (l.titulo || "?").charAt(0);
+      }
+
+      const info = document.createElement("div");
+      info.className = "admin-info";
+      const t = document.createElement("p"); t.className = "admin-titulo"; t.textContent = l.titulo || "—";
+      const a = document.createElement("p"); a.className = "admin-autor"; a.textContent = l.autor || "";
+      const badge = document.createElement("span");
+      badge.className = "admin-tag " + tag.classe; badge.textContent = tag.texto;
+      info.appendChild(t); info.appendChild(a); info.appendChild(badge);
+
+      const acoes = document.createElement("div");
+      acoes.className = "admin-acoes";
+      if (est === "disponivel") {
+        const bv = document.createElement("button");
+        bv.type = "button"; bv.className = "admin-btn admin-btn-vender";
+        bv.textContent = "Marcar vendido"; bv.dataset.acao = "vender"; bv.dataset.id = id;
+        acoes.appendChild(bv);
+      } else {
+        const br = document.createElement("button");
+        br.type = "button"; br.className = "admin-btn admin-btn-repor";
+        br.textContent = "Repor na loja"; br.dataset.acao = "repor"; br.dataset.id = id;
+        acoes.appendChild(br);
+      }
+
+      card.appendChild(capa); card.appendChild(info); card.appendChild(acoes);
+      lista.appendChild(card);
+    });
+  }
+
+  function criarAvisoVazio(texto) {
+    const p = document.createElement("p"); p.className = "conta-ajuda"; p.textContent = texto; return p;
+  }
+
+  async function carregarAdmin() {
+    const carregando = document.getElementById("admin-carregando");
+    if (!adminCarregado) {
+      if (carregando) { carregando.hidden = false; carregando.textContent = "Carregando catálogo…"; }
+      try { dispMapaAdmin = await Auth.lerDisponibilidade(); } catch (e) { dispMapaAdmin = {}; }
+      adminCarregado = true;
+    }
+    if (carregando) carregando.hidden = true;
+    renderAdmin();
+  }
+
+  // Busca no admin
+  const adminBusca = document.getElementById("admin-busca");
+  if (adminBusca) adminBusca.addEventListener("input", () => { adminFiltro = adminBusca.value.trim(); renderAdmin(); });
+
+  // Ações de repor / marcar vendido (delegação)
+  const adminListaEl = document.getElementById("admin-lista");
+  if (adminListaEl) adminListaEl.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".admin-btn");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const acao = btn.dataset.acao;
+    if (!id || !acao) return;
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = "Salvando…";
+    try {
+      if (acao === "vender") {
+        await Auth.marcarVendidos([id]);
+        dispMapaAdmin[id] = { estado: "vendido" };
+      } else {
+        await Auth.liberarLivros([id]);
+        delete dispMapaAdmin[id];
+      }
+      renderAdmin();
+    } catch (err) {
+      btn.disabled = false; btn.textContent = original;
+    }
+  });
+
   /* ---------- Apagar conta ---------- */
   const zonaPerigo   = document.getElementById("zona-perigo");
   const modalApagar  = document.getElementById("modal-apagar");
@@ -371,7 +528,11 @@
     const fFoto = document.getElementById("conta-foto");
     if (fNome) fNome.textContent = user.nome || "Leitor(a)";
     if (fEmail) fEmail.textContent = user.email || "";
-    if (fFoto) fFoto.innerHTML = user.foto ? `<img src="${user.foto}" alt="">` : "";
+    if (fFoto) {
+      fFoto.innerHTML = "";
+      const im = (window.AuthUtil && user.foto) ? window.AuthUtil.imagemSegura(user.foto) : null;
+      if (im) fFoto.appendChild(im);
+    }
 
     set("p-nome", user.nome);
     set("p-email", user.email);

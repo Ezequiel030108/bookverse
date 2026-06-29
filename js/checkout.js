@@ -323,13 +323,20 @@
     el.appendChild(img);
   }
 
-  function gerarPix() {
+  let gerandoPix = false;   // trava contra clique duplo (evita cobranças duplicadas)
+  async function gerarPix() {
+    if (gerandoPix) return;
     if (!validar(true)) {
       if (avisoForm) avisoForm.hidden = false;
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    return usaMercadoPago ? gerarPixMercadoPago() : gerarPixManual();
+    gerandoPix = true;
+    try {
+      return await (usaMercadoPago ? gerarPixMercadoPago() : gerarPixManual());
+    } finally {
+      gerandoPix = false;
+    }
   }
 
   /* ----- Modo manual: Pix gerado no navegador (sem backend) ----- */
@@ -417,7 +424,7 @@
     if (st) {
       st.hidden = false;
       st.className = "pix-status aguardando";
-      st.innerHTML = "⏳ Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
+      st.textContent = "⏳ Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
     }
     const btn = document.getElementById("btn-ja-paguei");
     if (btn) btn.textContent = "Já paguei — verificar agora";
@@ -446,7 +453,7 @@
         const st = document.getElementById("pix-status");
         if (st) {
           st.className = "pix-status aguardando";
-          st.innerHTML = "Ainda não identificamos o pagamento. Se você acabou de pagar, aguarde alguns segundos 💜";
+          st.textContent = "Ainda não identificamos o pagamento. Se você acabou de pagar, aguarde alguns segundos 💜";
         }
       }
     } catch (e) { /* silencioso: tenta de novo no próximo ciclo */ }
@@ -455,7 +462,7 @@
 
   async function aoConfirmarPagamento() {
     const st = document.getElementById("pix-status");
-    if (st) { st.className = "pix-status confirmado"; st.innerHTML = "✅ Pagamento confirmado!"; }
+    if (st) { st.className = "pix-status confirmado"; st.textContent = "✅ Pagamento confirmado!"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
     marcarVendidoSeLogado();   // vendido: sai da loja de vez
     // Garante o aviso ao lojista pelo próprio site (além do webhook).

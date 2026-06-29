@@ -96,6 +96,7 @@
       <nav id="conta-menu" class="conta-menu" hidden aria-label="Menu da conta">
         <button type="button" class="conta-menu-item ativo" data-tab="dados">Meus dados</button>
         <button type="button" class="conta-menu-item" data-tab="pedidos">Meus pedidos</button>
+        <button type="button" class="conta-menu-item conta-menu-admin" data-tab="admin" hidden>Administração</button>
       </nav>
 
       <!-- Painel: dados -->
@@ -184,6 +185,17 @@
         <p id="sem-pedidos" class="conta-ajuda" hidden>Você ainda não fez nenhum pedido por aqui.</p>
       </section>
 
+      <!-- Painel: administração (só para e-mails de admin) -->
+      <section id="painel-admin" class="checkout-bloco" hidden>
+        <h2 class="checkout-subtitulo">Administração da loja</h2>
+        <p class="conta-ajuda">Reponha um livro na loja ou marque como vendido. As mudanças valem para todos os clientes assim que recarregarem a loja.</p>
+        <div class="admin-busca-wrap">
+          <input type="search" id="admin-busca" class="admin-busca" placeholder="Buscar pelo título ou autor…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Buscar livro" />
+        </div>
+        <p id="admin-carregando" class="conta-ajuda">Carregando catálogo…</p>
+        <div id="admin-lista" class="admin-lista"></div>
+      </section>
+
       <!-- Cadastro completo (após o onboarding) -->
       <section id="onboarding-ok" class="checkout-bloco conta-ok" hidden>
         <div class="conta-ok-check" aria-hidden="true">
@@ -219,8 +231,11 @@
     <p class="rodape-sub">Feito com carinho para nossos leitores ✦</p>
   </footer>
 
+  <script src="js/livros.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/precos.js"></script>
+  <script src="js/cart.js"></script>
   <script src="js/conta.js"></script>
 </body>
 </html>

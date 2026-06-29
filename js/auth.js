@@ -38,6 +38,20 @@
     ouvintes.forEach(cb => { try { cb(usuarioAtual); } catch (e) {} });
   }
 
+  // Cria um <img> seguro a partir de uma URL de foto, sem injeção de HTML.
+  // Só aceita http(s); qualquer outra coisa é ignorada.
+  function imagemSegura(url) {
+    const u = String(url || "");
+    if (!/^https?:\/\//i.test(u)) return null;
+    const img = document.createElement("img");
+    img.src = u;
+    img.alt = "";
+    img.loading = "lazy";
+    img.referrerPolicy = "no-referrer";
+    return img;
+  }
+  window.AuthUtil = { imagemSegura };
+
   // Remove dados locais (carrinho etc.) ao sair da conta — em qualquer página.
   function limparDadosLocais() {
     try {
@@ -72,6 +86,7 @@
     async lerDisponibilidade() { await prontoPromise; return impl.lerDisponibilidade(); },
     async reservarLivros(ids)  { await prontoPromise; return impl.reservarLivros(ids); },
     async marcarVendidos(ids)  { await prontoPromise; return impl.marcarVendidos(ids); },
+    async liberarLivros(ids)   { await prontoPromise; return impl.liberarLivros(ids); },
     async apagarConta()        { await prontoPromise; const r = await impl.apagarConta(); limparDadosLocais(); return r; }
   };
   window.Auth = Auth;
@@ -94,6 +109,7 @@
         '<div class="cmp-head"><p class="cmp-nome"></p><p class="cmp-email"></p></div>' +
         '<a class="cmp-item" href="conta.html#dados"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Meus dados</a>' +
         '<a class="cmp-item" href="conta.html#pedidos"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M9 12h6M9 16h6"/></svg> Meus pedidos</a>' +
+        '<a class="cmp-item cmp-admin" href="conta.html#admin" hidden><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Administração</a>' +
         '<button type="button" class="cmp-item cmp-sair"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M21 12H9M9 21H4V3h5"/></svg> Sair</button>';
       document.body.appendChild(pop);
       pop.querySelector(".cmp-sair").addEventListener("click", async () => {
@@ -127,18 +143,25 @@
       }
     });
 
+    const adminEmails = ((window.LOJA_CONFIG && window.LOJA_CONFIG.admin && window.LOJA_CONFIG.admin.emails) || [])
+      .map(e => String(e || "").trim().toLowerCase()).filter(Boolean);
+
     Auth.onChange(function (user) {
       const label = btn.querySelector(".conta-btn-label");
       const av = btn.querySelector(".conta-btn-avatar");
       if (user) {
         if (label) label.textContent = (user.nome || "Conta").split(" ")[0];
-        if (av && user.foto) av.innerHTML = `<img src="${user.foto}" alt="">`;
+        if (av && user.foto) { const im = imagemSegura(user.foto); if (im) { av.innerHTML = ""; av.appendChild(im); } }
         const n = pop.querySelector(".cmp-nome"), em = pop.querySelector(".cmp-email");
         if (n) n.textContent = user.nome || "Leitor(a)";
         if (em) em.textContent = user.email || "";
+        const adminItem = pop.querySelector(".cmp-admin");
+        if (adminItem) adminItem.hidden = !(user.email && adminEmails.indexOf(String(user.email).toLowerCase()) >= 0);
       } else {
         if (label) label.textContent = "Entrar";
         if (av) av.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+        const adminItem = pop.querySelector(".cmp-admin");
+        if (adminItem) adminItem.hidden = true;
         fecharPop();
       }
     });
@@ -167,6 +190,7 @@
       lerDisponibilidade: async () => ({}),
       reservarLivros: async () => {},
       marcarVendidos: async () => {},
+      liberarLivros: async () => {},
       apagarConta: async () => {}
     };
     Auth.pronto = true;
@@ -201,7 +225,8 @@
         salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, atualizarPedido: async () => {}, listarPedidos: async () => [],
         ouvirPedidos: async () => () => {},
         salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false,
-        lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {}, apagarConta: async () => {}
+        lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {},
+        liberarLivros: async () => {}, apagarConta: async () => {}
       };
       Auth.pronto = true;
       notificar();
@@ -374,6 +399,13 @@
         await Promise.all(ids.map(id => id
           ? comTimeout(db.collection("disponibilidade").doc(id)
               .set({ estado: "vendido", uid: usuarioAtual.uid }, { merge: true }), 8000).catch(() => {})
+          : Promise.resolve()));
+      },
+      // Repõe o livro na loja: apaga o registro de disponibilidade.
+      liberarLivros: async function (ids) {
+        if (!usuarioAtual || !Array.isArray(ids)) return;
+        await Promise.all(ids.map(id => id
+          ? comTimeout(db.collection("disponibilidade").doc(id).delete(), 8000).catch(() => {})
           : Promise.resolve()));
       },
       apagarConta: async function () {

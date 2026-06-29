@@ -12,11 +12,15 @@
    ============================================================ */
 
 const MP_API = "https://api.mercadopago.com";
+const { aplicarHeaders } = require("./_seguranca");
 
 module.exports = async (req, res) => {
+  aplicarHeaders(res);
+  if (req.method !== "GET") { res.status(405).json({ error: "Método não permitido." }); return; }
+
   const token = process.env.MP_ACCESS_TOKEN;
   if (!token) {
-    res.status(500).json({ error: "MP_ACCESS_TOKEN não configurado." });
+    res.status(500).json({ error: "Serviço de pagamento indisponível." });
     return;
   }
 

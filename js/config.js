@@ -86,6 +86,15 @@ window.LOJA_CONFIG = {
     exigirConta: true
   },
 
+  /* ---------- ADMINISTRADORES ----------
+     E-mails (de contas Google) que enxergam o painel de Administração
+     dentro de "Minha conta": ali dá para repor um livro na loja ou
+     marcá-lo como vendido, sem precisar abrir o Firebase Console.
+     Coloque um e-mail por linha, entre aspas e separado por vírgula. */
+  admin: {
+    emails: ["ezequielfigueiredoaraujobatist@gmail.com"]
+  },
+
   /* ---------- LOGIN COM GOOGLE / CONTAS (Firebase) ----------
      Opcional. Permite que o cliente crie conta com o Google, tenha os
      dados preenchidos no checkout e veja o histórico de pedidos.
