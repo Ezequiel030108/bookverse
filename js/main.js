@@ -682,19 +682,32 @@ function ativarModoPromocao() {
   vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
   vitrine.innerHTML = `
     <div class="vitrine-card">
-      <div class="vitrine-head">
-        <span class="vitrine-tag"><span class="vitrine-bola" aria-hidden="true">⚽</span> ${PROMOCAO.nome}</span>
-        <span class="vitrine-prazo">${ultimoDiaPromo() ? "último dia!" : "até " + dataFimPromo()}</span>
-      </div>
-      <p class="vitrine-msg">Entrou no clima da Copa? Aproveite os descontos especiais nos seus próximos livros!</p>
-      <div class="vitrine-ofertas">
-        <div class="vitrine-oferta">
-          <span class="vitrine-pct">${PROMOCAO.descontoUm}% OFF</span>
-          <span class="vitrine-oferta-txt">em qualquer livro</span>
+      <span class="vitrine-glow" aria-hidden="true"></span>
+      <span class="vitrine-losango" aria-hidden="true"></span>
+      <div class="vitrine-conteudo">
+        <div class="vitrine-head">
+          <span class="vitrine-tag">
+            <span class="vitrine-icone" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H5a2 2 0 0 1-2-2 1 1 0 0 1 1-1h2M17 6h2a2 2 0 0 0 2-2 1 1 0 0 0-1-1h-2"/></svg>
+            </span>
+            ${PROMOCAO.nome}
+          </span>
+          <span class="vitrine-prazo">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            ${ultimoDiaPromo() ? "Último dia!" : "Até " + dataFimPromo()}
+          </span>
         </div>
-        <div class="vitrine-oferta destaque">
-          <span class="vitrine-pct">${PROMOCAO.descontoDupla}% OFF</span>
-          <span class="vitrine-oferta-txt">levando 2 ou mais</span>
+        <p class="vitrine-msg">Entrou no clima da Copa? Os descontos já entram sozinhos no seu carrinho.</p>
+        <div class="vitrine-ofertas">
+          <div class="vitrine-oferta">
+            <span class="vitrine-pct">${PROMOCAO.descontoUm}<small>% OFF</small></span>
+            <span class="vitrine-oferta-txt">em qualquer livro</span>
+          </div>
+          <div class="vitrine-oferta destaque">
+            <span class="vitrine-selo">Melhor oferta</span>
+            <span class="vitrine-pct">${PROMOCAO.descontoDupla}<small>% OFF</small></span>
+            <span class="vitrine-oferta-txt">levando 2 ou mais</span>
+          </div>
         </div>
       </div>
     </div>

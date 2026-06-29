@@ -1181,48 +1181,86 @@ main {
 }
 
 /* ---- Card da promoção — compacto, com as ofertas explícitas ---- */
-.vitrine-promo { position: relative; z-index: 1; padding: 12px clamp(12px, 3.5vw, 20px) 0; }
+.vitrine-promo { position: relative; z-index: 1; padding: 14px clamp(12px, 3.5vw, 20px) 0; }
 .vitrine-card {
   position: relative; overflow: hidden; isolation: isolate;
   max-width: 1080px; margin: 0 auto;
-  padding: 14px 16px;
-  border-radius: 18px; color: #fff;
+  padding: 20px clamp(18px, 3vw, 30px);
+  border-radius: 20px; color: #fff;
+  background: linear-gradient(135deg, #00a83f 0%, #017a30 52%, #044f20 100%);
+  border: 1px solid rgba(255,223,0,.35);
+  box-shadow: 0 16px 40px rgba(0,40,16,.5), inset 0 1px 0 rgba(255,255,255,.16);
+}
+/* Brilhos suaves (amarelo no topo, azul embaixo — cores da bandeira) */
+.vitrine-glow {
+  position: absolute; inset: 0; z-index: -2; pointer-events: none;
   background:
-    radial-gradient(120% 90% at 100% -15%, rgba(255,223,0,.22), transparent 55%),
-    linear-gradient(135deg, #009c3b 0%, #007a2f 55%, #04631f 100%);
-  border: 1px solid rgba(255,223,0,.45);
-  box-shadow: 0 12px 30px rgba(0,42,16,.45), inset 0 1px 0 rgba(255,255,255,.14);
+    radial-gradient(58% 120% at 92% -12%, rgba(255,223,0,.30), transparent 60%),
+    radial-gradient(48% 120% at 6% 122%, rgba(1,33,105,.5), transparent 60%);
 }
-.vitrine-card::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px);
-  background-size: 15px 15px; opacity: .5;
+/* Losango do Brasil (decorativo, à direita) */
+.vitrine-losango {
+  position: absolute; z-index: -1; right: -96px; top: 50%;
+  width: 300px; height: 300px; transform: translateY(-50%) rotate(45deg);
+  background: linear-gradient(135deg, rgba(255,223,0,.20), rgba(255,223,0,.03));
+  border-radius: 40px; pointer-events: none;
 }
-.vitrine-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
-.vitrine-msg { margin: 0 0 12px; font-size: .87rem; line-height: 1.4; color: rgba(255,255,255,.9); max-width: 60ch; }
+.vitrine-conteudo { position: relative; }
+
+.vitrine-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
 .vitrine-tag {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: 'Playfair Display', Georgia, serif; font-weight: 800; font-size: 1.12rem; color: #fff;
-  text-shadow: 0 1px 8px rgba(0,0,0,.3);
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: 'Playfair Display', Georgia, serif; font-weight: 800;
+  font-size: clamp(1.15rem, 3.6vw, 1.45rem); color: #fff;
+  letter-spacing: .2px; text-shadow: 0 2px 10px rgba(0,0,0,.28);
 }
-.vitrine-bola { display: inline-block; animation: bola-gira 6s linear infinite; font-size: .92em; }
+.vitrine-icone {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: none;
+  border-radius: 10px; color: #04631f;
+  background: linear-gradient(135deg, #ffe863, #ffc400);
+  box-shadow: 0 4px 12px rgba(255,196,0,.4);
+}
 .vitrine-prazo {
-  white-space: nowrap; font-size: .72rem; font-weight: 700; color: #fff;
-  background: rgba(0,0,0,.22); border: 1px solid rgba(255,255,255,.18);
-  padding: 4px 10px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: .72rem; font-weight: 800; color: #06351a;
+  background: linear-gradient(135deg, #ffe863, #ffce2b);
+  padding: 5px 11px; border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(255,196,0,.3);
 }
-.vitrine-ofertas { display: flex; gap: 10px; }
+.vitrine-msg {
+  margin: 0 0 16px; font-size: .9rem; line-height: 1.45;
+  color: rgba(255,255,255,.92); max-width: 52ch;
+}
+
+.vitrine-ofertas { display: flex; gap: 12px; flex-wrap: wrap; }
 .vitrine-oferta {
-  flex: 1; display: flex; flex-direction: column; gap: 1px;
-  padding: 10px 13px; border-radius: 13px;
-  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
+  position: relative; flex: 1 1 200px; min-width: 0;
+  display: flex; flex-direction: column;
+  padding: 14px 16px; border-radius: 14px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
 }
-.vitrine-pct { font-family: 'Playfair Display', Georgia, serif; font-weight: 800; font-size: 1.4rem; line-height: 1.05; color: var(--br-amarelo); }
-.vitrine-oferta-txt { font-size: .74rem; font-weight: 600; color: rgba(255,255,255,.9); }
-.vitrine-oferta.destaque { background: linear-gradient(135deg, #ffe863, #ffc400); border-color: #ffd84d; box-shadow: 0 6px 16px rgba(255,196,0,.32); }
+.vitrine-pct {
+  font-family: 'Playfair Display', Georgia, serif; font-weight: 800;
+  font-size: 2.1rem; line-height: 1; color: var(--br-amarelo);
+  display: flex; align-items: baseline; gap: 5px;
+}
+.vitrine-pct small { font-size: .85rem; font-weight: 700; letter-spacing: .3px; }
+.vitrine-oferta-txt { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.9); margin-top: 5px; }
+
+.vitrine-oferta.destaque {
+  background: linear-gradient(135deg, #ffe75a, #ffc400);
+  border-color: rgba(255,255,255,.5);
+  box-shadow: 0 10px 24px rgba(255,196,0,.35);
+}
 .vitrine-oferta.destaque .vitrine-pct { color: #04631f; }
 .vitrine-oferta.destaque .vitrine-oferta-txt { color: #0a3d1c; }
-@keyframes bola-gira { to { transform: rotate(360deg); } }
+.vitrine-selo {
+  position: absolute; top: -9px; right: 12px;
+  font-size: .61rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  color: #fff; background: linear-gradient(135deg, #1466d6, #012169);
+  padding: 3px 9px; border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(1,33,105,.5);
+}
 
 /* ---- Preços promocionais no card ---- */
 .info-preco.em-promo { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
@@ -1256,7 +1294,7 @@ main {
 .ceu-bolas span:nth-child(6) { left: 90%; top: 72%; animation-delay: 8s;   }
 .ceu-bolas span:nth-child(7) { left: 13%; top: 86%; animation-delay: 9.6s; font-size: 1.1rem; }
 @keyframes bola-flutua { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-22px) rotate(180deg); } }
-@media (prefers-reduced-motion: reduce) { .vitrine-bola, .ceu-bolas span { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ceu-bolas span { animation: none; } }
 
 /* ============================================================
    ============================================================

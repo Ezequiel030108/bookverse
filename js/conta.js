@@ -102,7 +102,8 @@
   if (formPerfil) formPerfil.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     if (!validarPerfil()) return;
-    if (btnSalvar) btnSalvar.disabled = true;
+    if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = "Salvando…"; }
+    if (onbErro) onbErro.hidden = true;
     try {
       await Auth.salvarPerfil({
         nome: v("p-nome"),
@@ -115,12 +116,21 @@
         },
         cadastroCompleto: true
       });
-      if (modo === "onboarding") entrarModoOk();
-      else if (perfilOk) { perfilOk.hidden = false; setTimeout(() => { perfilOk.hidden = true; }, 2500); }
+
+      if (modo === "onboarding") {
+        // Confirma e leva de volta para onde a pessoa estava (ou a loja).
+        let destino = "index.html";
+        try { destino = sessionStorage.getItem("bookverse_retorno") || "index.html"; } catch (e) {}
+        entrarModoOk();
+        setTimeout(() => { window.location.href = destino; }, 1100);
+      } else if (perfilOk) {
+        perfilOk.hidden = false;
+        setTimeout(() => { perfilOk.hidden = true; }, 2500);
+      }
     } catch (e) {
       if (onbErro) { onbErro.hidden = false; onbErro.textContent = "Não foi possível salvar agora. Tente novamente."; }
     } finally {
-      if (btnSalvar) btnSalvar.disabled = false;
+      if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = (modo === "onboarding") ? "Concluir cadastro" : "Salvar alterações"; }
     }
   });
 
