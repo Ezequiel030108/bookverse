@@ -280,7 +280,20 @@
       entrarComGoogle: async function () {
         const provider = new fb.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
-        const cred = await auth.signInWithPopup(provider);
+        let cred;
+        try {
+          cred = await auth.signInWithPopup(provider);
+        } catch (e) {
+          // Fechar/cancelar a janelinha do Google NÃO é erro: devolve null
+          // para a tela apenas reabilitar o botão, sem mostrar aviso vermelho.
+          const cancelou = e && (
+            e.code === "auth/popup-closed-by-user" ||
+            e.code === "auth/cancelled-popup-request" ||
+            e.code === "auth/user-cancelled"
+          );
+          if (cancelou) return null;
+          throw e;
+        }
         const u = cred && cred.user;
         if (u) usuarioAtual = { uid: u.uid, nome: u.displayName || "", email: u.email || "", foto: u.photoURL || "" };
         return usuarioAtual;

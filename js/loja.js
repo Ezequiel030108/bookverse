@@ -170,8 +170,14 @@
     const btnG = document.getElementById("aviso-conta-google");
     if (btnG) btnG.addEventListener("click", async () => {
       btnG.disabled = true;
+      // Rede de segurança: se o cliente fechar a janelinha do Google sem
+      // entrar, em alguns navegadores o login não "responde" e o botão
+      // ficaria travado. Ao voltar o foco para a página, reabilitamos.
+      const destravar = () => { btnG.disabled = false; };
+      window.addEventListener("focus", destravar, { once: true });
       let user = null;
       try { if (window.Auth) user = await window.Auth.entrarComGoogle(); } catch (e) {}
+      window.removeEventListener("focus", destravar);
       btnG.disabled = false;
       fecharAvisoConta();
       if (!user) return;

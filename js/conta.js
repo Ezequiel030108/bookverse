@@ -57,9 +57,15 @@
   if (btnGoogle) btnGoogle.addEventListener("click", async () => {
     if (elErro) elErro.hidden = true;
     btnGoogle.disabled = true;
+    // Rede de segurança: em alguns navegadores, se o cliente fechar a
+    // janelinha do Google sem entrar, o login não "responde" e o botão
+    // ficaria travado até dar refresh. Ao voltar o foco para a página
+    // (a janelinha fechou), reabilitamos o botão.
+    const destravar = () => { btnGoogle.disabled = false; };
+    window.addEventListener("focus", destravar, { once: true });
     try { await Auth.entrarComGoogle(); }
     catch (e) { if (elErro) { elErro.hidden = false; elErro.textContent = "Não foi possível entrar com o Google. Tente novamente."; } }
-    finally { btnGoogle.disabled = false; }
+    finally { window.removeEventListener("focus", destravar); btnGoogle.disabled = false; }
   });
   const btnSair = document.getElementById("btn-sair");
   if (btnSair) btnSair.addEventListener("click", () => Auth.sair());

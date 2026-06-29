@@ -2139,10 +2139,19 @@ main {
   display: inline-flex; align-items: center; gap: 10px;
   margin: 10px auto 0;
   padding: 12px 20px; border-radius: var(--raio);
-  background: #fff; color: #1f1f1f; font-weight: 600;
-  border: 1px solid #dadce0;
+  background: var(--vidro); color: var(--texto-claro); font-weight: 600;
+  border: 1px solid var(--vidro-borda);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background .15s ease, border-color .15s ease, transform .12s ease;
 }
-.botao-google:hover { background: #f5f5f5; }
+/* "Bolinha" branca atrás do G colorido do Google, para ele continuar
+   legível sobre o fundo escuro (a logo é feita para fundo claro). */
+.botao-google svg {
+  background: #fff; border-radius: 50%; padding: 2px;
+  box-sizing: content-box;
+}
+.botao-google:hover { background: rgba(74, 43, 181, .5); border-color: var(--lavanda); }
 .botao-google:disabled { opacity: .6; cursor: default; }
 
 .conta-perfil-head { display: flex; align-items: center; gap: 14px; }
