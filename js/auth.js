@@ -65,6 +65,7 @@
     async atualizarStatusPedido(c, s) { await prontoPromise; return impl.atualizarStatusPedido(c, s); },
     async atualizarPedido(c, campos) { await prontoPromise; return impl.atualizarPedido(c, campos); },
     async listarPedidos()   { await prontoPromise; return impl.listarPedidos(); },
+    async ouvirPedidos(cb)  { await prontoPromise; return impl.ouvirPedidos(cb); },
     async salvarCarrinho(c) { await prontoPromise; return impl.salvarCarrinho(c); },
     async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); },
     async cadastroCompleto(){ await prontoPromise; return impl.cadastroCompleto(); },
@@ -159,6 +160,7 @@
       atualizarStatusPedido: async () => {},
       atualizarPedido: async () => {},
       listarPedidos: async () => [],
+      ouvirPedidos: async () => () => {},
       salvarCarrinho: async () => {},
       lerCarrinho: async () => null,
       cadastroCompleto: async () => false,
@@ -197,6 +199,7 @@
         entrarComGoogle: async () => { alert("Não foi possível conectar ao login agora. Tente novamente."); },
         sair: async () => {}, perfil: async () => null, salvarPerfil: async () => {},
         salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, atualizarPedido: async () => {}, listarPedidos: async () => [],
+        ouvirPedidos: async () => () => {},
         salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false,
         lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {}, apagarConta: async () => {}
       };
@@ -305,6 +308,18 @@
             .collection("pedidos").orderBy("criadoEm", "desc").limit(50).get(), 6000);
           return snap.docs.map(d => d.data());
         } catch (e) { return []; }
+      },
+      ouvirPedidos: function (cb) {
+        if (!usuarioAtual) return () => {};
+        try {
+          const unsubscribe = db.collection("users").doc(usuarioAtual.uid)
+            .collection("pedidos").orderBy("criadoEm", "desc").limit(50)
+            .onSnapshot(snap => {
+              const pedidos = snap.docs.map(d => d.data());
+              try { cb(pedidos); } catch (e) {}
+            }, () => {});
+          return unsubscribe;
+        } catch (e) { return () => {}; }
       },
 
       // Carrinho guardado na conta (campo "carrinho" do documento do usuário).

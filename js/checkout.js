@@ -653,7 +653,7 @@
       </dl>
       <p class="conf-entrega"><strong>Entrega:</strong> ${cliente.entrega}${cliente.endereco ? " — " + cliente.endereco : ""}</p>
       <p class="conf-aviso">${confirmado
-        ? "✅ Pagamento confirmado! Já estamos preparando o seu pedido 💜"
+        ? "✅ Pagamento confirmado! Em breve entraremos em contato para combinar a entrega. 💜"
         : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante pra agilizar 💜"}</p>`;
 
     const sub = document.getElementById("confirmacao-sub");

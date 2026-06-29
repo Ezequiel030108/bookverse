@@ -264,7 +264,7 @@ body::after {
 .topbar-acoes {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -2029,9 +2029,17 @@ main {
 }
 .conta-btn-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .conta-btn-label { white-space: nowrap; }
-@media (max-width: 560px) {
+@media (max-width: 700px) {
   .conta-btn-label { display: none; }
   .conta-btn { padding: 6px; }
+}
+/* Telas muito pequenas: compacta ainda mais a marca */
+@media (max-width: 360px) {
+  .marca-logo-wrap { width: 32px; height: 32px; }
+  .marca-nome { font-size: 1.2rem; }
+  .marca-local { display: none; }
+  .topbar-acoes { gap: 4px; }
+  .topbar-linha { padding: 6px 10px; gap: 6px; }
 }
 
 /* Status do pagamento (modo Mercado Pago) */
@@ -2268,6 +2276,18 @@ main {
   border: 1px solid var(--vidro-borda); border-radius: 8px; padding: 8px; word-break: break-all;
 }
 .pedido-pix-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* Aviso de contato nos pedidos pagos */
+.pedido-contato-aviso {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(74, 43, 181, .18);
+  border: 1px solid rgba(184, 158, 255, .22);
+  font-size: .82rem;
+  color: var(--lavanda-clara);
+  line-height: 1.45;
+}
 
 /* ============================================================
    ZONA DE PERIGO — Apagar conta

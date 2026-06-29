@@ -204,15 +204,11 @@
     pendente:   { texto: "Aguardando pagamento",   classe: "pedido-pendente" },
     aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" }
   };
-  let pedidosCarregados = false;
-  async function carregarPedidos() {
+
+  function renderPedidos(pedidos) {
     const lista = document.getElementById("lista-pedidos");
     const vazio = document.getElementById("sem-pedidos");
-    if (!lista || pedidosCarregados) return;
-    if (vazio) { vazio.hidden = false; vazio.textContent = "Carregando seus pedidos…"; }
-    let pedidos = [];
-    try { pedidos = await Auth.listarPedidos(); } catch (e) { pedidos = []; }
-    pedidosCarregados = true;
+    if (!lista) return;
     if (!pedidos.length) {
       lista.innerHTML = "";
       if (vazio) { vazio.hidden = false; vazio.textContent = "Você ainda não fez nenhum pedido por aqui."; }
@@ -223,8 +219,8 @@
       const st = STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" };
       const itens = (p.itens || []).map(i => `<li>${i.qty}× ${i.titulo}</li>`).join("");
       const data = p.criadoEm && p.criadoEm.toDate ? p.criadoEm.toDate().toLocaleDateString("pt-BR") : "";
-      // Pedido ainda não pago e com código Pix: deixa pagar de novo.
-      const pixBloco = (p.status !== "pago" && p.pix) ? `
+      const pago = p.status === "pago";
+      const pixBloco = (!pago && p.pix) ? `
           <details class="pedido-pix">
             <summary>Ver código Pix para pagar</summary>
             <p class="pedido-pix-ajuda">Copie e pague no app do seu banco (Pix Copia e Cola):</p>
@@ -234,6 +230,7 @@
               ${p.pixUrl ? `<a class="botao-loja botao-loja-primario" href="${p.pixUrl}" target="_blank" rel="noopener">Abrir pagamento</a>` : ""}
             </div>
           </details>` : "";
+      const pagoAviso = pago ? `<p class="pedido-contato-aviso">📦 Em breve entraremos em contato para combinar a entrega.</p>` : "";
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
@@ -244,10 +241,33 @@
           <ul class="pedido-itens">${itens}</ul>
           <div class="pedido-rodape"><span>${p.entrega || ""}</span><strong>${fmt(p.total)}</strong></div>
           ${pixBloco}
+          ${pagoAviso}
         </article>`;
     }).join("");
+  }
 
-    reconciliarPendentes(pedidos);
+  let cancelarOuvirPedidos = null;
+  let reconciliacaoRodando = false;
+
+  async function carregarPedidos() {
+    const lista = document.getElementById("lista-pedidos");
+    const vazio = document.getElementById("sem-pedidos");
+    if (!lista) return;
+
+    // Cancela listener anterior se houver
+    if (cancelarOuvirPedidos) { cancelarOuvirPedidos(); cancelarOuvirPedidos = null; }
+
+    if (vazio) { vazio.hidden = false; vazio.textContent = "Carregando seus pedidos…"; }
+
+    // Snapshot em tempo real: atualiza a UI automaticamente quando o Firestore muda
+    cancelarOuvirPedidos = await Auth.ouvirPedidos(pedidos => {
+      renderPedidos(pedidos);
+      // Roda reconciliação só uma vez por abertura de aba (evita múltiplas chamadas)
+      if (!reconciliacaoRodando) {
+        reconciliacaoRodando = true;
+        reconciliarPendentes(pedidos).finally(() => { reconciliacaoRodando = false; });
+      }
+    });
   }
 
   // Verifica no Mercado Pago os pedidos pendentes; se algum foi pago,
@@ -284,7 +304,7 @@
         } catch (e) {}
       }
     }
-    if (mudou) { pedidosCarregados = false; carregarPedidos(); }
+    // Não precisa chamar carregarPedidos() aqui — o onSnapshot já detecta as mudanças automaticamente.
   }
 
   // Copiar o código Pix de um pedido (delegação no container da lista).
@@ -337,7 +357,12 @@
   /* ---------- Reage ao login/logout ---------- */
   Auth.onChange(async (user) => {
     if (!user && !Auth.pronto) { mostrar(elCarregando); return; }
-    if (!user) { mostrar(elDeslogado); return; }
+    if (!user) {
+      // Cancela o listener de pedidos ao deslogar
+      if (cancelarOuvirPedidos) { cancelarOuvirPedidos(); cancelarOuvirPedidos = null; }
+      mostrar(elDeslogado);
+      return;
+    }
 
     mostrar(elLogado);
 
@@ -363,7 +388,7 @@
     }
     atualizarDicaWhats();
 
-    pedidosCarregados = false;
+    reconciliacaoRodando = false;
     if (perfilCompleto(perfil)) entrarModoDashboard();
     else entrarModoOnboarding();
   });
