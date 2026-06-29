@@ -48,6 +48,17 @@
   let pagamentoId = null;   // id do pagamento no Mercado Pago
   let pollTimer = null;     // checagem automática "já caiu?"
   let contaCarregada = false; // true quando os dados da conta já chegaram
+  let pixCopiaCola = "";    // código Pix gerado (guardado no pedido)
+  let pixTicketUrl = "";    // link de pagamento do Mercado Pago
+
+  // "Comprar agora" = compra direta de UM livro, sem usar o carrinho.
+  let compraDireta = null;
+  try { compraDireta = JSON.parse(sessionStorage.getItem("bookverse_compra_direta") || "null"); } catch (e) {}
+
+  // Fonte dos itens do pedido: a compra direta (1 livro) ou o carrinho.
+  function dadosPedido() {
+    return compraDireta ? Carrinho.resolverLista([compraDireta], false) : Carrinho.resolver();
+  }
 
   function opcaoSelecionada() {
     return opcoesFrete.find(o => o.id === freteId) || opcoesFrete[0] || { valor: 0, pedeEndereco: false };
@@ -73,7 +84,7 @@
 
   /* ---------- Render do resumo ---------- */
   function render() {
-    const dados = Carrinho.resolver();
+    const dados = dadosPedido();
 
     if (dados.vazio) {
       elGrid.hidden = true;
@@ -223,7 +234,7 @@
   }
 
   function atualizarEstadoPagamento() {
-    const ok = validar(false) && !Carrinho.resolver().vazio;
+    const ok = validar(false) && !dadosPedido().vazio;
     const configurado = usaMercadoPago || pixConfigurado();
     const carregado = !exigeConta() || contaCarregada;  // espera os dados da conta
     if (avisoConfig) avisoConfig.hidden = configurado;
@@ -246,7 +257,7 @@
 
   /* ---------- Dados do pedido ---------- */
   function montarPedido() {
-    const dados = Carrinho.resolver();
+    const dados = dadosPedido();
     const frete = valorFrete(dados.subtotal);
     const total = dados.subtotal + frete;
     return { dados, frete, total };
@@ -343,10 +354,13 @@
     }
     erroPag.hidden = true;
 
+    pixCopiaCola = payload;
+    pixTicketUrl = "";
     document.getElementById("pix-codigo").value = payload;
     document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
     renderQR(payload);
     mostrarPixArea();
+    reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
   }
 
   /* ----- Modo Mercado Pago: cobrança + confirmação automática ----- */
@@ -377,6 +391,8 @@
       }
 
       pagamentoId = data.id;
+      pixCopiaCola = data.qr_code || "";
+      pixTicketUrl = data.ticket_url || "";
       document.getElementById("pix-codigo").value = data.qr_code;
       document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
       renderQRImagem(data.qr_code_base64);
@@ -384,6 +400,7 @@
       marcarAguardando();
       salvarPerfilSeLogado();
       salvarPedidoSeLogado("pendente");
+      reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
       iniciarPolling();
     } catch (e) {
       if (erroPag) {
@@ -440,6 +457,14 @@
     const st = document.getElementById("pix-status");
     if (st) { st.className = "pix-status confirmado"; st.innerHTML = "✅ Pagamento confirmado!"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
+    marcarVendidoSeLogado();   // vendido: sai da loja de vez
+    // Garante o aviso ao lojista pelo próprio site (além do webhook).
+    try {
+      await enviarEmailManual();
+      if (codigoPedido && window.Auth && window.Auth.usuario && window.Auth.usuario()) {
+        window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
+      }
+    } catch (e) {}
     sucesso(true);
   }
 
@@ -476,11 +501,23 @@
       entrega: cliente.entrega,
       endereco: cliente.endereco || "",
       pagamentoId: pagamentoId || "",
+      pix: pixCopiaCola || "",
+      pixUrl: pixTicketUrl || "",
+      emailBody: montarEmailBody(),   // usado para avisar o lojista quando confirmar
+      emailEnviado: false,
       itens: dados.itens.map(i => ({
-        titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
+        id: i.id, titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
       }))
     };
     return window.Auth.salvarPedido(pedido).catch(() => {});
+  }
+
+  function idsDoPedido() { return dadosPedido().itens.map(i => i.id).filter(Boolean); }
+  function reservarSeLogado() {
+    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.reservarLivros(idsDoPedido());
+  }
+  function marcarVendidoSeLogado() {
+    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.marcarVendidos(idsDoPedido());
   }
 
   function copiarPix() {
@@ -642,7 +679,13 @@
       }
     }
 
-    Carrinho.limpar();
+    // Compra direta: não mexe no carrinho, só encerra a compra avulsa.
+    // Compra pelo carrinho: esvazia o carrinho.
+    if (compraDireta) {
+      try { sessionStorage.removeItem("bookverse_compra_direta"); } catch (e) {}
+    } else {
+      Carrinho.limpar();
+    }
 
     document.getElementById("checkout-grid").hidden = true;
     document.getElementById("checkout-vazio").hidden = true;
@@ -736,7 +779,7 @@
 
   function init() {
     protegerCheckout();
-    if (Carrinho.resolver().vazio) { render(); return; }
+    if (dadosPedido().vazio) { render(); return; }
     montarEntrega();
     render();
     preencherDeConta();

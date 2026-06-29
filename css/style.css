@@ -2249,3 +2249,23 @@ main {
 .dados-conta-editar:hover { border-color: var(--lavanda); background: rgba(74,43,181,.3); }
 .dados-conta-editar svg { color: var(--lavanda); }
 @media (max-width: 480px) { .dados-conta-grid { grid-template-columns: 1fr; } }
+
+/* Livro de unidade única: sem seletor de quantidade no carrinho */
+.qty-unica { font-size: .76rem; color: var(--texto-discreto); font-weight: 600; }
+
+/* Pix dentro de um pedido pendente (Meus pedidos) */
+.pedido-pix { margin-top: 12px; border-top: 1px solid rgba(184,158,255,.15); padding-top: 10px; }
+.pedido-pix > summary {
+  cursor: pointer; font-size: .84rem; font-weight: 700; color: var(--lavanda-clara);
+  list-style: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.pedido-pix > summary::before { content: "🔑"; font-size: .9em; }
+.pedido-pix[open] > summary { margin-bottom: 8px; }
+.pedido-pix-ajuda { margin: 0 0 6px; font-size: .78rem; color: var(--texto-suave); }
+.pedido-pix-codigo {
+  width: 100%; resize: none; font-family: monospace; font-size: .74rem;
+  color: var(--texto-claro); background: rgba(10,5,36,.6);
+  border: 1px solid var(--vidro-borda); border-radius: 8px; padding: 8px; word-break: break-all;
+}
+.pedido-pix-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.pedido-pix-acoes .botao-loja { flex: 1 1 auto; }

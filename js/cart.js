@@ -60,13 +60,16 @@ window.Carrinho = (function () {
     document.dispatchEvent(new CustomEvent("carrinho:mudou", { detail: dados }));
   }
 
-  /* ---------- Leitura resolvida (com detalhes dos livros) ---------- */
-  function resolver() {
+  /* ---------- Leitura resolvida (com detalhes dos livros) ----------
+     resolverLista resolve uma lista [{id, qty}] qualquer; resolver()
+     usa o carrinho salvo. A "compra direta" (Comprar agora) usa
+     resolverLista com um único livro, sem mexer no carrinho. */
+  function resolverLista(lista, persistir) {
     const mapa = mapaLivros();
     const itens = [];
     let mudou = false;
 
-    estado.forEach(item => {
+    (lista || []).forEach(item => {
       const livro = mapa[item.id];
       if (!livro || livro.estoque <= 0) { mudou = true; return; } // saiu de catálogo/estoque
       const qty = Math.max(1, Math.min(item.qty, livro.estoque));  // respeita o estoque
@@ -74,7 +77,7 @@ window.Carrinho = (function () {
       itens.push({ id: item.id, qty, livro });
     });
 
-    if (mudou) {
+    if (persistir && mudou) {
       estado = itens.map(i => ({ id: i.id, qty: i.qty }));
       try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {}
     }
@@ -82,12 +85,13 @@ window.Carrinho = (function () {
     const totalItens = itens.reduce((s, i) => s + i.qty, 0);
     const linhas = itens.map(i => {
       const unit = window.Precos.precoUnitario(i.livro, totalItens);
-      return { ...i, precoUnit: unit, precoLinha: unit * i.qty };
+      return Object.assign({}, i, { precoUnit: unit, precoLinha: unit * i.qty });
     });
     const subtotal = linhas.reduce((s, i) => s + i.precoLinha, 0);
 
     return { itens: linhas, totalItens, subtotal, vazio: linhas.length === 0 };
   }
+  function resolver() { return resolverLista(estado, true); }
 
   /* ---------- Ações ---------- */
   function add(livro, qty) {
@@ -122,7 +126,7 @@ window.Carrinho = (function () {
     salvar(estado);
   }
 
-  return { idLivro, assinar, resolver, add, definirQty, remover, limpar, totalItens, substituir };
+  return { idLivro, assinar, resolver, resolverLista, add, definirQty, remover, limpar, totalItens, substituir };
 })();
 
 /* Disponibiliza o gerador de id para os outros scripts. */

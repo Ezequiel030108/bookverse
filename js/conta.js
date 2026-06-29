@@ -221,6 +221,17 @@
       const st = STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" };
       const itens = (p.itens || []).map(i => `<li>${i.qty}× ${i.titulo}</li>`).join("");
       const data = p.criadoEm && p.criadoEm.toDate ? p.criadoEm.toDate().toLocaleDateString("pt-BR") : "";
+      // Pedido ainda não pago e com código Pix: deixa pagar de novo.
+      const pixBloco = (p.status !== "pago" && p.pix) ? `
+          <details class="pedido-pix">
+            <summary>Ver código Pix para pagar</summary>
+            <p class="pedido-pix-ajuda">Copie e pague no app do seu banco (Pix Copia e Cola):</p>
+            <textarea class="pedido-pix-codigo" readonly rows="3">${p.pix}</textarea>
+            <div class="pedido-pix-acoes">
+              <button type="button" class="botao-loja botao-loja-secundario pedido-pix-copiar">Copiar código</button>
+              ${p.pixUrl ? `<a class="botao-loja botao-loja-primario" href="${p.pixUrl}" target="_blank" rel="noopener">Abrir pagamento</a>` : ""}
+            </div>
+          </details>` : "";
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
@@ -230,9 +241,66 @@
           ${data ? `<p class="pedido-data">${data}</p>` : ""}
           <ul class="pedido-itens">${itens}</ul>
           <div class="pedido-rodape"><span>${p.entrega || ""}</span><strong>${fmt(p.total)}</strong></div>
+          ${pixBloco}
         </article>`;
     }).join("");
+
+    reconciliarPendentes(pedidos);
   }
+
+  // Verifica no Mercado Pago os pedidos pendentes; se algum foi pago,
+  // atualiza o status e avisa o lojista por e-mail (uma única vez).
+  async function reconciliarPendentes(pedidos) {
+    let mudou = false;
+    const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
+    for (const p of pedidos) {
+      if (!p) continue;
+      let pago = p.status === "pago";
+      // Ainda pendente: confirma no Mercado Pago.
+      if (!pago && p.pagamentoId) {
+        try {
+          const r = await fetch("/api/status-pix?id=" + encodeURIComponent(p.pagamentoId));
+          const d = await r.json();
+          pago = !!(d && d.status === "approved");
+        } catch (e) {}
+        if (pago) {
+          try { await Auth.atualizarStatusPedido(p.codigo, "pago"); } catch (e) {}
+          try { await Auth.marcarVendidos((p.itens || []).map(i => i.id).filter(Boolean)); } catch (e) {}
+          mudou = true;
+        }
+      }
+      // Avisa o lojista por e-mail, uma única vez por pedido.
+      if (pago && !p.emailEnviado && p.emailBody && key) {
+        try {
+          await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify(Object.assign({ access_key: key }, p.emailBody))
+          });
+          await Auth.atualizarPedido(p.codigo, { emailEnviado: true });
+          mudou = true;
+        } catch (e) {}
+      }
+    }
+    if (mudou) { pedidosCarregados = false; carregarPedidos(); }
+  }
+
+  // Copiar o código Pix de um pedido (delegação no container da lista).
+  (function () {
+    const listaEl = document.getElementById("lista-pedidos");
+    if (!listaEl) return;
+    listaEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".pedido-pix-copiar");
+      if (!btn) return;
+      const det = btn.closest(".pedido-pix");
+      const ta = det && det.querySelector(".pedido-pix-codigo");
+      if (!ta) return;
+      const ok = () => { const o = btn.textContent; btn.textContent = "Copiado!"; setTimeout(() => { btn.textContent = o; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(ok).catch(() => { ta.select(); document.execCommand("copy"); ok(); });
+      } else { ta.select(); document.execCommand("copy"); ok(); }
+    });
+  })();
 
   /* ---------- Reage ao login/logout ---------- */
   Auth.onChange(async (user) => {
