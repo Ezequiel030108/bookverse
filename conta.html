@@ -53,17 +53,14 @@
     <!-- Contas não configuradas -->
     <section id="conta-desconfig" class="checkout-bloco" hidden>
       <h2 class="checkout-subtitulo">Contas ainda não configuradas</h2>
-      <p>O login com Google ainda não foi ativado nesta loja. (Para o lojista:
-         preencha o bloco <code>firebase</code> em <code>js/config.js</code> —
-         veja o README.)</p>
+      <p>O login com Google ainda não foi ativado nesta loja.</p>
       <a class="botao-loja botao-loja-secundario" href="index.html">Voltar à loja</a>
     </section>
 
     <!-- Deslogado -->
     <section id="conta-deslogado" class="checkout-bloco conta-login" hidden>
       <h2 class="checkout-subtitulo">Entre na sua conta</h2>
-      <p>Faça login para preencher seus dados automaticamente no checkout e
-         acompanhar o histórico dos seus pedidos.</p>
+      <p>Faça login para finalizar pedidos e acompanhar o histórico.</p>
       <button id="btn-google" type="button" class="botao-google">
         <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
           <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.63z"/>
@@ -76,9 +73,17 @@
       <p id="conta-erro" class="pagamento-erro" hidden></p>
     </section>
 
-    <!-- Logado -->
+    <!-- Logado: onboarding (1ª vez) OU painel (retornante) -->
     <section id="conta-logado" hidden>
-      <div class="conta-perfil-head checkout-bloco">
+
+      <!-- Intro do onboarding (só na primeira vez) -->
+      <div id="onboarding-intro" class="checkout-bloco" hidden>
+        <h2 class="checkout-subtitulo">Falta pouco! 🎉</h2>
+        <p class="conta-ajuda">Complete seu cadastro para finalizar seus pedidos com mais rapidez. Você só precisa fazer isso uma vez. Os campos com <span class="obrig">*</span> são obrigatórios.</p>
+      </div>
+
+      <!-- Cabeçalho do painel (retornante) -->
+      <div id="dashboard-header" class="conta-perfil-head checkout-bloco" hidden>
         <span class="conta-avatar-grande" id="conta-foto" aria-hidden="true"></span>
         <div class="conta-perfil-id">
           <p class="conta-nome" id="conta-nome"></p>
@@ -87,13 +92,20 @@
         <button id="btn-sair" type="button" class="botao-loja botao-loja-secundario">Sair</button>
       </div>
 
-      <section class="checkout-bloco">
-        <h2 class="checkout-subtitulo">Meus dados</h2>
-        <p class="conta-ajuda">Estes dados preenchem o checkout automaticamente na próxima compra.</p>
+      <!-- Menu do painel -->
+      <nav id="conta-menu" class="conta-menu" hidden aria-label="Menu da conta">
+        <button type="button" class="conta-menu-item ativo" data-tab="dados">Meus dados</button>
+        <button type="button" class="conta-menu-item" data-tab="pedidos">Meus pedidos</button>
+      </nav>
+
+      <!-- Painel: dados -->
+      <section id="painel-dados" class="checkout-bloco">
+        <h2 class="checkout-subtitulo" id="painel-dados-titulo" hidden>Meus dados</h2>
+        <p class="conta-ajuda" id="painel-dados-ajuda" hidden>Estes dados preenchem o checkout automaticamente.</p>
         <form id="form-perfil" novalidate>
           <div class="campo">
-            <label for="p-nome">Nome completo</label>
-            <input type="text" id="p-nome" autocomplete="name" />
+            <label for="p-nome">Nome completo <span class="obrig">*</span></label>
+            <input type="text" id="p-nome" autocomplete="name" required />
           </div>
           <div class="campo-linha">
             <div class="campo">
@@ -101,8 +113,8 @@
               <input type="email" id="p-email" autocomplete="email" readonly />
             </div>
             <div class="campo">
-              <label for="p-tel">WhatsApp</label>
-              <input type="tel" id="p-tel" autocomplete="tel" inputmode="tel" placeholder="(83) 9 9999-8888" />
+              <label for="p-tel">WhatsApp <span class="obrig">*</span></label>
+              <input type="tel" id="p-tel" autocomplete="tel" inputmode="tel" placeholder="(83) 9 9999-8888" required />
               <small class="campo-dica" id="p-dica-whats">Com DDD — ex.: (83) 9 9999-8888.</small>
             </div>
           </div>
@@ -147,16 +159,29 @@
             </div>
           </div>
 
-          <button type="submit" class="botao-loja botao-loja-primario">Salvar dados</button>
+          <p class="pagamento-erro" id="onboarding-erro" hidden></p>
+          <button type="submit" id="btn-salvar-perfil" class="botao-loja botao-loja-primario botao-loja-bloco">Salvar</button>
           <p id="perfil-ok" class="conta-salvo" hidden>✅ Dados salvos!</p>
         </form>
       </section>
 
-      <section class="checkout-bloco" id="secao-pedidos">
+      <!-- Painel: pedidos -->
+      <section id="painel-pedidos" class="checkout-bloco" hidden>
         <h2 class="checkout-subtitulo">Meus pedidos</h2>
         <div id="lista-pedidos" class="lista-pedidos"></div>
-        <p id="sem-pedidos" class="conta-ajuda" hidden>Você ainda não fez pedidos por aqui.</p>
+        <p id="sem-pedidos" class="conta-ajuda" hidden>Você ainda não fez nenhum pedido por aqui.</p>
       </section>
+
+      <!-- Cadastro completo (após o onboarding) -->
+      <section id="onboarding-ok" class="checkout-bloco conta-ok" hidden>
+        <div class="conta-ok-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2>Cadastro completo!</h2>
+        <p>Tudo certo, <span id="ok-nome">leitor(a)</span>. Seus dados foram salvos. 💜</p>
+        <button type="button" id="btn-continuar" class="botao-loja botao-loja-primario">Continuar</button>
+      </section>
+
     </section>
 
   </main>

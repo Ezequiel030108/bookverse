@@ -1996,56 +1996,6 @@ main {
   .conta-btn { padding: 6px; }
 }
 
-/* Container do dropdown */
-.conta-dropdown-wrap { position: relative; display: flex; }
-
-/* Menu dropdown */
-.conta-menu {
-  position: absolute; top: calc(100% + 8px); right: 0;
-  width: 240px;
-  background: var(--fundo); border: 1px solid var(--vidro-borda);
-  border-radius: var(--raio); padding: 8px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  z-index: 100;
-  animation: slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes slide-down {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.conta-menu-header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px 12px; margin-bottom: 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.conta-menu-header img {
-  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
-  background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
-}
-.conta-menu-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.conta-menu-nome { font-size: 0.95rem; font-weight: 600; color: var(--texto-claro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conta-menu-email { font-size: 0.8rem; color: var(--texto-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.conta-menu-item {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; text-align: left; padding: 10px;
-  background: transparent; border: none; color: var(--texto-base);
-  font-size: 0.9rem; font-weight: 500; border-radius: 6px;
-  text-decoration: none; cursor: pointer;
-  transition: all 0.2s ease;
-}
-.conta-menu-item:hover {
-  background: rgba(255,255,255,0.05); color: var(--texto-claro);
-}
-#btn-sair-conta { color: #fca5a5; margin-top: 4px; }
-#btn-sair-conta:hover { background: rgba(248,113,113,0.1); color: #f87171; }
-
-/* Onboarding modal */
-.onboarding-form { margin-top: 15px; text-align: left; }
-.onboarding-form .campo-grupo { margin-bottom: 16px; }
-.onboarding-form .campo:invalid:focus { border-color: #f87171; }
-.obrigatorio { color: #f87171; }
-
 /* Status do pagamento (modo Mercado Pago) */
 .pix-status {
   margin: 14px 0 0; padding: 12px 14px; border-radius: var(--raio);
@@ -2176,3 +2126,56 @@ main {
 .campo input.campo-bloqueado:focus {
   outline: none; border-color: var(--vidro-borda);
 }
+
+/* ============================================================
+   MENU DA CONTA (dropdown da barra) + PAINEL DA CONTA
+   ============================================================ */
+.conta-menu-pop {
+  position: fixed; z-index: 600; min-width: 220px;
+  background: linear-gradient(180deg, var(--indigo), var(--noite));
+  border: 1px solid var(--vidro-borda); border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  padding: 8px; overflow: hidden;
+  transform: translateY(-8px) scale(.98); opacity: 0;
+  transition: transform .18s ease, opacity .18s ease;
+}
+.conta-menu-pop[hidden] { display: none; }
+.conta-menu-pop.aberto { transform: none; opacity: 1; }
+.cmp-head { padding: 8px 10px 10px; border-bottom: 1px solid rgba(184,158,255,.16); margin-bottom: 6px; }
+.cmp-nome { margin: 0; font-weight: 700; color: var(--texto-claro); font-size: .92rem; }
+.cmp-email { margin: 2px 0 0; font-size: .76rem; color: var(--texto-suave); word-break: break-all; }
+.cmp-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px; border-radius: 9px; text-align: left;
+  color: var(--texto-claro); text-decoration: none; font-size: .9rem; font-weight: 500;
+}
+.cmp-item:hover { background: rgba(74,43,181,.45); }
+.cmp-item svg { color: var(--lavanda); flex: none; }
+.cmp-sair { color: var(--aurora-rosa); }
+.cmp-sair svg { color: var(--aurora-rosa); }
+
+/* Abas do painel da conta */
+.conta-menu {
+  display: flex; gap: 6px; margin: 0 0 16px;
+  background: var(--vidro); border: 1px solid var(--vidro-borda);
+  border-radius: 999px; padding: 5px;
+}
+.conta-menu-item {
+  flex: 1; padding: 9px 14px; border-radius: 999px;
+  color: var(--texto-suave); font-weight: 600; font-size: .9rem;
+}
+.conta-menu-item.ativo { background: linear-gradient(135deg, var(--violeta), var(--indigo-claro)); color: #fff; }
+
+/* Asterisco de campo obrigatório */
+.obrig { color: var(--aurora-rosa); font-weight: 700; }
+
+/* Tela "cadastro completo" */
+.conta-ok { text-align: center; }
+.conta-ok-check {
+  width: 64px; height: 64px; margin: 6px auto 14px; border-radius: 50%;
+  display: grid; place-items: center; color: #0a0524;
+  background: linear-gradient(135deg, #8be78f, #4fd862);
+  box-shadow: 0 10px 26px rgba(79,216,98,.35);
+}
+.conta-ok h2 { font-family: 'Playfair Display', serif; margin: 0 0 8px; color: var(--texto-claro); }
+.conta-ok p { color: var(--texto-suave); margin: 0 0 20px; }
