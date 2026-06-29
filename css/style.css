@@ -1014,15 +1014,17 @@ main {
 .modal-fechar:active { background: rgba(74, 43, 181, .6); }
 .modal-rolavel { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1 1 auto; padding-bottom: 8px; }
 
-/* MOBILE-FIRST: capa centralizada no topo, texto em largura total abaixo. */
+/* MOBILE-FIRST: capa compacta no topo; PREÇO/ESTADO logo após o autor
+   (acima da dobra), e a sinopse por último — assim o que importa para
+   comprar aparece de cara e a sinopse cortada deixa claro que há mais. */
 .modal-conteudo {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 6px 22px 22px;
+  gap: 16px;
+  padding: 4px 22px 22px;
 }
 .modal-capa {
-  width: 150px;
+  width: 110px;
   align-self: center;
   aspect-ratio: 2 / 3;
   border-radius: 12px;
@@ -1032,20 +1034,26 @@ main {
 }
 .modal-capa img { width: 100%; height: 100%; object-fit: cover; }
 .modal-capa .capa-fallback { font-size: 2.2rem; }
-.modal-info { min-width: 0; width: 100%; }
+.modal-info { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 14px; }
 .modal-info h2 {
+  order: 1;
   font-family: 'Playfair Display', Georgia, serif;
-  margin: 0 0 4px; font-size: 1.5rem; line-height: 1.2;
+  margin: 0; font-size: 1.4rem; line-height: 1.2;
   color: var(--texto-claro); text-align: center;
 }
-.modal-autor { font-style: italic; margin: 0 0 16px; color: var(--lavanda); font-size: .98rem; text-align: center; }
+.modal-autor { order: 2; font-style: italic; margin: -6px 0 0; color: var(--lavanda); font-size: .96rem; text-align: center; }
+.modal-detalhes { order: 3; }
+/* Sinopse logo após o preço: o começo aparece e o fim é cortado pela
+   dobra (com o fade do rodapé), sinalizando que há mais para rolar. */
 .modal-sinopse {
-  margin: 0 0 18px;
+  order: 4;
+  margin: 0;
   color: var(--texto-suave);
-  font-size: 1.02rem;
-  line-height: 1.65;
+  font-size: 1.0rem;
+  line-height: 1.6;
   text-align: left;
 }
+.modal-promo { order: 5; }
 /* Lista de detalhes vira cartão com linhas "rótulo | valor". */
 .modal-detalhes {
   list-style: none; padding: 14px 16px; margin: 0;
@@ -1077,10 +1085,20 @@ main {
 }
 .badge-preco { font-size: 1.02rem; box-shadow: 0 0 14px rgba(255, 217, 102, .4), 0 2px 6px rgba(0,0,0,.35); }
 .modal-rodape {
+  position: relative;
   padding: 12px 16px calc(12px + var(--safe-bottom));
   background: rgba(10, 5, 36, .7);
   border-top: 1px solid rgba(184, 158, 255, .15);
   flex-shrink: 0;
+}
+/* Fade acima do rodapé: deixa claro que o conteúdo continua ao rolar. */
+.modal-rodape::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -28px;
+  height: 28px;
+  background: linear-gradient(to top, var(--noite), transparent);
+  pointer-events: none;
 }
 .botao-instagram {
   display: flex;
@@ -2247,15 +2265,17 @@ main {
 
 /* Abas do painel da conta */
 .conta-menu {
-  display: flex; gap: 6px; margin: 0 0 16px;
+  display: flex; gap: 4px; margin: 0 0 16px;
   background: var(--vidro); border: 1px solid var(--vidro-borda);
   border-radius: 999px; padding: 5px;
 }
 .conta-menu-item {
-  flex: 1; padding: 9px 14px; border-radius: 999px;
-  color: var(--texto-suave); font-weight: 600; font-size: .9rem;
+  flex: 1; padding: 9px 8px; border-radius: 999px;
+  color: var(--texto-suave); font-weight: 600; font-size: .82rem;
+  white-space: nowrap; text-align: center; line-height: 1.2;
 }
 .conta-menu-item.ativo { background: linear-gradient(135deg, var(--violeta), var(--indigo-claro)); color: #fff; }
+@media (min-width: 420px) { .conta-menu-item { font-size: .9rem; padding: 9px 12px; } }
 
 /* Asterisco de campo obrigatório */
 .obrig { color: var(--aurora-rosa); font-weight: 700; }
