@@ -997,49 +997,85 @@ main {
 }
 .modal-fechar {
   position: absolute;
-  top: 6px; right: 8px;
-  width: var(--alvo-toque); height: var(--alvo-toque);
+  top: 10px; right: 10px;
+  width: 40px; height: 40px;
   border-radius: 50%;
   color: var(--texto-claro);
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   line-height: 1;
-  z-index: 2;
+  z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 5, 36, .55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(184, 158, 255, .2);
   -webkit-tap-highlight-color: transparent;
 }
-.modal-fechar:active { background: rgba(255,255,255,.08); }
+.modal-fechar:active { background: rgba(74, 43, 181, .6); }
 .modal-rolavel { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1 1 auto; padding-bottom: 8px; }
-.modal-conteudo { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 12px 20px 20px; }
+
+/* MOBILE-FIRST: capa centralizada no topo, texto em largura total abaixo. */
+.modal-conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 6px 22px 22px;
+}
 .modal-capa {
+  width: 150px;
+  align-self: center;
   aspect-ratio: 2 / 3;
-  border-radius: var(--raio);
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--brilho-livro);
   background: var(--indigo);
 }
 .modal-capa img { width: 100%; height: 100%; object-fit: cover; }
 .modal-capa .capa-fallback { font-size: 2.2rem; }
-.modal-info { min-width: 0; }
-.modal-info h2 { font-family: 'Playfair Display', Georgia, serif; margin: 0 0 4px; font-size: 1.35rem; line-height: 1.2; color: var(--texto-claro); }
-.modal-autor { font-style: italic; margin: 0 0 10px; color: var(--lavanda); font-size: .9rem; }
-.modal-sinopse { margin: 14px 0; grid-column: 1 / -1; color: var(--texto-suave); font-size: .95rem; line-height: 1.55; }
-.modal-detalhes { grid-column: 1 / -1; list-style: none; padding: 0; margin: 0 0 4px; display: grid; gap: 10px; font-size: .9rem; color: var(--texto-suave); }
-.modal-detalhes li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
-.modal-detalhes strong { color: var(--texto-discreto); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .6px; min-width: 64px; }
+.modal-info { min-width: 0; width: 100%; }
+.modal-info h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  margin: 0 0 4px; font-size: 1.5rem; line-height: 1.2;
+  color: var(--texto-claro); text-align: center;
+}
+.modal-autor { font-style: italic; margin: 0 0 16px; color: var(--lavanda); font-size: .98rem; text-align: center; }
+.modal-sinopse {
+  margin: 0 0 18px;
+  color: var(--texto-suave);
+  font-size: 1.02rem;
+  line-height: 1.65;
+  text-align: left;
+}
+/* Lista de detalhes vira cartão com linhas "rótulo | valor". */
+.modal-detalhes {
+  list-style: none; padding: 14px 16px; margin: 0;
+  display: grid; gap: 12px; font-size: .95rem; color: var(--texto-suave);
+  background: rgba(10, 5, 36, .4);
+  border: 1px solid rgba(184, 158, 255, .15);
+  border-radius: 14px;
+}
+.modal-detalhes li {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.modal-detalhes li + li { border-top: 1px solid rgba(184, 158, 255, .1); padding-top: 12px; }
+.modal-detalhes strong {
+  color: var(--texto-discreto); font-weight: 600; font-size: .76rem;
+  text-transform: uppercase; letter-spacing: .6px;
+}
 .badge-destaque {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 5px 13px;
   border-radius: 999px;
-  font-size: .85rem;
+  font-size: .9rem;
   font-weight: 700;
   line-height: 1.3;
   color: #2b1d10;
   background: linear-gradient(135deg, var(--estrela-clara), var(--estrela));
-  box-shadow: 0 0 14px rgba(255, 217, 102, .45), 0 2px 6px rgba(0,0,0,.35);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
 }
-.badge-destaque::before { content: "✎"; font-size: .9em; opacity: .85; }
-.badge-preco::before { content: "✦"; }
+.badge-preco { font-size: 1.02rem; box-shadow: 0 0 14px rgba(255, 217, 102, .4), 0 2px 6px rgba(0,0,0,.35); }
 .modal-rodape {
   padding: 12px 16px calc(12px + var(--safe-bottom));
   background: rgba(10, 5, 36, .7);
@@ -1143,8 +1179,14 @@ main {
   .modal { align-items: center; padding: 24px; }
   .modal-caixa { border-radius: 16px; max-height: 88vh; animation: surgirCaixa .3s ease both; }
   .modal-puxador { display: none; }
-  .modal-conteudo { grid-template-columns: 210px 1fr; gap: 24px; padding: 28px; }
-  .modal-info h2 { font-size: 1.6rem; }
+  .modal-conteudo {
+    display: grid; grid-template-columns: 200px 1fr;
+    align-items: start; gap: 28px; padding: 30px;
+  }
+  .modal-capa { width: auto; align-self: start; }
+  /* No desktop a capa fica à esquerda; título/sinopse alinhados à esquerda. */
+  .modal-info h2 { font-size: 1.7rem; text-align: left; }
+  .modal-autor { text-align: left; }
 }
 
 @media (min-width: 1000px) {
@@ -1544,22 +1586,25 @@ main {
 .carrinho-aviso { margin: 0 0 12px; font-size: .76rem; color: var(--texto-discreto); }
 
 /* ---------- Ações no modal de detalhes ---------- */
-.modal-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Mobile: botões empilhados (alvo de toque grande). Comprar agora em cima. */
+.modal-acoes { display: flex; flex-direction: column-reverse; gap: 10px; }
+.modal-acoes .botao-loja { width: 100%; }
 .modal-suporte {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   width: 100%;
-  margin-top: 12px;
+  margin-top: 14px;
   padding: 8px;
-  font-size: .82rem;
+  font-size: .85rem;
   color: var(--lavanda);
   text-decoration: none;
 }
 .modal-suporte:hover { color: var(--lavanda-clara); text-decoration: underline; text-underline-offset: 2px; }
-@media (max-width: 380px) {
-  .modal-acoes { grid-template-columns: 1fr; }
+@media (min-width: 480px) {
+  .modal-acoes { flex-direction: row; }
+  .modal-acoes .botao-loja { flex: 1; }
 }
 
 /* ---------- Toast (aviso rápido "adicionado") ---------- */
@@ -2376,13 +2421,15 @@ main {
 
 /* ============================================================
    MODAL — Confirmar apagar conta
+   (tudo escopado em .modal-overlay para NÃO afetar o modal de
+   detalhes do livro, que usa .modal-caixa / .modal-acoes)
    ============================================================ */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 9000;
   background: rgba(10, 5, 36, .82); backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center; padding: 20px;
 }
-.modal-caixa {
+.modal-overlay .modal-caixa {
   background: #1a0e4a; border: 1px solid rgba(255,90,90,.3);
   border-radius: 16px; padding: 32px 28px 24px; max-width: 400px; width: 100%;
   text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.6);
@@ -2392,10 +2439,10 @@ main {
   width: 60px; height: 60px; border-radius: 50%;
   background: rgba(255,60,60,.15); color: #ff8080; margin-bottom: 16px;
 }
-.modal-titulo { font-size: 1.25rem; font-weight: 700; color: var(--texto-claro); margin: 0 0 10px; }
+.modal-overlay .modal-titulo { font-size: 1.25rem; font-weight: 700; color: var(--texto-claro); margin: 0 0 10px; }
 .modal-desc { font-size: .88rem; color: var(--texto-suave); line-height: 1.55; margin: 0 0 24px; }
 .modal-desc strong { color: #ff8080; }
-.modal-acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.modal-acoes .botao-loja-secundario { min-width: 110px; }
-.modal-acoes .botao-perigo { min-width: 160px; }
+.modal-overlay .modal-acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.modal-overlay .modal-acoes .botao-loja-secundario { min-width: 110px; }
+.modal-overlay .modal-acoes .botao-perigo { min-width: 160px; }
 .pedido-pix-acoes .botao-loja { flex: 1 1 auto; }
