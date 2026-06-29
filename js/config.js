@@ -95,7 +95,8 @@ window.LOJA_CONFIG = {
     emails: [
       "ezequielfigueiredoaraujobatist@gmail.com",
       "cauantista@gmail.com",
-      "marialeticinha22@gmail.com"
+      "marialeticinha22@gmail.com",
+      "oficialpaulo6@gmail.com"
     ]
   },
 
