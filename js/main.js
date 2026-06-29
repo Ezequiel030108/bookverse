@@ -136,7 +136,30 @@ function capaHTML(livro, lazy = true) {
     : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
 }
 
-function disponivel(livro) { return livro.estoque > 0; }
+function disponivel(livro) {
+  if (livro.estoque <= 0) return false;
+  // Livros reservados (Pix em processamento) ou vendidos saem da loja.
+  const ind = window.__indisponiveis;
+  if (ind && typeof window.idLivro === "function" && ind.has(window.idLivro(livro))) return false;
+  return true;
+}
+
+/* Carrega a disponibilidade (reservados/vendidos) e re-renderiza a loja. */
+function carregarDisponibilidade() {
+  if (!(window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade)) return;
+  window.Auth.lerDisponibilidade().then(mapa => {
+    const set = new Set();
+    const agora = Date.now();
+    Object.keys(mapa || {}).forEach(id => {
+      const d = mapa[id] || {};
+      if (d.estado === "vendido") set.add(id);
+      else if (d.estado === "reservado" && (!d.ate || d.ate > agora)) set.add(id);
+    });
+    window.__indisponiveis = set;
+    const termo = (campoBusca && campoBusca.value) || "";
+    renderizar(termo);
+  }).catch(() => {});
+}
 
 /* ---------- Promoção (configurada em js/livros.js) ----------
    Liga e desliga sozinha pelas datas de PROMOCAO. Para testar antes da
@@ -757,3 +780,4 @@ function ativarModoPromocao() {
 document.getElementById("ano-atual").textContent = new Date().getFullYear();
 ativarModoPromocao();
 renderizar("");
+carregarDisponibilidade();   // esconde reservados/vendidos quando a lista carrega

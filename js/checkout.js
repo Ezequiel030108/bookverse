@@ -360,6 +360,7 @@
     document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
     renderQR(payload);
     mostrarPixArea();
+    reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
   }
 
   /* ----- Modo Mercado Pago: cobrança + confirmação automática ----- */
@@ -399,6 +400,7 @@
       marcarAguardando();
       salvarPerfilSeLogado();
       salvarPedidoSeLogado("pendente");
+      reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
       iniciarPolling();
     } catch (e) {
       if (erroPag) {
@@ -455,6 +457,7 @@
     const st = document.getElementById("pix-status");
     if (st) { st.className = "pix-status confirmado"; st.innerHTML = "✅ Pagamento confirmado!"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
+    marcarVendidoSeLogado();   // vendido: sai da loja de vez
     // Garante o aviso ao lojista pelo próprio site (além do webhook).
     try {
       await enviarEmailManual();
@@ -503,10 +506,18 @@
       emailBody: montarEmailBody(),   // usado para avisar o lojista quando confirmar
       emailEnviado: false,
       itens: dados.itens.map(i => ({
-        titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
+        id: i.id, titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
       }))
     };
     return window.Auth.salvarPedido(pedido).catch(() => {});
+  }
+
+  function idsDoPedido() { return dadosPedido().itens.map(i => i.id).filter(Boolean); }
+  function reservarSeLogado() {
+    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.reservarLivros(idsDoPedido());
+  }
+  function marcarVendidoSeLogado() {
+    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.marcarVendidos(idsDoPedido());
   }
 
   function copiarPix() {

@@ -263,7 +263,11 @@
           const d = await r.json();
           pago = !!(d && d.status === "approved");
         } catch (e) {}
-        if (pago) { try { await Auth.atualizarStatusPedido(p.codigo, "pago"); } catch (e) {} mudou = true; }
+        if (pago) {
+          try { await Auth.atualizarStatusPedido(p.codigo, "pago"); } catch (e) {}
+          try { await Auth.marcarVendidos((p.itens || []).map(i => i.id).filter(Boolean)); } catch (e) {}
+          mudou = true;
+        }
       }
       // Avisa o lojista por e-mail, uma única vez por pedido.
       if (pago && !p.emailEnviado && p.emailBody && key) {

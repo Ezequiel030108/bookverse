@@ -235,6 +235,12 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
            allow read, write: if request.auth != null && request.auth.uid == uid;
          }
        }
+       // Disponibilidade dos livros (reservados/vendidos): qualquer um lê
+       // (para esconder da loja); só quem está logado pode escrever.
+       match /disponibilidade/{livro} {
+         allow read: if true;
+         allow write: if request.auth != null;
+       }
      }
    }
    ```

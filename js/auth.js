@@ -67,7 +67,10 @@
     async listarPedidos()   { await prontoPromise; return impl.listarPedidos(); },
     async salvarCarrinho(c) { await prontoPromise; return impl.salvarCarrinho(c); },
     async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); },
-    async cadastroCompleto(){ await prontoPromise; return impl.cadastroCompleto(); }
+    async cadastroCompleto(){ await prontoPromise; return impl.cadastroCompleto(); },
+    async lerDisponibilidade() { await prontoPromise; return impl.lerDisponibilidade(); },
+    async reservarLivros(ids)  { await prontoPromise; return impl.reservarLivros(ids); },
+    async marcarVendidos(ids)  { await prontoPromise; return impl.marcarVendidos(ids); }
   };
   window.Auth = Auth;
 
@@ -157,7 +160,10 @@
       listarPedidos: async () => [],
       salvarCarrinho: async () => {},
       lerCarrinho: async () => null,
-      cadastroCompleto: async () => false
+      cadastroCompleto: async () => false,
+      lerDisponibilidade: async () => ({}),
+      reservarLivros: async () => {},
+      marcarVendidos: async () => {}
     };
     Auth.pronto = true;
     resolverPronto();
@@ -189,7 +195,8 @@
         entrarComGoogle: async () => { alert("Não foi possível conectar ao login agora. Tente novamente."); },
         sair: async () => {}, perfil: async () => null, salvarPerfil: async () => {},
         salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, atualizarPedido: async () => {}, listarPedidos: async () => [],
-        salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false
+        salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false,
+        lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {}
       };
       Auth.pronto = true;
       notificar();
@@ -326,6 +333,31 @@
         if (p.cadastroCompleto) return true;
         const tel = String(p.telefone || "").replace(/\D/g, "");
         return !!(p.nome && tel.length >= 10);
+      },
+
+      // Disponibilidade dos livros (reservados/vendidos) — leitura pública.
+      lerDisponibilidade: async function () {
+        try {
+          const snap = await comTimeout(db.collection("disponibilidade").get(), 6000);
+          const mapa = {};
+          snap.forEach(doc => { mapa[doc.id] = doc.data(); });
+          return mapa;
+        } catch (e) { return {}; }
+      },
+      reservarLivros: async function (ids) {
+        if (!usuarioAtual || !Array.isArray(ids)) return;
+        const ate = Date.now() + 30 * 60 * 1000;   // reserva vale 30 min
+        await Promise.all(ids.map(id => id
+          ? comTimeout(db.collection("disponibilidade").doc(id)
+              .set({ estado: "reservado", ate: ate, uid: usuarioAtual.uid }, { merge: true }), 8000).catch(() => {})
+          : Promise.resolve()));
+      },
+      marcarVendidos: async function (ids) {
+        if (!usuarioAtual || !Array.isArray(ids)) return;
+        await Promise.all(ids.map(id => id
+          ? comTimeout(db.collection("disponibilidade").doc(id)
+              .set({ estado: "vendido", uid: usuarioAtual.uid }, { merge: true }), 8000).catch(() => {})
+          : Promise.resolve()));
       }
     };
 
