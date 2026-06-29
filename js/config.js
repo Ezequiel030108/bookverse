@@ -92,7 +92,11 @@ window.LOJA_CONFIG = {
      marcá-lo como vendido, sem precisar abrir o Firebase Console.
      Coloque um e-mail por linha, entre aspas e separado por vírgula. */
   admin: {
-    emails: ["ezequielfigueiredoaraujobatist@gmail.com"]
+    emails: [
+      "ezequielfigueiredoaraujobatist@gmail.com",
+      "cauantista@gmail.com",
+      "marialeticinha22@gmail.com"
+    ]
   },
 
   /* ---------- LOGIN COM GOOGLE / CONTAS (Firebase) ----------
