@@ -36,6 +36,10 @@
   if (anoEl) anoEl.textContent = new Date().getFullYear();
 
   let modo = "dashboard";   // "onboarding" | "dashboard"
+  // true quando o cliente clicou em "Entrar" NESTA tela (e não chegou aqui
+  // já logado pelo menu "Minha conta"). Serve para, ao terminar o login,
+  // voltar para a página de onde veio em vez de abrir o painel da conta.
+  let loginIniciadoAqui = false;
 
   function fmt(v) { const n = Number(v) || 0; return simbolo + " " + n.toFixed(2).replace(".", ","); }
   function mostrar(el) { [elCarregando, elDesconfig, elDeslogado, elLogado].forEach(x => { if (x) x.hidden = (x !== el); }); }
@@ -56,6 +60,7 @@
   const btnGoogle = document.getElementById("btn-google");
   if (btnGoogle) btnGoogle.addEventListener("click", async () => {
     if (elErro) elErro.hidden = true;
+    loginIniciadoAqui = true;     // o login partiu desta tela
     btnGoogle.disabled = true;
     // Rede de segurança: em alguns navegadores, se o cliente fechar a
     // janelinha do Google sem entrar, o login não "responde" e o botão
@@ -138,15 +143,26 @@
     }
   });
 
+  /* ---------- Para onde voltar depois do login ----------
+     Lê (e limpa) a página guardada em "bookverse_retorno" — definida quando
+     o cliente clicou em "Entrar". Só aceita endereços do próprio site e
+     ignora a própria página de conta (para não voltar a ela mesma). */
+  function retornoSalvo() {
+    let url = null;
+    try { url = sessionStorage.getItem("bookverse_retorno"); sessionStorage.removeItem("bookverse_retorno"); } catch (e) {}
+    if (!url) return null;
+    try {
+      const u = new URL(url, window.location.href);
+      if (u.origin !== window.location.origin) return null;
+      if (/(^|\/)conta\.html$/.test(u.pathname)) return null;
+      return u.href;
+    } catch (e) { return null; }
+  }
+
   /* ---------- "Continuar" depois do onboarding ---------- */
   const btnContinuar = document.getElementById("btn-continuar");
   if (btnContinuar) btnContinuar.addEventListener("click", () => {
-    let retorno = "index.html";
-    try {
-      retorno = sessionStorage.getItem("bookverse_retorno") || "index.html";
-      sessionStorage.removeItem("bookverse_retorno");
-    } catch (e) {}
-    window.location.href = retorno;
+    window.location.href = retornoSalvo() || "index.html";
   });
 
   /* ---------- Menu (abas) ---------- */
@@ -719,7 +735,19 @@
     atualizarDicaWhats();
 
     reconciliacaoRodando = false;
-    if (perfilCompleto(perfil)) entrarModoDashboard();
-    else entrarModoOnboarding();
+    if (perfilCompleto(perfil)) {
+      // Já tem cadastro. Se o login partiu desta tela (clicou em "Entrar"),
+      // volta para onde a pessoa estava — ex.: a página dos livros ou o que
+      // ela tentava comprar. Se chegou aqui pelo menu "Minha conta", mostra
+      // o painel normalmente.
+      if (loginIniciadoAqui) {
+        loginIniciadoAqui = false;
+        const retorno = retornoSalvo();
+        if (retorno) { window.location.href = retorno; return; }
+      }
+      entrarModoDashboard();
+    } else {
+      entrarModoOnboarding();
+    }
   });
 })();
