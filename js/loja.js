@@ -162,7 +162,17 @@
       btnG.disabled = true;
       try { if (window.Auth) await window.Auth.entrarComGoogle(); } catch (e) {}
       btnG.disabled = false;
-      if (window.Auth && window.Auth.usuario()) fecharAvisoConta();
+      if (window.Auth && window.Auth.usuario()) {
+        fecharAvisoConta();
+        // Primeira vez (sem cadastro completo): leva ao onboarding e volta.
+        try {
+          const completo = await window.Auth.cadastroCompleto();
+          if (!completo) {
+            try { sessionStorage.setItem("bookverse_retorno", window.location.href); } catch (e) {}
+            window.location.href = "conta.html";
+          }
+        } catch (e) {}
+      }
     });
   }
 

@@ -65,24 +65,75 @@
     async atualizarStatusPedido(c, s) { await prontoPromise; return impl.atualizarStatusPedido(c, s); },
     async listarPedidos()   { await prontoPromise; return impl.listarPedidos(); },
     async salvarCarrinho(c) { await prontoPromise; return impl.salvarCarrinho(c); },
-    async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); }
+    async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); },
+    async cadastroCompleto(){ await prontoPromise; return impl.cadastroCompleto(); }
   };
   window.Auth = Auth;
 
-  /* -------- Botão de conta na barra superior (se existir) -------- */
+  /* -------- Botão de conta na barra superior (vira um menu) -------- */
   function ligarBotaoConta() {
     const btn = document.getElementById("btn-conta");
     if (!btn) return;
     if (!configurado) { btn.hidden = true; return; }
     btn.hidden = false;
+
+    // Cria o menu (dropdown) uma única vez.
+    let pop = document.getElementById("conta-menu-pop");
+    if (!pop) {
+      pop = document.createElement("div");
+      pop.id = "conta-menu-pop";
+      pop.className = "conta-menu-pop";
+      pop.hidden = true;
+      pop.innerHTML =
+        '<div class="cmp-head"><p class="cmp-nome"></p><p class="cmp-email"></p></div>' +
+        '<a class="cmp-item" href="conta.html#dados"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Meus dados</a>' +
+        '<a class="cmp-item" href="conta.html#pedidos"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M9 12h6M9 16h6"/></svg> Meus pedidos</a>' +
+        '<button type="button" class="cmp-item cmp-sair"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M21 12H9M9 21H4V3h5"/></svg> Sair</button>';
+      document.body.appendChild(pop);
+      pop.querySelector(".cmp-sair").addEventListener("click", async () => {
+        fecharPop();
+        await Auth.sair();
+        window.location.href = "index.html";
+      });
+    }
+
+    function posicionar() {
+      const r = btn.getBoundingClientRect();
+      pop.style.top = (r.bottom + 8) + "px";
+      pop.style.right = Math.max(8, window.innerWidth - r.right) + "px";
+    }
+    function abrirPop() { posicionar(); pop.hidden = false; requestAnimationFrame(() => pop.classList.add("aberto")); }
+    function fecharPop() { pop.classList.remove("aberto"); setTimeout(() => { pop.hidden = true; }, 180); }
+
+    document.addEventListener("click", (e) => {
+      if (!pop.hidden && !pop.contains(e.target) && !btn.contains(e.target)) fecharPop();
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharPop(); });
+    window.addEventListener("resize", () => { if (!pop.hidden) posicionar(); });
+
+    btn.addEventListener("click", (e) => {
+      if (usuarioAtual) {
+        e.preventDefault();                 // logado: abre o menu em vez de navegar
+        pop.hidden ? abrirPop() : fecharPop();
+      } else {
+        // deslogado: vai para a página de conta (login), lembrando de onde veio
+        try { sessionStorage.setItem("bookverse_retorno", window.location.href); } catch (err) {}
+      }
+    });
+
     Auth.onChange(function (user) {
       const label = btn.querySelector(".conta-btn-label");
       const av = btn.querySelector(".conta-btn-avatar");
       if (user) {
         if (label) label.textContent = (user.nome || "Conta").split(" ")[0];
         if (av && user.foto) av.innerHTML = `<img src="${user.foto}" alt="">`;
-      } else if (label) {
-        label.textContent = "Entrar";
+        const n = pop.querySelector(".cmp-nome"), em = pop.querySelector(".cmp-email");
+        if (n) n.textContent = user.nome || "Leitor(a)";
+        if (em) em.textContent = user.email || "";
+      } else {
+        if (label) label.textContent = "Entrar";
+        if (av) av.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+        fecharPop();
       }
     });
   }
@@ -103,7 +154,8 @@
       atualizarStatusPedido: async () => {},
       listarPedidos: async () => [],
       salvarCarrinho: async () => {},
-      lerCarrinho: async () => null
+      lerCarrinho: async () => null,
+      cadastroCompleto: async () => false
     };
     Auth.pronto = true;
     resolverPronto();
@@ -135,7 +187,7 @@
         entrarComGoogle: async () => { alert("Não foi possível conectar ao login agora. Tente novamente."); },
         sair: async () => {}, perfil: async () => null, salvarPerfil: async () => {},
         salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, listarPedidos: async () => [],
-        salvarCarrinho: async () => {}, lerCarrinho: async () => null
+        salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false
       };
       Auth.pronto = true;
       notificar();
@@ -211,6 +263,15 @@
         const doc = await db.collection("users").doc(usuarioAtual.uid).get();
         const data = doc.exists ? doc.data() : null;
         return data && Array.isArray(data.carrinho) ? data.carrinho : null;
+      },
+      cadastroCompleto: async function () {
+        if (!usuarioAtual) return false;
+        const doc = await db.collection("users").doc(usuarioAtual.uid).get();
+        const p = doc.exists ? doc.data() : null;
+        if (!p) return false;
+        if (p.cadastroCompleto) return true;
+        const tel = String(p.telefone || "").replace(/\D/g, "");
+        return !!(p.nome && tel.length >= 10);
       }
     };
 
