@@ -358,6 +358,8 @@
   let dispMapaAdmin = {};
   let adminCarregado = false;
   let adminFiltro = "";
+  let adminFiltroStatus = "todos";         // todos | disponivel | vendido | meus
+  let editandoId = "";                     // id do livro em edição (vazio = adicionando)
   let livrosCatalogo = [];                 // livros adicionados pelo admin (Firestore)
   let idsCatalogo = new Set();             // ids removíveis (vindos do catálogo)
 
@@ -381,19 +383,47 @@
     return base;
   }
 
+  // Resumo no topo: total / disponíveis / vendidos / adicionados pelo admin.
+  function atualizarResumo() {
+    const box = document.getElementById("admin-resumo");
+    if (!box) return;
+    const idDe = window.idLivro || (l => l.id);
+    const todos = listaLivrosAdmin();
+    let disp = 0, vend = 0;
+    todos.forEach(l => {
+      const est = estadoDoLivro(idDe(l));
+      if (est === "vendido") vend++;
+      else if (est === "disponivel") disp++;
+    });
+    const meus = idsCatalogo.size;
+    box.hidden = false;
+    box.innerHTML =
+      '<div class="admin-resumo-item"><strong>' + todos.length + '</strong><span>no total</span></div>' +
+      '<div class="admin-resumo-item"><strong>' + disp + '</strong><span>disponíveis</span></div>' +
+      '<div class="admin-resumo-item"><strong>' + vend + '</strong><span>vendidos</span></div>' +
+      '<div class="admin-resumo-item"><strong>' + meus + '</strong><span>seus livros</span></div>';
+  }
+
   function renderAdmin() {
+    atualizarResumo();
     const lista = document.getElementById("admin-lista");
     if (!lista) return;
     const idDe = window.idLivro || (l => l.id);
     const termo = adminFiltro.toLowerCase();
     const livros = listaLivrosAdmin().filter(l => {
-      if (!termo) return true;
-      return ((l.titulo || "") + " " + (l.autor || "")).toLowerCase().indexOf(termo) >= 0;
+      const id = idDe(l);
+      if (termo && ((l.titulo || "") + " " + (l.autor || "")).toLowerCase().indexOf(termo) < 0) return false;
+      if (adminFiltroStatus === "meus") return idsCatalogo.has(id);
+      if (adminFiltroStatus === "disponivel") return estadoDoLivro(id) === "disponivel";
+      if (adminFiltroStatus === "vendido") return estadoDoLivro(id) === "vendido";
+      return true;
     });
 
     if (!livros.length) {
       lista.innerHTML = "";
-      lista.appendChild(criarAvisoVazio("Nenhum livro encontrado."));
+      lista.appendChild(criarAvisoVazio(adminFiltro || adminFiltroStatus !== "todos"
+        ? "Nenhum livro encontrado com esse filtro."
+        : "Nenhum livro no catálogo ainda."));
       return;
     }
 
@@ -402,9 +432,11 @@
       const id = idDe(l);
       const est = estadoDoLivro(id);
       const tag = ESTADO_ADMIN[est] || ESTADO_ADMIN.disponivel;
+      const meu = idsCatalogo.has(id);
 
       const card = document.createElement("article");
       card.className = "admin-item";
+      if (id === editandoId) card.classList.add("admin-item-editando");
 
       const capa = document.createElement("div");
       capa.className = "admin-capa";
@@ -420,29 +452,40 @@
       info.className = "admin-info";
       const t = document.createElement("p"); t.className = "admin-titulo"; t.textContent = l.titulo || "—";
       const a = document.createElement("p"); a.className = "admin-autor"; a.textContent = l.autor || "";
+      const metaTxt = [l.genero, l.preco].filter(Boolean).join("  ·  ");
+      const meta = document.createElement("p"); meta.className = "admin-meta"; meta.textContent = metaTxt;
+
+      const tags = document.createElement("div");
+      tags.className = "admin-tags";
       const badge = document.createElement("span");
       badge.className = "admin-tag " + tag.classe; badge.textContent = tag.texto;
-      info.appendChild(t); info.appendChild(a); info.appendChild(badge);
+      tags.appendChild(badge);
+      if (meu) {
+        const seu = document.createElement("span");
+        seu.className = "admin-tag admin-tag-meu"; seu.textContent = "Seu livro";
+        tags.appendChild(seu);
+      }
+      info.appendChild(t); info.appendChild(a);
+      if (metaTxt) info.appendChild(meta);
+      info.appendChild(tags);
 
       const acoes = document.createElement("div");
       acoes.className = "admin-acoes";
-      if (est === "disponivel") {
-        const bv = document.createElement("button");
-        bv.type = "button"; bv.className = "admin-btn admin-btn-vender";
-        bv.textContent = "Marcar vendido"; bv.dataset.acao = "vender"; bv.dataset.id = id;
-        acoes.appendChild(bv);
-      } else {
-        const br = document.createElement("button");
-        br.type = "button"; br.className = "admin-btn admin-btn-repor";
-        br.textContent = "Repor na loja"; br.dataset.acao = "repor"; br.dataset.id = id;
-        acoes.appendChild(br);
+
+      function botao(acao, texto, classe) {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "admin-btn " + classe;
+        b.textContent = texto; b.dataset.acao = acao; b.dataset.id = id;
+        return b;
       }
-      // Livros adicionados pelo admin podem ser removidos de vez.
-      if (idsCatalogo.has(id)) {
-        const bx = document.createElement("button");
-        bx.type = "button"; bx.className = "admin-btn admin-btn-remover";
-        bx.textContent = "Remover"; bx.dataset.acao = "remover"; bx.dataset.id = id;
-        acoes.appendChild(bx);
+
+      if (est === "disponivel") acoes.appendChild(botao("vender", "Marcar vendido", "admin-btn-vender"));
+      else acoes.appendChild(botao("repor", "Repor na loja", "admin-btn-repor"));
+
+      // Só os livros adicionados pelo admin podem ser editados e removidos.
+      if (meu) {
+        acoes.appendChild(botao("editar", "Editar", "admin-btn-editar"));
+        acoes.appendChild(botao("remover", "Remover", "admin-btn-remover"));
       }
 
       card.appendChild(capa); card.appendChild(info); card.appendChild(acoes);
@@ -481,7 +524,17 @@
   const adminBusca = document.getElementById("admin-busca");
   if (adminBusca) adminBusca.addEventListener("input", () => { adminFiltro = adminBusca.value.trim(); renderAdmin(); });
 
-  // Ações de repor / marcar vendido (delegação)
+  // Filtros por estado (Todos / Disponíveis / Vendidos / Adicionados por mim)
+  const adminFiltros = document.getElementById("admin-filtros");
+  if (adminFiltros) adminFiltros.addEventListener("click", (e) => {
+    const chip = e.target.closest(".admin-chip");
+    if (!chip) return;
+    adminFiltroStatus = chip.dataset.filtro || "todos";
+    adminFiltros.querySelectorAll(".admin-chip").forEach(c => c.classList.toggle("ativo", c === chip));
+    renderAdmin();
+  });
+
+  // Ações de editar / repor / marcar vendido / remover (delegação)
   const adminListaEl = document.getElementById("admin-lista");
   if (adminListaEl) adminListaEl.addEventListener("click", async (e) => {
     const btn = e.target.closest(".admin-btn");
@@ -489,6 +542,8 @@
     const id = btn.dataset.id;
     const acao = btn.dataset.acao;
     if (!id || !acao) return;
+    // Editar abre o formulário preenchido — não é uma ação "salvando" inline.
+    if (acao === "editar") { entrarModoEdicao(id); return; }
     if (acao === "remover") {
       if (!window.confirm("Remover este livro da loja permanentemente?")) return;
     }
@@ -593,6 +648,77 @@
     const v = Number(n) || 0;
     return "R$ " + v.toFixed(2).replace(".", ",");
   }
+  // "R$ 20,00" / "1.234,56" / "20" -> número
+  function precoParaNumero(str) {
+    let s = String(str || "").replace(/[^\d,.]/g, "");
+    if (s.indexOf(",") >= 0) s = s.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(s);
+    return isFinite(n) ? n : 0;
+  }
+
+  /* ---------- Edição de um livro já adicionado ---------- */
+  function preencherFormLivro(l) {
+    set("livro-titulo", l.titulo);
+    set("livro-autor", l.autor);
+    set("livro-genero", l.genero);
+    const pn = precoParaNumero(l.preco);
+    set("livro-preco", pn ? String(pn) : "");
+    set("livro-estoque", l.estoque != null ? String(l.estoque) : "1");
+    set("livro-estado", l.estado);
+    set("livro-sinopse", l.sinopse);
+    fotoBase64 = l.imagem || "";
+    if (fotoPreview) {
+      if (fotoBase64) {
+        fotoPreview.innerHTML = "";
+        const im = document.createElement("img"); im.src = fotoBase64; im.alt = ""; fotoPreview.appendChild(im);
+      } else {
+        fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
+      }
+    }
+  }
+
+  function setIconeAdd(txt) {
+    const ic = document.querySelector("#admin-add-summary .admin-add-icone");
+    if (ic) ic.textContent = txt;
+  }
+
+  function entrarModoEdicao(id) {
+    const l = livrosCatalogo.find(x => x && x.id === id);
+    if (!l) return;
+    editandoId = id;
+    preencherFormLivro(l);
+    set("livro-edit-id", id);
+    if (livroErro) livroErro.hidden = true;
+    if (livroOk) livroOk.hidden = true;
+    const titEl = document.getElementById("admin-add-titulo");
+    if (titEl) titEl.textContent = "Editando: " + (l.titulo || "livro");
+    setIconeAdd("✏️");
+    if (btnSalvarLivro) btnSalvarLivro.textContent = "Salvar alterações";
+    const cancelar = document.getElementById("btn-cancelar-edicao");
+    if (cancelar) cancelar.hidden = false;
+    const det = document.getElementById("admin-add");
+    if (det) det.open = true;
+    renderAdmin();   // realça o card que está sendo editado
+    if (det && det.scrollIntoView) det.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function sairModoEdicao() {
+    editandoId = "";
+    if (formLivro) formLivro.reset();
+    set("livro-edit-id", "");
+    fotoBase64 = "";
+    if (fotoPreview) fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
+    const titEl = document.getElementById("admin-add-titulo");
+    if (titEl) titEl.textContent = "Adicionar um novo livro";
+    setIconeAdd("➕");
+    if (btnSalvarLivro) btnSalvarLivro.textContent = "Adicionar livro à loja";
+    const cancelar = document.getElementById("btn-cancelar-edicao");
+    if (cancelar) cancelar.hidden = true;
+    if (livroErro) livroErro.hidden = true;
+  }
+
+  const btnCancelarEdicao = document.getElementById("btn-cancelar-edicao");
+  if (btnCancelarEdicao) btnCancelarEdicao.addEventListener("click", () => { sairModoEdicao(); renderAdmin(); });
 
   const formLivro = document.getElementById("form-livro");
   const livroErro = document.getElementById("livro-erro");
@@ -608,7 +734,9 @@
       if (livroErro) { livroErro.hidden = false; livroErro.textContent = "Preencha título, autor e um preço válido."; }
       return;
     }
-    const id = slugLivro(titulo, autor) || ("livro-" + Date.now().toString(36));
+    const editando = !!editandoId;
+    const existente = editando ? livrosCatalogo.find(l => l && l.id === editandoId) : null;
+    const id = editando ? editandoId : (slugLivro(titulo, autor) || ("livro-" + Date.now().toString(36)));
     const estoque = Math.max(1, parseInt(v("livro-estoque"), 10) || 1);
     const livro = {
       id: id,
@@ -621,26 +749,25 @@
       sinopse: v("livro-sinopse"),
       imagem: fotoBase64 || "",
       destaque: true,
-      dataAdicao: new Date().toISOString().slice(0, 10)
+      // Ao editar, preserva a data original (não volta para "Novidades da Semana").
+      dataAdicao: (existente && existente.dataAdicao) ? existente.dataAdicao : new Date().toISOString().slice(0, 10)
     };
-    if (btnSalvarLivro) { btnSalvarLivro.disabled = true; btnSalvarLivro.textContent = "Adicionando…"; }
+    if (btnSalvarLivro) { btnSalvarLivro.disabled = true; btnSalvarLivro.textContent = editando ? "Salvando…" : "Adicionando…"; }
     try {
       await Auth.adicionarLivro(livro);
       // Atualiza a lista local do admin
       livrosCatalogo = livrosCatalogo.filter(l => l.id !== id);
       livrosCatalogo.push(livro);
       idsCatalogo.add(id);
+      sairModoEdicao();
       renderAdmin();
-      formLivro.reset();
-      fotoBase64 = "";
-      if (fotoPreview) fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
-      if (livroOk) { livroOk.hidden = false; setTimeout(() => { livroOk.hidden = true; }, 3000); }
+      if (livroOk) { livroOk.hidden = false; livroOk.textContent = editando ? "✅ Alterações salvas!" : "✅ Livro adicionado!"; setTimeout(() => { livroOk.hidden = true; }, 3000); }
       const det = document.getElementById("admin-add");
       if (det) det.open = false;
     } catch (e) {
-      if (livroErro) { livroErro.hidden = false; livroErro.textContent = "Não foi possível adicionar o livro agora. Tente novamente."; }
+      if (livroErro) { livroErro.hidden = false; livroErro.textContent = editando ? "Não foi possível salvar as alterações agora. Tente novamente." : "Não foi possível adicionar o livro agora. Tente novamente."; }
     } finally {
-      if (btnSalvarLivro) { btnSalvarLivro.disabled = false; btnSalvarLivro.textContent = "Adicionar livro à loja"; }
+      if (btnSalvarLivro) { btnSalvarLivro.disabled = false; btnSalvarLivro.textContent = editandoId ? "Salvar alterações" : "Adicionar livro à loja"; }
     }
   });
 

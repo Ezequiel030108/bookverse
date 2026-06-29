@@ -254,6 +254,39 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
 
 ---
 
+## ✨ Gerar sinopses com IA (grátis)
+
+No painel de **Administração** (dentro de "Minha conta", para os e-mails da
+lista `admin.emails`), ao adicionar ou editar um livro existe o botão
+**"✨ Gerar sinopse com IA"**. Ele escreve uma sinopse curta e elegante a partir
+do título, autor e gênero — e você ainda pode editar o texto depois.
+
+Para ativar, configure **uma** chave de IA na Vercel (em **Settings →
+Environment Variables**). Recomendamos o **Google Gemini**, que é **gratuito** e
+**não pede cartão**:
+
+1. Acesse <https://aistudio.google.com/apikey> e entre com sua conta Google.
+2. Clique em **Create API key** e **copie** a chave gerada.
+3. Na Vercel, crie a variável:
+
+   | Nome             | Valor                    |
+   | ---------------- | ------------------------ |
+   | `GEMINI_API_KEY` | a chave que você copiou  |
+
+4. **Publique de novo** (a Vercel republica sozinha ao salvar). Pronto: o botão
+   de gerar sinopse passa a funcionar.
+
+> O plano gratuito do Gemini é mais que suficiente para uma livraria (centenas
+> de gerações por dia). Enquanto a chave não for configurada, o botão apenas
+> avisa que a geração está indisponível — você pode escrever a sinopse à mão
+> normalmente.
+>
+> Prefere usar o **Claude (Anthropic)**? Em vez do Gemini, crie a variável
+> `ANTHROPIC_API_KEY` com a chave da Anthropic (serviço pago). Se as duas
+> estiverem configuradas, o Gemini (gratuito) é usado.
+
+---
+
 ## 🚚 Como ajustar o frete e a entrega
 
 Tudo fica no arquivo `js/config.js`, dentro de `frete`. Cada opção é um bloco:

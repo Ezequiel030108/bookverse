@@ -1,5 +1,5 @@
 /* ============================================================
-   BOOKVERSE — API: GERAR SINOPSE COM IA (Claude / Anthropic)
+   BOOKVERSE — API: GERAR SINOPSE COM IA
    ------------------------------------------------------------
    Recebe título, autor e gênero de um livro e devolve uma
    sinopse curta em português, no mesmo estilo das sinopses
@@ -8,12 +8,25 @@
    Uso: POST /api/gerar-sinopse  { titulo, autor, genero }
    Resposta: { sinopse }
 
-   Variável de ambiente (configure na Vercel, NÃO no código):
-     - ANTHROPIC_API_KEY  → chave da API da Anthropic (secreta)
+   FUNCIONA COM DUAS IAs (escolha UMA, configure na Vercel em
+   Settings → Environment Variables — NUNCA no código):
+
+     • GEMINI_API_KEY     → Google Gemini. É GRATUITO (sem cartão).
+                            Pegue a chave em https://aistudio.google.com/apikey
+                            ➜ esta é a opção recomendada.
+
+     • ANTHROPIC_API_KEY  → Claude / Anthropic (paga).
+
+   Se as duas estiverem configuradas, o Gemini (gratuito) é usado.
    ============================================================ */
 
 const { aplicarHeaders } = require("./_seguranca");
+
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+const GEMINI_MODELO = "gemini-2.5-flash";
+const GEMINI_API =
+  "https://generativelanguage.googleapis.com/v1beta/models/" +
+  GEMINI_MODELO + ":generateContent";
 
 function lerBody(req) {
   let b = req.body;
@@ -23,6 +36,82 @@ function lerBody(req) {
   return b || {};
 }
 
+/* Instruções de estilo, iguais para qualquer IA. */
+const SYSTEM =
+  "Você escreve sinopses curtas de livros para uma livraria brasileira chamada BookVerse. " +
+  "Escreva SEMPRE em português do Brasil, em 2 a 3 frases (no máximo ~60 palavras), em tom envolvente e elegante. " +
+  "Descreva o enredo ou o tema central da obra e termine destacando a importância ou o apelo do livro. " +
+  "Não use aspas; não comece repetindo o título nem o nome do autor; não invente prêmios, datas ou dados específicos que não sejam de conhecimento comum. " +
+  "Responda APENAS com o texto da sinopse, sem rótulos ou comentários.\n\n" +
+  "Exemplos do estilo desejado:\n" +
+  "- O mais célebre tratado político de todos os tempos. Com frieza e realismo, Maquiavel analisa como o poder é conquistado e mantido, separando a política da moral e inaugurando o pensamento político moderno. Leitura indispensável para compreender as relações de poder.\n" +
+  "- Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. Um dos maiores clássicos de todos os tempos.";
+
+function montarPergunta(titulo, autor, genero) {
+  return `Escreva a sinopse para o livro "${titulo}"` +
+    (autor ? `, de ${autor}` : "") +
+    (genero ? ` (gênero: ${genero})` : "") + ".";
+}
+
+/* ---------- Google Gemini (gratuito) ---------- */
+async function gerarComGemini(key, pergunta) {
+  const r = await fetch(GEMINI_API + "?key=" + encodeURIComponent(key), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: SYSTEM }] },
+      contents: [{ role: "user", parts: [{ text: pergunta }] }],
+      generationConfig: {
+        temperature: 0.85,
+        maxOutputTokens: 600,
+        // Desliga o "pensamento" do 2.5 Flash para não consumir o limite
+        // de tokens e devolver a sinopse direto.
+        thinkingConfig: { thinkingBudget: 0 }
+      }
+    })
+  });
+
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const e = new Error("gemini-falha");
+    e.status = r.status === 429 ? 429 : 502;
+    throw e;
+  }
+  if (data.promptFeedback && data.promptFeedback.blockReason) {
+    const e = new Error("gemini-bloqueado"); e.refusal = true; throw e;
+  }
+  const cand = (data.candidates || [])[0];
+  const partes = (cand && cand.content && cand.content.parts) || [];
+  return partes.filter(p => p && p.text).map(p => p.text).join(" ").trim();
+}
+
+/* ---------- Claude / Anthropic (paga) ---------- */
+async function gerarComAnthropic(key, pergunta) {
+  const r = await fetch(ANTHROPIC_API, {
+    method: "POST",
+    headers: {
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-8",
+      max_tokens: 400,
+      system: SYSTEM,
+      messages: [{ role: "user", content: pergunta }]
+    })
+  });
+
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error("anthropic-falha"); e.status = 502; throw e; }
+  if (data.stop_reason === "refusal") { const e = new Error("anthropic-recusa"); e.refusal = true; throw e; }
+  return (data.content || [])
+    .filter(b => b && b.type === "text")
+    .map(b => b.text)
+    .join(" ")
+    .trim();
+}
+
 module.exports = async (req, res) => {
   aplicarHeaders(res);
   if (req.method !== "POST") {
@@ -30,8 +119,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!geminiKey && !anthropicKey) {
     res.status(500).json({ error: "Geração de sinopse indisponível (chave de IA não configurada)." });
     return;
   }
@@ -46,51 +136,12 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const system =
-      "Você escreve sinopses curtas de livros para uma livraria brasileira chamada BookVerse. " +
-      "Escreva SEMPRE em português do Brasil, em 2 a 3 frases (no máximo ~60 palavras), em tom envolvente e elegante. " +
-      "Descreva o enredo ou o tema central da obra e termine destacando a importância ou o apelo do livro. " +
-      "Não use aspas; não comece repetindo o título nem o nome do autor; não invente prêmios, datas ou dados específicos que não sejam de conhecimento comum. " +
-      "Responda APENAS com o texto da sinopse, sem rótulos ou comentários.\n\n" +
-      "Exemplos do estilo desejado:\n" +
-      "- O mais célebre tratado político de todos os tempos. Com frieza e realismo, Maquiavel analisa como o poder é conquistado e mantido, separando a política da moral e inaugurando o pensamento político moderno. Leitura indispensável para compreender as relações de poder.\n" +
-      "- Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. Um dos maiores clássicos de todos os tempos.";
+    const pergunta = montarPergunta(titulo, autor, genero);
 
-    const pergunta =
-      `Escreva a sinopse para o livro "${titulo}"` +
-      (autor ? `, de ${autor}` : "") +
-      (genero ? ` (gênero: ${genero})` : "") + ".";
-
-    const r = await fetch(ANTHROPIC_API, {
-      method: "POST",
-      headers: {
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-opus-4-8",
-        max_tokens: 400,
-        system: system,
-        messages: [{ role: "user", content: pergunta }]
-      })
-    });
-
-    const data = await r.json();
-    if (!r.ok) {
-      res.status(502).json({ error: "Falha ao gerar a sinopse." });
-      return;
-    }
-    if (data.stop_reason === "refusal") {
-      res.status(502).json({ error: "Não foi possível gerar a sinopse para este título." });
-      return;
-    }
-
-    const sinopse = (data.content || [])
-      .filter(b => b && b.type === "text")
-      .map(b => b.text)
-      .join(" ")
-      .trim();
+    // Prefere o Gemini (gratuito) quando configurado; senão usa o Claude.
+    const sinopse = geminiKey
+      ? await gerarComGemini(geminiKey, pergunta)
+      : await gerarComAnthropic(anthropicKey, pergunta);
 
     if (!sinopse) {
       res.status(502).json({ error: "A IA não retornou uma sinopse." });
@@ -99,6 +150,14 @@ module.exports = async (req, res) => {
 
     res.status(200).json({ sinopse });
   } catch (e) {
-    res.status(500).json({ error: "Erro ao gerar a sinopse." });
+    if (e && e.refusal) {
+      res.status(502).json({ error: "Não foi possível gerar a sinopse para este título." });
+      return;
+    }
+    if (e && e.status === 429) {
+      res.status(429).json({ error: "Muitas gerações em pouco tempo. Aguarde um instante e tente de novo." });
+      return;
+    }
+    res.status(e && e.status ? e.status : 500).json({ error: "Não foi possível gerar a sinopse agora." });
   }
 };

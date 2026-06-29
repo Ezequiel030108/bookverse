@@ -2364,7 +2364,25 @@ main {
 /* ============================================================
    PAINEL DE ADMINISTRAÇÃO (repor / vender livros)
    ============================================================ */
-.admin-busca-wrap { margin: 10px 0 16px; }
+/* ---- Resumo (total / disponíveis / vendidos / seus) ---- */
+.admin-resumo {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  margin: 4px 0 18px;
+}
+.admin-resumo-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 6px; text-align: center;
+  background: rgba(20, 9, 58, .4); border: 1px solid var(--vidro-borda); border-radius: 12px;
+}
+.admin-resumo-item strong { font-size: 1.25rem; color: var(--lavanda-clara); line-height: 1; }
+.admin-resumo-item span { font-size: .68rem; color: var(--texto-discreto); }
+@media (max-width: 440px) {
+  .admin-resumo { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Ferramentas: busca + filtros ---- */
+.admin-ferramentas { margin: 10px 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.admin-busca-wrap { margin: 0; }
 .admin-busca {
   width: 100%; padding: 11px 14px; font-size: 16px;
   color: var(--texto-claro); background: rgba(10,5,36,.6);
@@ -2373,32 +2391,51 @@ main {
 .admin-busca::placeholder { color: var(--texto-discreto); }
 .admin-busca:focus { outline: none; border-color: var(--lavanda); }
 
+.admin-filtros { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-chip {
+  padding: 7px 14px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  border: 1px solid var(--vidro-borda); background: var(--vidro); color: var(--texto-discreto);
+  transition: background .15s, border-color .15s, color .15s;
+}
+.admin-chip:hover { border-color: var(--lavanda); color: var(--texto-claro); }
+.admin-chip.ativo {
+  background: rgba(157,124,255,.18); border-color: var(--lavanda); color: var(--lavanda-clara);
+}
+
 .admin-lista { display: flex; flex-direction: column; gap: 10px; }
 .admin-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px; border-radius: var(--raio);
+  display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  padding: 12px; border-radius: var(--raio);
   background: rgba(20, 9, 58, .4); border: 1px solid var(--vidro-borda);
+  transition: border-color .15s, box-shadow .15s;
+}
+.admin-item-editando {
+  border-color: var(--lavanda);
+  box-shadow: 0 0 0 1px var(--lavanda), 0 6px 20px rgba(157,124,255,.18);
 }
 .admin-capa {
-  width: 42px; height: 60px; flex: none; border-radius: 6px; overflow: hidden;
+  width: 46px; height: 66px; flex: none; border-radius: 6px; overflow: hidden;
   display: grid; place-items: center;
   background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
   color: var(--lavanda-clara); font-weight: 700; font-size: 1.1rem;
 }
 .admin-capa img { width: 100%; height: 100%; object-fit: cover; }
-.admin-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.admin-info { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .admin-titulo { margin: 0; font-weight: 600; color: var(--texto-claro); font-size: .92rem; line-height: 1.25; }
 .admin-autor  { margin: 0; font-size: .78rem; color: var(--texto-discreto); }
+.admin-meta   { margin: 1px 0 0; font-size: .76rem; color: var(--lavanda-clara); font-weight: 600; }
+.admin-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .admin-tag {
-  align-self: flex-start; margin-top: 2px;
   font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
   padding: 2px 8px; border-radius: 999px;
 }
 .admin-tag-disponivel { background: rgba(122,223,130,.16); color: #8be79a; border: 1px solid rgba(122,223,130,.35); }
 .admin-tag-reservado  { background: rgba(255,217,102,.14); color: var(--estrela-clara); border: 1px solid rgba(255,217,102,.35); }
 .admin-tag-vendido    { background: rgba(255,90,90,.14); color: #ff9090; border: 1px solid rgba(255,90,90,.35); }
+.admin-tag-meu        { background: rgba(157,124,255,.16); color: var(--lavanda-clara); border: 1px solid rgba(157,124,255,.4); }
 
-.admin-acoes { flex: none; }
+.admin-acoes { flex: none; display: flex; flex-direction: column; gap: 6px; }
 .admin-btn {
   padding: 8px 12px; border-radius: 999px; font-size: .78rem; font-weight: 700;
   cursor: pointer; white-space: nowrap; min-height: 38px;
@@ -2410,14 +2447,17 @@ main {
 .admin-btn-repor:hover  { background: rgba(122,223,130,.22); }
 .admin-btn-vender { border-color: rgba(255,90,90,.45); color: #ff9090; background: rgba(255,90,90,.1); }
 .admin-btn-vender:hover { background: rgba(255,90,90,.22); }
+.admin-btn-editar { border-color: rgba(157,124,255,.5); color: var(--lavanda-clara); background: rgba(157,124,255,.1); }
+.admin-btn-editar:hover { background: rgba(157,124,255,.22); }
 .admin-btn-remover { border-color: rgba(255,150,90,.45); color: #ffb27a; background: rgba(255,150,90,.1); }
 .admin-btn-remover:hover { background: rgba(255,150,90,.22); }
-.admin-acoes { display: flex; flex-direction: column; gap: 6px; }
-@media (max-width: 420px) {
-  .admin-item { flex-wrap: wrap; }
-  .admin-acoes { width: 100%; }
-  .admin-btn { width: 100%; }
+@media (max-width: 520px) {
+  .admin-acoes { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  .admin-btn { flex: 1 1 auto; }
 }
+
+/* ---- Ações do formulário (salvar / cancelar edição) ---- */
+.admin-form-acoes { display: flex; flex-direction: column; gap: 8px; }
 
 /* ---- Adicionar livro (formulário do admin) ---- */
 .admin-add {

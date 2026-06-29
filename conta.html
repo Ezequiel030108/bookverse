@@ -189,10 +189,14 @@
       <section id="painel-admin" class="checkout-bloco" hidden>
         <h2 class="checkout-subtitulo">Administração da loja</h2>
 
-        <!-- Adicionar novo livro -->
+        <!-- Resumo rápido (total / disponíveis / vendidos) -->
+        <div id="admin-resumo" class="admin-resumo" hidden></div>
+
+        <!-- Adicionar / editar livro -->
         <details id="admin-add" class="admin-add">
-          <summary>➕ Adicionar um novo livro</summary>
+          <summary id="admin-add-summary"><span class="admin-add-icone" aria-hidden="true">➕</span> <span id="admin-add-titulo">Adicionar um novo livro</span></summary>
           <form id="form-livro" class="admin-add-form" novalidate>
+            <input type="hidden" id="livro-edit-id" value="" />
             <div class="admin-foto-wrap">
               <div class="admin-foto-preview" id="livro-foto-preview" aria-hidden="true">
                 <span class="admin-foto-vazio">Foto da capa</span>
@@ -247,15 +251,29 @@
             </div>
 
             <p class="pagamento-erro" id="livro-erro" hidden></p>
-            <button type="submit" id="btn-salvar-livro" class="botao-loja botao-loja-primario botao-loja-bloco">Adicionar livro à loja</button>
+            <div class="admin-form-acoes">
+              <button type="submit" id="btn-salvar-livro" class="botao-loja botao-loja-primario botao-loja-bloco">Adicionar livro à loja</button>
+              <button type="button" id="btn-cancelar-edicao" class="botao-loja botao-loja-secundario botao-loja-bloco" hidden>Cancelar edição</button>
+            </div>
             <p id="livro-ok" class="conta-salvo" hidden>✅ Livro adicionado!</p>
           </form>
         </details>
 
-        <p class="conta-ajuda">Reponha um livro na loja, marque como vendido ou remova um livro que você adicionou. As mudanças valem para todos os clientes assim que recarregarem a loja.</p>
-        <div class="admin-busca-wrap">
-          <input type="search" id="admin-busca" class="admin-busca" placeholder="Buscar pelo título ou autor…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Buscar livro" />
+        <p class="conta-ajuda">Edite, reponha, marque como vendido ou remova os livros da loja. As mudanças valem para todos os clientes assim que recarregarem a página.</p>
+
+        <!-- Busca + filtros -->
+        <div class="admin-ferramentas">
+          <div class="admin-busca-wrap">
+            <input type="search" id="admin-busca" class="admin-busca" placeholder="Buscar pelo título ou autor…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Buscar livro" />
+          </div>
+          <div class="admin-filtros" id="admin-filtros" role="group" aria-label="Filtrar livros">
+            <button type="button" class="admin-chip ativo" data-filtro="todos">Todos</button>
+            <button type="button" class="admin-chip" data-filtro="disponivel">Disponíveis</button>
+            <button type="button" class="admin-chip" data-filtro="vendido">Vendidos</button>
+            <button type="button" class="admin-chip" data-filtro="meus">Adicionados por mim</button>
+          </div>
         </div>
+
         <p id="admin-carregando" class="conta-ajuda">Carregando catálogo…</p>
         <div id="admin-lista" class="admin-lista"></div>
       </section>
