@@ -216,7 +216,10 @@
       entrarComGoogle: async function () {
         const provider = new fb.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
-        await auth.signInWithPopup(provider);
+        const cred = await auth.signInWithPopup(provider);
+        const u = cred && cred.user;
+        if (u) usuarioAtual = { uid: u.uid, nome: u.displayName || "", email: u.email || "", foto: u.photoURL || "" };
+        return usuarioAtual;
       },
       sair: async function () { await auth.signOut(); },
 

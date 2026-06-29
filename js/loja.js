@@ -160,32 +160,59 @@
     const btnG = document.getElementById("aviso-conta-google");
     if (btnG) btnG.addEventListener("click", async () => {
       btnG.disabled = true;
-      try { if (window.Auth) await window.Auth.entrarComGoogle(); } catch (e) {}
+      let user = null;
+      try { if (window.Auth) user = await window.Auth.entrarComGoogle(); } catch (e) {}
       btnG.disabled = false;
-      if (window.Auth && window.Auth.usuario()) {
-        fecharAvisoConta();
-        // Primeira vez (sem cadastro completo): leva ao onboarding e volta.
-        try {
-          const completo = await window.Auth.cadastroCompleto();
-          if (!completo) {
-            try { sessionStorage.setItem("bookverse_retorno", window.location.href); } catch (e) {}
-            window.location.href = "conta.html";
-          }
-        } catch (e) {}
+      fecharAvisoConta();
+      if (!user) return;
+      // Primeira vez (cadastro incompleto): leva ao onboarding e volta.
+      // Se já tiver cadastro, o onChange retoma a ação pendente sozinho.
+      let completo = false;
+      try { completo = await window.Auth.cadastroCompleto(); } catch (e) {}
+      if (!completo) {
+        try { sessionStorage.setItem("bookverse_retorno", "index.html"); } catch (e) {}
+        window.location.href = "conta.html";
       }
     });
   }
 
   /* ---------- Carrinho exige conta ---------- */
   // Só permite usar o carrinho com o cliente logado (quando o login
-  // está configurado). Caso contrário, abre o modal pedindo conta.
-  function podeUsarCarrinho() {
+  // está configurado). Caso contrário, guarda a ação pretendida e abre
+  // o modal pedindo conta.
+  function podeUsarCarrinho(pendente) {
     if (!(window.Auth && window.Auth.configurado)) return true; // contas desligadas
     if (window.Auth.usuario()) return true;                     // logado
+    if (pendente) {
+      try { sessionStorage.setItem("bookverse_acao_pendente", JSON.stringify(pendente)); } catch (e) {}
+    }
     abrirAvisoConta();
     return false;
   }
   window.podeUsarCarrinho = podeUsarCarrinho;
+
+  /* ---------- Roteamento após o login ----------
+     - Cadastro incompleto: leva ao onboarding (e volta depois).
+     - Cadastro completo: retoma a ação que foi interrompida (adicionar
+       ao carrinho ou comprar agora). */
+  async function rotearAposLogin() {
+    let pend = null;
+    try { pend = JSON.parse(sessionStorage.getItem("bookverse_acao_pendente") || "null"); } catch (e) {}
+    if (!pend) return;                          // nada pendente: segue normal
+
+    let completo = false;
+    try { completo = await window.Auth.cadastroCompleto(); } catch (e) {}
+    if (!completo) return;                       // aguarda o onboarding (não força aqui)
+
+    try { sessionStorage.removeItem("bookverse_acao_pendente"); } catch (e) {}
+    const livro = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS))
+      ? LIVROS.find(l => window.idLivro(l) === pend.id) : null;
+    if (!livro) return;
+    Carrinho.add(livro, 1);
+    if (pend.tipo === "comprar") { window.location.href = "checkout.html"; return; }
+    toast(`"${livro.titulo}" no carrinho`);
+    abrirDrawer();
+  }
 
   /* ---------- Sincroniza o carrinho com a conta (Firestore) ---------- */
   if (window.Auth && window.Auth.configurado) {
@@ -200,6 +227,7 @@
           if (remoto) Carrinho.substituir(remoto);
         } catch (e) {}
         carrinhoPronto = true;             // a partir daqui, mudanças são salvas
+        rotearAposLogin();                 // onboarding ou retomar a ação
       } else {
         Carrinho.limpar();                 // sem conta: carrinho vazio
       }

@@ -233,6 +233,8 @@
     const { total } = montarPedido();
     const bv = document.getElementById("btn-pix-valor");
     if (bv) bv.textContent = Precos.formatarBRL(total);
+
+    if (typeof atualizarCartaoDados === "function") atualizarCartaoDados();
   }
 
   form.addEventListener("input", (e) => {
@@ -667,28 +669,46 @@
     });
   }
 
-  /* ---------- Dados vêm da conta (somente leitura) ----------
-     O cliente edita os próprios dados em "Minha conta"; aqui eles só
-     são exibidos e usados no pedido. */
-  const CAMPOS_CONTA = ["cli-nome", "cli-email", "cli-tel", "cli-instagram",
-    "end-cep", "end-rua", "end-numero", "end-compl", "end-bairro", "end-cidade", "end-uf"];
-
-  function bloquearCamposConta() {
-    if (!(window.Auth && window.Auth.configurado)) return; // contas desligadas: edição normal
-    CAMPOS_CONTA.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.readOnly = true; el.classList.add("campo-bloqueado"); }
-    });
-  }
-
+  /* ---------- Dados vêm da conta (exibição, não edição) ----------
+     O cliente edita os próprios dados em "Minha conta". Aqui só
+     mostramos um cartão de leitura (os valores ficam em inputs ocultos
+     usados para montar o pedido). */
   function setCampo(id, valor) {
     const el = document.getElementById(id);
     if (el) el.value = valor || "";
   }
 
+  // Atualiza o cartão visual de "Seus dados" a partir dos inputs ocultos.
+  function atualizarCartaoDados() {
+    function aplicar(idSpan, valor, obrigatorio) {
+      const el = document.getElementById(idSpan);
+      if (!el) return;
+      const tem = !!(valor && String(valor).trim());
+      el.textContent = tem ? valor : (obrigatorio ? "Não informado" : "—");
+      el.classList.toggle("faltando", !tem && obrigatorio);
+    }
+    aplicar("show-nome", val("cli-nome"), true);
+    aplicar("show-email", val("cli-email"), true);
+    aplicar("show-tel", val("cli-tel"), true);
+    aplicar("show-instagram", val("cli-instagram"), false);
+
+    const endEl = document.getElementById("show-endereco");
+    if (endEl) {
+      const cidUf = (val("end-cidade") && val("end-uf"))
+        ? val("end-cidade") + "/" + val("end-uf").toUpperCase()
+        : (val("end-cidade") || val("end-uf").toUpperCase());
+      const endereco = [val("end-rua"), val("end-numero"), val("end-compl"),
+        val("end-bairro"), cidUf, val("end-cep") ? "CEP " + val("end-cep") : ""]
+        .filter(Boolean).join(", ");
+      const obrig = opcaoSelecionada().pedeEndereco;
+      const tem = !!endereco;
+      endEl.textContent = tem ? endereco : (obrig ? "Não informado" : "—");
+      endEl.classList.toggle("faltando", !tem && obrig);
+    }
+  }
+
   function preencherDeConta() {
     if (!window.Auth || !window.Auth.configurado) return;
-    bloquearCamposConta();
     window.Auth.onChange(async (user) => {
       if (user) {
         setCampo("cli-nome", user.nome);
@@ -709,6 +729,7 @@
         } catch (e) {}
       }
       contaCarregada = true;
+      atualizarCartaoDados();
       atualizarEstadoPagamento();   // reavalia o botão quando a conta carrega
     });
   }

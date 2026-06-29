@@ -70,68 +70,61 @@
 
         <form id="form-entrega" class="checkout-bloco" novalidate>
           <h2 class="checkout-subtitulo"><span class="passo-num">1</span> Seus dados</h2>
-          <p class="dados-conta-nota">Estes dados vêm da sua conta. Para alterá-los, acesse <a href="conta.html">Minha conta</a>.</p>
 
-          <div class="campo">
-            <label for="cli-nome">Nome completo</label>
-            <input type="text" id="cli-nome" name="nome" autocomplete="name" required placeholder="Como devemos te chamar?" />
-          </div>
-
-          <div class="campo-linha">
-            <div class="campo">
-              <label for="cli-email">E-mail</label>
-              <input type="email" id="cli-email" name="email" autocomplete="email" required placeholder="voce@email.com" />
+          <div class="dados-conta">
+            <div class="dados-conta-grid">
+              <div class="dado-item">
+                <span class="dado-rotulo">Nome</span>
+                <span class="dado-valor" id="show-nome">—</span>
+              </div>
+              <div class="dado-item">
+                <span class="dado-rotulo">E-mail</span>
+                <span class="dado-valor" id="show-email">—</span>
+              </div>
+              <div class="dado-item">
+                <span class="dado-rotulo">WhatsApp</span>
+                <span class="dado-valor" id="show-tel">—</span>
+              </div>
+              <div class="dado-item">
+                <span class="dado-rotulo">Instagram</span>
+                <span class="dado-valor" id="show-instagram">—</span>
+              </div>
             </div>
-            <div class="campo">
-              <label for="cli-tel">WhatsApp</label>
-              <input type="tel" id="cli-tel" name="telefone" autocomplete="tel" inputmode="tel" required placeholder="(83) 9 9999-8888" />
-              <small class="campo-dica" id="dica-whats">Com DDD — é o nosso principal contato com você.</small>
-            </div>
+            <a class="dados-conta-editar" href="conta.html#dados">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+              Editar dados
+            </a>
           </div>
 
-          <div class="campo">
-            <label for="cli-instagram">Instagram <span class="opcional">(opcional)</span></label>
-            <input type="text" id="cli-instagram" name="instagram" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@seu_usuario" />
-          </div>
+          <!-- Valores preenchidos a partir da conta -->
+          <input type="hidden" id="cli-nome" name="nome">
+          <input type="hidden" id="cli-email" name="email">
+          <input type="hidden" id="cli-tel" name="telefone">
+          <input type="hidden" id="cli-instagram" name="instagram">
 
           <h2 class="checkout-subtitulo"><span class="passo-num">2</span> Entrega</h2>
           <div class="entrega-opcoes" id="entrega-opcoes" role="radiogroup" aria-label="Forma de entrega"></div>
 
           <div class="endereco-campos" id="endereco-campos" hidden>
-            <div class="campo-linha">
-              <div class="campo campo-cep">
-                <label for="end-cep">CEP</label>
-                <input type="text" id="end-cep" name="cep" inputmode="numeric" autocomplete="postal-code" placeholder="58000-000" />
+            <div class="dados-conta">
+              <div class="dados-conta-grid">
+                <div class="dado-item dado-item-full">
+                  <span class="dado-rotulo">Endereço de entrega</span>
+                  <span class="dado-valor" id="show-endereco">—</span>
+                </div>
               </div>
-              <div class="campo campo-cresce">
-                <label for="end-rua">Rua / Logradouro</label>
-                <input type="text" id="end-rua" name="rua" autocomplete="address-line1" placeholder="Rua, avenida..." />
-              </div>
+              <a class="dados-conta-editar" href="conta.html#dados">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                Editar endereço
+              </a>
             </div>
-            <div class="campo-linha">
-              <div class="campo campo-num">
-                <label for="end-numero">Número</label>
-                <input type="text" id="end-numero" name="numero" inputmode="numeric" placeholder="123" />
-              </div>
-              <div class="campo campo-cresce">
-                <label for="end-compl">Complemento <span class="opcional">(opcional)</span></label>
-                <input type="text" id="end-compl" name="complemento" autocomplete="address-line2" placeholder="Apto, bloco, referência..." />
-              </div>
-            </div>
-            <div class="campo-linha">
-              <div class="campo campo-cresce">
-                <label for="end-bairro">Bairro</label>
-                <input type="text" id="end-bairro" name="bairro" placeholder="Bairro" />
-              </div>
-              <div class="campo campo-cresce">
-                <label for="end-cidade">Cidade</label>
-                <input type="text" id="end-cidade" name="cidade" autocomplete="address-level2" placeholder="Cidade" />
-              </div>
-              <div class="campo campo-uf">
-                <label for="end-uf">UF</label>
-                <input type="text" id="end-uf" name="uf" maxlength="2" autocomplete="address-level1" placeholder="PB" />
-              </div>
-            </div>
+            <input type="hidden" id="end-cep" name="cep">
+            <input type="hidden" id="end-rua" name="rua">
+            <input type="hidden" id="end-numero" name="numero">
+            <input type="hidden" id="end-compl" name="complemento">
+            <input type="hidden" id="end-bairro" name="bairro">
+            <input type="hidden" id="end-cidade" name="cidade">
+            <input type="hidden" id="end-uf" name="uf">
           </div>
 
           <div class="campo">
