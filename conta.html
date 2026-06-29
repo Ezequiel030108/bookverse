@@ -163,6 +163,18 @@
           <button type="submit" id="btn-salvar-perfil" class="botao-loja botao-loja-primario botao-loja-bloco">Salvar</button>
           <p id="perfil-ok" class="conta-salvo" hidden>✅ Dados salvos!</p>
         </form>
+
+        <!-- Zona de perigo -->
+        <div id="zona-perigo" class="zona-perigo" hidden>
+          <p class="zona-perigo-titulo">Zona de perigo</p>
+          <div class="zona-perigo-corpo">
+            <div>
+              <p class="zona-perigo-label">Apagar minha conta</p>
+              <p class="zona-perigo-desc">Remove permanentemente seus dados e histórico de pedidos.</p>
+            </div>
+            <button type="button" id="btn-apagar-conta" class="botao-perigo">Apagar conta</button>
+          </div>
+        </div>
       </section>
 
       <!-- Painel: pedidos -->
@@ -185,6 +197,22 @@
     </section>
 
   </main>
+
+  <!-- Modal: confirmar apagar conta -->
+  <div id="modal-apagar" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="modal-apagar-titulo">
+    <div class="modal-caixa">
+      <div class="modal-icone-perigo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h2 id="modal-apagar-titulo" class="modal-titulo">Apagar conta?</h2>
+      <p class="modal-desc">Todos os seus dados e histórico de pedidos serão <strong>permanentemente excluídos</strong>. Esta ação não pode ser desfeita.</p>
+      <div class="modal-acoes">
+        <button type="button" id="btn-modal-cancelar" class="botao-loja botao-loja-secundario">Cancelar</button>
+        <button type="button" id="btn-modal-confirmar" class="botao-perigo">Sim, apagar tudo</button>
+      </div>
+      <p id="modal-apagar-erro" class="pagamento-erro" hidden></p>
+    </div>
+  </div>
 
   <footer class="rodape">
     <p>© <span id="ano-atual"></span> BookVerse · Juazeirinho</p>

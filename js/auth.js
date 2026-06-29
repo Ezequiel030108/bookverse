@@ -70,7 +70,8 @@
     async cadastroCompleto(){ await prontoPromise; return impl.cadastroCompleto(); },
     async lerDisponibilidade() { await prontoPromise; return impl.lerDisponibilidade(); },
     async reservarLivros(ids)  { await prontoPromise; return impl.reservarLivros(ids); },
-    async marcarVendidos(ids)  { await prontoPromise; return impl.marcarVendidos(ids); }
+    async marcarVendidos(ids)  { await prontoPromise; return impl.marcarVendidos(ids); },
+    async apagarConta()        { await prontoPromise; const r = await impl.apagarConta(); limparDadosLocais(); return r; }
   };
   window.Auth = Auth;
 
@@ -163,7 +164,8 @@
       cadastroCompleto: async () => false,
       lerDisponibilidade: async () => ({}),
       reservarLivros: async () => {},
-      marcarVendidos: async () => {}
+      marcarVendidos: async () => {},
+      apagarConta: async () => {}
     };
     Auth.pronto = true;
     resolverPronto();
@@ -196,7 +198,7 @@
         sair: async () => {}, perfil: async () => null, salvarPerfil: async () => {},
         salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, atualizarPedido: async () => {}, listarPedidos: async () => [],
         salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false,
-        lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {}
+        lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {}, apagarConta: async () => {}
       };
       Auth.pronto = true;
       notificar();
@@ -358,6 +360,36 @@
           ? comTimeout(db.collection("disponibilidade").doc(id)
               .set({ estado: "vendido", uid: usuarioAtual.uid }, { merge: true }), 8000).catch(() => {})
           : Promise.resolve()));
+      },
+      apagarConta: async function () {
+        if (!usuarioAtual) return;
+        const uid = usuarioAtual.uid;
+        // Apaga todos os pedidos da subcoleção
+        try {
+          const snap = await comTimeout(db.collection("users").doc(uid).collection("pedidos").get(), 8000);
+          const batch = db.batch();
+          snap.docs.forEach(d => batch.delete(d.ref));
+          if (snap.docs.length) await batch.commit();
+        } catch (e) {}
+        // Apaga o documento do usuário
+        try {
+          await comTimeout(db.collection("users").doc(uid).delete(), 8000);
+        } catch (e) {}
+        // Apaga a conta do Firebase Auth
+        try {
+          const fbUser = auth.currentUser;
+          if (fbUser) await fbUser.delete();
+        } catch (e) {
+          // auth/requires-recent-login: faz reautenticação pelo Google e tenta de novo
+          if (e && e.code === "auth/requires-recent-login") {
+            const provider = new fb.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: "select_account" });
+            await auth.signInWithPopup(provider);
+            const fbUser2 = auth.currentUser;
+            if (fbUser2) await fbUser2.delete();
+          }
+        }
+        await auth.signOut();
       }
     };
 

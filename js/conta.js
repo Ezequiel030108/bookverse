@@ -167,6 +167,7 @@
     if (dadosTitulo) dadosTitulo.hidden = true;
     if (dadosAjuda) dadosAjuda.hidden = true;
     if (btnSalvar) btnSalvar.textContent = "Concluir cadastro";
+    if (zonaPerigo) zonaPerigo.hidden = true;
   }
   function entrarModoDashboard() {
     modo = "dashboard";
@@ -177,6 +178,7 @@
     if (dadosTitulo) dadosTitulo.hidden = false;
     if (dadosAjuda) dadosAjuda.hidden = false;
     if (btnSalvar) btnSalvar.textContent = "Salvar alterações";
+    if (zonaPerigo) zonaPerigo.hidden = false;
     abrirTab(location.hash === "#pedidos" ? "pedidos" : "dados");
   }
   function entrarModoOk() {
@@ -301,6 +303,36 @@
       } else { ta.select(); document.execCommand("copy"); ok(); }
     });
   })();
+
+  /* ---------- Apagar conta ---------- */
+  const zonaPerigo   = document.getElementById("zona-perigo");
+  const modalApagar  = document.getElementById("modal-apagar");
+  const btnApagarConta   = document.getElementById("btn-apagar-conta");
+  const btnModalCancelar = document.getElementById("btn-modal-cancelar");
+  const btnModalConfirmar = document.getElementById("btn-modal-confirmar");
+  const modalErro    = document.getElementById("modal-apagar-erro");
+
+  function abrirModal() { if (modalApagar) { modalApagar.hidden = false; if (modalErro) modalErro.hidden = true; } }
+  function fecharModal() { if (modalApagar) modalApagar.hidden = true; }
+
+  if (btnApagarConta)   btnApagarConta.addEventListener("click", abrirModal);
+  if (btnModalCancelar) btnModalCancelar.addEventListener("click", fecharModal);
+  if (modalApagar) modalApagar.addEventListener("click", e => { if (e.target === modalApagar) fecharModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") fecharModal(); });
+
+  if (btnModalConfirmar) btnModalConfirmar.addEventListener("click", async () => {
+    btnModalConfirmar.disabled = true;
+    btnModalConfirmar.textContent = "Apagando…";
+    if (modalErro) modalErro.hidden = true;
+    try {
+      await Auth.apagarConta();
+      window.location.href = "index.html";
+    } catch (e) {
+      if (modalErro) { modalErro.hidden = false; modalErro.textContent = "Não foi possível apagar a conta agora. Tente novamente."; }
+      btnModalConfirmar.disabled = false;
+      btnModalConfirmar.textContent = "Sim, apagar tudo";
+    }
+  });
 
   /* ---------- Reage ao login/logout ---------- */
   Auth.onChange(async (user) => {

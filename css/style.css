@@ -2268,4 +2268,59 @@ main {
   border: 1px solid var(--vidro-borda); border-radius: 8px; padding: 8px; word-break: break-all;
 }
 .pedido-pix-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+/* ============================================================
+   ZONA DE PERIGO — Apagar conta
+   ============================================================ */
+.zona-perigo {
+  margin-top: 32px;
+  border: 1px solid rgba(255, 90, 90, .3);
+  border-radius: var(--raio);
+  padding: 16px 18px;
+  background: rgba(255, 60, 60, .06);
+}
+.zona-perigo-titulo {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+  color: #ff7a7a; font-weight: 700; margin: 0 0 12px;
+}
+.zona-perigo-corpo {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.zona-perigo-label { font-size: .93rem; font-weight: 600; color: var(--texto-claro); margin: 0 0 2px; }
+.zona-perigo-desc  { font-size: .8rem; color: var(--texto-discreto); margin: 0; }
+
+.botao-perigo {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 9px 18px; border-radius: 999px; border: 1px solid rgba(255,90,90,.5);
+  background: rgba(255,60,60,.12); color: #ff8080; font-size: .84rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s;
+  min-height: var(--alvo-toque);
+}
+.botao-perigo:hover { background: rgba(255,60,60,.25); border-color: rgba(255,90,90,.8); color: #ffaaaa; }
+.botao-perigo:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ============================================================
+   MODAL — Confirmar apagar conta
+   ============================================================ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(10, 5, 36, .82); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-caixa {
+  background: #1a0e4a; border: 1px solid rgba(255,90,90,.3);
+  border-radius: 16px; padding: 32px 28px 24px; max-width: 400px; width: 100%;
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.modal-icone-perigo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: rgba(255,60,60,.15); color: #ff8080; margin-bottom: 16px;
+}
+.modal-titulo { font-size: 1.25rem; font-weight: 700; color: var(--texto-claro); margin: 0 0 10px; }
+.modal-desc { font-size: .88rem; color: var(--texto-suave); line-height: 1.55; margin: 0 0 24px; }
+.modal-desc strong { color: #ff8080; }
+.modal-acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.modal-acoes .botao-loja-secundario { min-width: 110px; }
+.modal-acoes .botao-perigo { min-width: 160px; }
 .pedido-pix-acoes .botao-loja { flex: 1 1 auto; }
