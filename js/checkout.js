@@ -48,6 +48,8 @@
   let pagamentoId = null;   // id do pagamento no Mercado Pago
   let pollTimer = null;     // checagem automática "já caiu?"
   let contaCarregada = false; // true quando os dados da conta já chegaram
+  let pixCopiaCola = "";    // código Pix gerado (guardado no pedido)
+  let pixTicketUrl = "";    // link de pagamento do Mercado Pago
 
   // "Comprar agora" = compra direta de UM livro, sem usar o carrinho.
   let compraDireta = null;
@@ -352,6 +354,8 @@
     }
     erroPag.hidden = true;
 
+    pixCopiaCola = payload;
+    pixTicketUrl = "";
     document.getElementById("pix-codigo").value = payload;
     document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
     renderQR(payload);
@@ -386,6 +390,8 @@
       }
 
       pagamentoId = data.id;
+      pixCopiaCola = data.qr_code || "";
+      pixTicketUrl = data.ticket_url || "";
       document.getElementById("pix-codigo").value = data.qr_code;
       document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
       renderQRImagem(data.qr_code_base64);
@@ -449,6 +455,13 @@
     const st = document.getElementById("pix-status");
     if (st) { st.className = "pix-status confirmado"; st.innerHTML = "✅ Pagamento confirmado!"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
+    // Garante o aviso ao lojista pelo próprio site (além do webhook).
+    try {
+      await enviarEmailManual();
+      if (codigoPedido && window.Auth && window.Auth.usuario && window.Auth.usuario()) {
+        window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
+      }
+    } catch (e) {}
     sucesso(true);
   }
 
@@ -485,6 +498,10 @@
       entrega: cliente.entrega,
       endereco: cliente.endereco || "",
       pagamentoId: pagamentoId || "",
+      pix: pixCopiaCola || "",
+      pixUrl: pixTicketUrl || "",
+      emailBody: montarEmailBody(),   // usado para avisar o lojista quando confirmar
+      emailEnviado: false,
       itens: dados.itens.map(i => ({
         titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
       }))

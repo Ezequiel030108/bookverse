@@ -63,6 +63,7 @@
     async salvarPerfil(d)   { await prontoPromise; return impl.salvarPerfil(d); },
     async salvarPedido(p)   { await prontoPromise; return impl.salvarPedido(p); },
     async atualizarStatusPedido(c, s) { await prontoPromise; return impl.atualizarStatusPedido(c, s); },
+    async atualizarPedido(c, campos) { await prontoPromise; return impl.atualizarPedido(c, campos); },
     async listarPedidos()   { await prontoPromise; return impl.listarPedidos(); },
     async salvarCarrinho(c) { await prontoPromise; return impl.salvarCarrinho(c); },
     async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); },
@@ -152,6 +153,7 @@
       salvarPerfil: async () => {},
       salvarPedido: async () => {},
       atualizarStatusPedido: async () => {},
+      atualizarPedido: async () => {},
       listarPedidos: async () => [],
       salvarCarrinho: async () => {},
       lerCarrinho: async () => null,
@@ -186,7 +188,7 @@
       impl = {
         entrarComGoogle: async () => { alert("Não foi possível conectar ao login agora. Tente novamente."); },
         sair: async () => {}, perfil: async () => null, salvarPerfil: async () => {},
-        salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, listarPedidos: async () => [],
+        salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, atualizarPedido: async () => {}, listarPedidos: async () => [],
         salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false
       };
       Auth.pronto = true;
@@ -278,6 +280,13 @@
         try {
           await comTimeout(db.collection("users").doc(usuarioAtual.uid)
             .collection("pedidos").doc(codigo).set(extra, { merge: true }), 8000);
+        } catch (e) {}
+      },
+      atualizarPedido: async function (codigo, campos) {
+        if (!usuarioAtual || !codigo) return;
+        try {
+          await comTimeout(db.collection("users").doc(usuarioAtual.uid)
+            .collection("pedidos").doc(codigo).set(campos || {}, { merge: true }), 8000);
         } catch (e) {}
       },
       listarPedidos: async function () {
