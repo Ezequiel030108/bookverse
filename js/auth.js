@@ -212,6 +212,24 @@
       return limpo;
     }
 
+    // ---- Resiliência: cache local do perfil + timeout nas operações ----
+    // Se o Firestore estiver lento/indisponível, a interface não trava e os
+    // dados do perfil não se perdem (ficam no cache local do navegador).
+    function chaveCachePerfil() { return usuarioAtual ? "bookverse_perfil_" + usuarioAtual.uid : null; }
+    function lerCachePerfil() {
+      try { const k = chaveCachePerfil(); if (!k) return null; const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; }
+      catch (e) { return null; }
+    }
+    function gravarCachePerfil(p) {
+      try { const k = chaveCachePerfil(); if (k) localStorage.setItem(k, JSON.stringify(p || {})); } catch (e) {}
+    }
+    function comTimeout(promessa, ms) {
+      return Promise.race([
+        promessa,
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))
+      ]);
+    }
+
     impl = {
       entrarComGoogle: async function () {
         const provider = new fb.auth.GoogleAuthProvider();
@@ -225,52 +243,76 @@
 
       perfil: async function () {
         if (!usuarioAtual) return null;
-        const doc = await db.collection("users").doc(usuarioAtual.uid).get();
-        return doc.exists ? doc.data() : null;
+        try {
+          const doc = await comTimeout(db.collection("users").doc(usuarioAtual.uid).get(), 6000);
+          if (doc && doc.exists) { gravarCachePerfil(doc.data()); return doc.data(); }
+          return lerCachePerfil();
+        } catch (e) { return lerCachePerfil(); }   // Firestore lento: usa o cache
       },
       salvarPerfil: async function (dados) {
         if (!usuarioAtual) return;
         const limpo = semUndefined(dados);
         limpo.email = limpo.email || usuarioAtual.email || "";
-        limpo.atualizadoEm = stamp();
-        await db.collection("users").doc(usuarioAtual.uid).set(limpo, { merge: true });
+        // 1) cache local — instantâneo e à prova de falha do Firestore
+        gravarCachePerfil(Object.assign({}, lerCachePerfil() || {}, limpo));
+        // 2) Firestore — melhor esforço, sem travar a interface
+        try {
+          await comTimeout(
+            db.collection("users").doc(usuarioAtual.uid)
+              .set(Object.assign({}, limpo, { atualizadoEm: stamp() }), { merge: true }),
+            8000);
+        } catch (e) { /* permanece salvo no cache local */ }
       },
       salvarPedido: async function (pedido) {
         if (!usuarioAtual || !pedido || !pedido.codigo) return;
-        await db.collection("users").doc(usuarioAtual.uid)
-          .collection("pedidos").doc(pedido.codigo)
-          .set(Object.assign({}, semUndefined(pedido), { criadoEm: stamp() }), { merge: true });
+        try {
+          await comTimeout(db.collection("users").doc(usuarioAtual.uid)
+            .collection("pedidos").doc(pedido.codigo)
+            .set(Object.assign({}, semUndefined(pedido), { criadoEm: stamp() }), { merge: true }), 8000);
+        } catch (e) {}
       },
       atualizarStatusPedido: async function (codigo, status) {
         if (!usuarioAtual || !codigo) return;
         const extra = { status: status };
         if (status === "pago") extra.pagoEm = stamp();
-        await db.collection("users").doc(usuarioAtual.uid)
-          .collection("pedidos").doc(codigo).set(extra, { merge: true });
+        try {
+          await comTimeout(db.collection("users").doc(usuarioAtual.uid)
+            .collection("pedidos").doc(codigo).set(extra, { merge: true }), 8000);
+        } catch (e) {}
       },
       listarPedidos: async function () {
         if (!usuarioAtual) return [];
-        const snap = await db.collection("users").doc(usuarioAtual.uid)
-          .collection("pedidos").orderBy("criadoEm", "desc").limit(50).get();
-        return snap.docs.map(d => d.data());
+        try {
+          const snap = await comTimeout(db.collection("users").doc(usuarioAtual.uid)
+            .collection("pedidos").orderBy("criadoEm", "desc").limit(50).get(), 6000);
+          return snap.docs.map(d => d.data());
+        } catch (e) { return []; }
       },
 
       // Carrinho guardado na conta (campo "carrinho" do documento do usuário).
       salvarCarrinho: async function (itens) {
         if (!usuarioAtual) return;
-        await db.collection("users").doc(usuarioAtual.uid)
-          .set({ carrinho: Array.isArray(itens) ? itens : [] }, { merge: true });
+        try {
+          await comTimeout(db.collection("users").doc(usuarioAtual.uid)
+            .set({ carrinho: Array.isArray(itens) ? itens : [] }, { merge: true }), 8000);
+        } catch (e) {}
       },
       lerCarrinho: async function () {
         if (!usuarioAtual) return null;
-        const doc = await db.collection("users").doc(usuarioAtual.uid).get();
-        const data = doc.exists ? doc.data() : null;
-        return data && Array.isArray(data.carrinho) ? data.carrinho : null;
+        try {
+          const doc = await comTimeout(db.collection("users").doc(usuarioAtual.uid).get(), 6000);
+          const data = doc && doc.exists ? doc.data() : null;
+          return data && Array.isArray(data.carrinho) ? data.carrinho : null;
+        } catch (e) { return null; }
       },
       cadastroCompleto: async function () {
         if (!usuarioAtual) return false;
-        const doc = await db.collection("users").doc(usuarioAtual.uid).get();
-        const p = doc.exists ? doc.data() : null;
+        let p = null;
+        try {
+          const doc = await comTimeout(db.collection("users").doc(usuarioAtual.uid).get(), 6000);
+          if (doc && doc.exists) { p = doc.data(); gravarCachePerfil(p); }
+        } catch (e) {}
+        if (!p) p = lerCachePerfil();
         if (!p) return false;
         if (p.cadastroCompleto) return true;
         const tel = String(p.telefone || "").replace(/\D/g, "");
