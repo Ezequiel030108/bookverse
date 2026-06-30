@@ -2132,8 +2132,15 @@ main {
 .conta-wrap { max-width: 720px; margin: 0 auto; }
 .conta-carregando { text-align: center; color: var(--texto-suave); padding: 30px 0; }
 
-.conta-login { text-align: center; }
-.conta-login p { color: var(--texto-suave); }
+.conta-login {
+  text-align: center;
+  max-width: 440px;
+  margin: 18px auto 0;
+  padding: 34px 26px;
+}
+.conta-login .checkout-subtitulo { justify-content: center; margin-bottom: 10px; }
+.conta-login p { color: var(--texto-suave); margin: 0 auto; max-width: 320px; }
+.conta-login .botao-google { margin-top: 22px; }
 
 .botao-google {
   display: inline-flex; align-items: center; gap: 10px;
