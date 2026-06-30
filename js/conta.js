@@ -375,11 +375,26 @@
     return "disponivel";
   }
 
-  function listaLivrosAdmin() {
-    const base = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS.slice() : [];
+  // Conjunto de ids dos livros originais da loja (vindos de js/livros.js).
+  function idsEstaticos() {
     const idDe = window.idLivro || (l => l.id);
-    const vistos = new Set(base.map(idDe));
-    livrosCatalogo.forEach(l => { if (l && l.id && !vistos.has(l.id)) { base.push(l); vistos.add(l.id); } });
+    const estaticos = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS : [];
+    return new Set(estaticos.map(idDe));
+  }
+
+  function listaLivrosAdmin() {
+    const idDe = window.idLivro || (l => l.id);
+    const estaticos = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS : [];
+    const override = {};
+    livrosCatalogo.forEach(c => { if (c && c.id) override[c.id] = c; });
+    const ids = new Set(estaticos.map(idDe));
+    // Livros originais da loja, com as edições aplicadas por cima (quando houver).
+    const base = estaticos.map(s => {
+      const ov = override[idDe(s)];
+      return ov ? Object.assign({}, s, ov) : s;
+    });
+    // Livros novos criados pelo admin (sem correspondente original).
+    livrosCatalogo.forEach(c => { if (c && c.id && !ids.has(c.id)) base.push(c); });
     return base;
   }
 
@@ -401,7 +416,7 @@
       '<div class="admin-resumo-item"><strong>' + todos.length + '</strong><span>no total</span></div>' +
       '<div class="admin-resumo-item"><strong>' + disp + '</strong><span>disponíveis</span></div>' +
       '<div class="admin-resumo-item"><strong>' + vend + '</strong><span>vendidos</span></div>' +
-      '<div class="admin-resumo-item"><strong>' + meus + '</strong><span>seus livros</span></div>';
+      '<div class="admin-resumo-item"><strong>' + meus + '</strong><span>modificados</span></div>';
   }
 
   function renderAdmin() {
@@ -427,12 +442,16 @@
       return;
     }
 
+    const estaticos = idsEstaticos();
     lista.innerHTML = "";
     livros.forEach(l => {
       const id = idDe(l);
       const est = estadoDoLivro(id);
       const tag = ESTADO_ADMIN[est] || ESTADO_ADMIN.disponivel;
-      const meu = idsCatalogo.has(id);
+      const noCatalogo = idsCatalogo.has(id);   // tem documento salvo (novo ou editado)
+      const ehEstatico = estaticos.has(id);     // existe no catálogo original da loja
+      const novoMeu = noCatalogo && !ehEstatico; // criado pelo admin do zero
+      const editado = noCatalogo && ehEstatico;  // livro da loja com edição salva
 
       const card = document.createElement("article");
       card.className = "admin-item";
@@ -460,9 +479,10 @@
       const badge = document.createElement("span");
       badge.className = "admin-tag " + tag.classe; badge.textContent = tag.texto;
       tags.appendChild(badge);
-      if (meu) {
+      if (novoMeu || editado) {
         const seu = document.createElement("span");
-        seu.className = "admin-tag admin-tag-meu"; seu.textContent = "Seu livro";
+        seu.className = "admin-tag admin-tag-meu";
+        seu.textContent = novoMeu ? "Seu livro" : "Editado";
         tags.appendChild(seu);
       }
       info.appendChild(t); info.appendChild(a);
@@ -482,11 +502,12 @@
       if (est === "disponivel") acoes.appendChild(botao("vender", "Marcar vendido", "admin-btn-vender"));
       else acoes.appendChild(botao("repor", "Repor na loja", "admin-btn-repor"));
 
-      // Só os livros adicionados pelo admin podem ser editados e removidos.
-      if (meu) {
-        acoes.appendChild(botao("editar", "Editar", "admin-btn-editar"));
-        acoes.appendChild(botao("remover", "Remover", "admin-btn-remover"));
-      }
+      // Qualquer livro pode ser editado.
+      acoes.appendChild(botao("editar", "Editar", "admin-btn-editar"));
+      // Livro criado pelo admin: pode ser removido de vez.
+      // Livro da loja editado: pode ter a edição revertida (volta ao original).
+      if (novoMeu) acoes.appendChild(botao("remover", "Remover", "admin-btn-remover"));
+      else if (editado) acoes.appendChild(botao("reverter", "Reverter edição", "admin-btn-remover"));
 
       card.appendChild(capa); card.appendChild(info); card.appendChild(acoes);
       lista.appendChild(card);
@@ -524,7 +545,7 @@
   const adminBusca = document.getElementById("admin-busca");
   if (adminBusca) adminBusca.addEventListener("input", () => { adminFiltro = adminBusca.value.trim(); renderAdmin(); });
 
-  // Filtros por estado (Todos / Disponíveis / Vendidos / Adicionados por mim)
+  // Filtros por estado (Todos / Disponíveis / Vendidos / Modificados)
   const adminFiltros = document.getElementById("admin-filtros");
   if (adminFiltros) adminFiltros.addEventListener("click", (e) => {
     const chip = e.target.closest(".admin-chip");
@@ -546,6 +567,8 @@
     if (acao === "editar") { entrarModoEdicao(id); return; }
     if (acao === "remover") {
       if (!window.confirm("Remover este livro da loja permanentemente?")) return;
+    } else if (acao === "reverter") {
+      if (!window.confirm("Desfazer suas alterações e voltar o livro ao original da loja?")) return;
     }
     const original = btn.textContent;
     btn.disabled = true; btn.textContent = "Salvando…";
@@ -562,6 +585,12 @@
         livrosCatalogo = livrosCatalogo.filter(l => l.id !== id);
         idsCatalogo.delete(id);
         delete dispMapaAdmin[id];
+      } else if (acao === "reverter") {
+        // Apaga só o documento de edição: o livro original (js/livros.js) continua.
+        await Auth.removerLivro(id);
+        livrosCatalogo = livrosCatalogo.filter(l => l.id !== id);
+        idsCatalogo.delete(id);
+        if (id === editandoId) sairModoEdicao();
       }
       renderAdmin();
     } catch (err) {
@@ -683,7 +712,9 @@
   }
 
   function entrarModoEdicao(id) {
-    const l = livrosCatalogo.find(x => x && x.id === id);
+    const idDe = window.idLivro || (l => l.id);
+    // Procura entre todos os livros (originais da loja + adicionados/editados).
+    const l = listaLivrosAdmin().find(x => idDe(x) === id);
     if (!l) return;
     editandoId = id;
     preencherFormLivro(l);
@@ -735,7 +766,9 @@
       return;
     }
     const editando = !!editandoId;
-    const existente = editando ? livrosCatalogo.find(l => l && l.id === editandoId) : null;
+    const idDe = window.idLivro || (l => l.id);
+    // Original (loja ou catálogo) para preservar data e destaque ao editar.
+    const existente = editando ? listaLivrosAdmin().find(l => idDe(l) === editandoId) : null;
     const id = editando ? editandoId : (slugLivro(titulo, autor) || ("livro-" + Date.now().toString(36)));
     const estoque = Math.max(1, parseInt(v("livro-estoque"), 10) || 1);
     const livro = {
@@ -748,7 +781,8 @@
       estado: v("livro-estado") || "Estado perfeito",
       sinopse: v("livro-sinopse"),
       imagem: fotoBase64 || "",
-      destaque: true,
+      // Preserva o destaque original (não promove um livro comum sem querer).
+      destaque: existente ? !!existente.destaque : true,
       // Ao editar, preserva a data original (não volta para "Novidades da Semana").
       dataAdicao: (existente && existente.dataAdicao) ? existente.dataAdicao : new Date().toISOString().slice(0, 10)
     };

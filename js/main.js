@@ -782,12 +782,19 @@ function carregarCatalogo() {
   window.Auth.lerCatalogo().then(extras => {
     if (!Array.isArray(extras) || !extras.length) return;
     const idDe = window.idLivro || (l => l.id);
-    const existentes = new Set(LIVROS.map(idDe));
+    const indice = new Map();
+    LIVROS.forEach((l, i) => indice.set(idDe(l), i));
     let mudou = false;
     extras.forEach(l => {
-      if (!l || !l.id || existentes.has(l.id)) return;
-      LIVROS.push(l);
-      existentes.add(l.id);
+      if (!l || !l.id) return;
+      if (indice.has(l.id)) {
+        // Edição de um livro existente: aplica as alterações por cima do original.
+        LIVROS[indice.get(l.id)] = Object.assign({}, LIVROS[indice.get(l.id)], l);
+      } else {
+        // Livro novo, cadastrado pelo admin.
+        LIVROS.push(l);
+        indice.set(l.id, LIVROS.length - 1);
+      }
       mudou = true;
     });
     if (mudou) {

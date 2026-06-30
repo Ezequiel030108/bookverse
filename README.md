@@ -359,7 +359,15 @@ Tudo fica no arquivo `js/config.js`, dentro de `frete`. Cada opção é um bloco
 
 ## ✏️ Como EDITAR um livro existente
 
-Abra `js/livros.js`, encontre o livro, troque o texto entre as aspas e salve.
+> 💜 **Sem mexer em código:** se o login com Google estiver ligado, entre com um
+> e-mail de **administrador** e vá em **Minha conta → Administração**. Toque em
+> **Editar** em qualquer livro (inclusive os que já vêm na loja) para mudar
+> título, autor, preço, estado, capa e sinopse. As alterações aparecem para
+> todos os clientes ao recarregar a página. Para desfazer uma edição feita ali,
+> use o botão **Reverter edição** (o livro volta ao original deste arquivo).
+
+Pelo código: abra `js/livros.js`, encontre o livro, troque o texto entre as
+aspas e salve.
 
 | Campo     | Para que serve                                           |
 |-----------|----------------------------------------------------------|
