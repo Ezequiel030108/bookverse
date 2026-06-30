@@ -337,6 +337,18 @@ const LIVROS = [
     dataAdicao: "2026-06-27"
   },
 
+  {
+    titulo: "Memórias do Subsolo",
+    autor: "Fiódor Dostoiévski",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Novo",
+    sinopse: "Um funcionário público amargurado e recluso escreve do \"subsolo\" suas confissões, num monólogo que mistura ironia, raiva e implacável autoanálise. Precursora do existencialismo, esta novela de Dostoiévski é um mergulho perturbador no livre-arbítrio e nas contradições da consciência humana. Edição da Editora 34, com tradução de Boris Schnaiderman.",
+    imagem: "",
+    dataAdicao: "2026-06-30"
+  },
+
   /* ===================== ROMANCE & LITERATURA ===================== */
 
   {
