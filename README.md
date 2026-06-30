@@ -287,6 +287,25 @@ Environment Variables**). Recomendamos o **Google Gemini**, que é **gratuito** 
 
 ---
 
+## 🏷️ Classificar o livro na categoria certa (IA)
+
+Ainda no formulário de **Administração**, ao lado do campo **Gênero**, existe o
+botão **"🏷️ Classificar categoria com IA"**. A partir do título, autor e (se já
+houver) sinopse, a IA escolhe **a melhor categoria entre as que a loja já tem** e
+preenche o campo sozinha — assim o livro cai na seção (carrossel) correta da loja.
+
+Se o livro **não se encaixar em nenhuma** categoria existente, a IA **sugere
+criar uma nova** e mostra o botão **"➕ Criar categoria «…»"**. Você confere o
+nome e, com um clique, a aplica — ela vira uma nova seção da loja assim que o
+livro é salvo.
+
+> Usa a **mesma chave de IA** da geração de sinopse (`GEMINI_API_KEY` ou
+> `ANTHROPIC_API_KEY`). Não precisa configurar nada além do que você já fez na
+> seção anterior. Enquanto não houver chave, o botão apenas avisa que a
+> classificação está indisponível — você escolhe o gênero à mão normalmente.
+
+---
+
 ## 🚚 Como ajustar o frete e a entrega
 
 Tudo fica no arquivo `js/config.js`, dentro de `frete`. Cada opção é um bloco:

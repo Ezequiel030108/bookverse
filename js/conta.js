@@ -521,10 +521,18 @@
   function preencherGeneros() {
     const dl = document.getElementById("generos-sugeridos");
     if (!dl || dl.children.length) return;
-    const base = (typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS : [];
-    const generos = [];
-    base.forEach(l => { const g = l.genero || ""; if (g && generos.indexOf(g) < 0) generos.push(g); });
-    generos.forEach(g => { const o = document.createElement("option"); o.value = g; dl.appendChild(o); });
+    categoriasExistentes().forEach(g => { const o = document.createElement("option"); o.value = g; dl.appendChild(o); });
+  }
+
+  // Lista única de categorias (gêneros) atualmente usadas na loja: livros
+  // originais (js/livros.js) + livros/edições do admin (Firestore).
+  function categoriasExistentes() {
+    const fonte = (typeof listaLivrosAdmin === "function" && livrosCatalogo.length)
+      ? listaLivrosAdmin()
+      : ((typeof LIVROS !== "undefined" && Array.isArray(LIVROS)) ? LIVROS : []);
+    const out = [];
+    fonte.forEach(l => { const g = (l.genero || "").trim(); if (g && out.indexOf(g) < 0) out.push(g); });
+    return out;
   }
 
   async function carregarAdmin() {
@@ -667,6 +675,71 @@
     }
   });
 
+  // Classificar o livro na categoria certa com IA
+  const btnClassificar = document.getElementById("btn-classificar-genero");
+  const generoDica = document.getElementById("genero-dica");
+  const btnUsarGeneroNovo = document.getElementById("btn-usar-genero-novo");
+  let categoriaNovaSugerida = "";
+
+  function mostrarGeneroDica(texto, tipo) {
+    if (!generoDica) return;
+    generoDica.hidden = false;
+    generoDica.classList.toggle("erro", tipo === "erro");
+    generoDica.classList.toggle("ok", tipo === "ok");
+    generoDica.textContent = texto;
+  }
+
+  function limparGeneroDica() {
+    categoriaNovaSugerida = "";
+    if (generoDica) { generoDica.hidden = true; generoDica.classList.remove("erro", "ok"); generoDica.textContent = ""; }
+    if (btnUsarGeneroNovo) btnUsarGeneroNovo.hidden = true;
+  }
+
+  // Aplica a categoria nova sugerida (o admin confirma a criação da seção).
+  if (btnUsarGeneroNovo) btnUsarGeneroNovo.addEventListener("click", () => {
+    if (!categoriaNovaSugerida) return;
+    set("livro-genero", categoriaNovaSugerida);
+    btnUsarGeneroNovo.hidden = true;
+    mostrarGeneroDica("Nova categoria “" + categoriaNovaSugerida + "” aplicada — vira uma nova seção na loja ao salvar.", "ok");
+  });
+
+  if (btnClassificar) btnClassificar.addEventListener("click", async () => {
+    const titulo = v("livro-titulo");
+    const autor = v("livro-autor");
+    const sinopse = v("livro-sinopse");
+    if (!titulo) { mostrarGeneroDica("Preencha o título primeiro.", "erro"); if (btnUsarGeneroNovo) btnUsarGeneroNovo.hidden = true; return; }
+    const categorias = categoriasExistentes();
+    if (!categorias.length) { mostrarGeneroDica("Catálogo ainda carregando. Tente de novo em instantes.", "erro"); return; }
+    categoriaNovaSugerida = "";
+    if (btnUsarGeneroNovo) btnUsarGeneroNovo.hidden = true;
+    const original = btnClassificar.textContent;
+    btnClassificar.disabled = true; btnClassificar.textContent = "Classificando…";
+    mostrarGeneroDica("Analisando o livro…", "");
+    try {
+      const r = await fetch("/api/classificar-livro", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo: titulo, autor: autor, sinopse: sinopse, categorias: categorias })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.categoria) throw new Error((d && d.error) || "falha");
+      const just = d.justificativa ? " " + d.justificativa : "";
+      if (d.nova) {
+        // Não se encaixou em nenhuma categoria: sugere criar uma nova.
+        categoriaNovaSugerida = d.categoria;
+        mostrarGeneroDica("Não encontrei uma categoria ideal entre as atuais. Sugestão: criar uma nova." + just, "");
+        if (btnUsarGeneroNovo) { btnUsarGeneroNovo.hidden = false; btnUsarGeneroNovo.textContent = "➕ Criar categoria “" + d.categoria + "”"; }
+      } else {
+        // Encaixou numa categoria existente: já preenche o campo.
+        set("livro-genero", d.categoria);
+        mostrarGeneroDica("Classificado em “" + d.categoria + "”." + just, "ok");
+      }
+    } catch (e) {
+      mostrarGeneroDica("Não foi possível classificar agora. Escolha o gênero à mão ou tente de novo.", "erro");
+    } finally {
+      btnClassificar.disabled = false; btnClassificar.textContent = original;
+    }
+  });
+
   // Salvar o novo livro
   function slugLivro(t, a) {
     return String((t || "") + "-" + (a || ""))
@@ -719,6 +792,7 @@
     editandoId = id;
     preencherFormLivro(l);
     set("livro-edit-id", id);
+    limparGeneroDica();
     if (livroErro) livroErro.hidden = true;
     if (livroOk) livroOk.hidden = true;
     const titEl = document.getElementById("admin-add-titulo");
@@ -737,6 +811,7 @@
     editandoId = "";
     if (formLivro) formLivro.reset();
     set("livro-edit-id", "");
+    limparGeneroDica();
     fotoBase64 = "";
     if (fotoPreview) fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
     const titEl = document.getElementById("admin-add-titulo");
