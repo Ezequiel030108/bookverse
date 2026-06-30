@@ -58,6 +58,15 @@
               mais recentes; se não houver nenhum, o título vira
               "Livros Novos".
 
+   --------------------------------------------------------------
+   ORDEM DENTRO DE CADA SEÇÃO:
+   --------------------------------------------------------------
+   Dentro de cada gênero, os livros marcados com "destaque: true"
+   aparecem primeiro (os mais famosos/principais) e os demais seguem
+   na ordem em que estão escritos aqui. Por isso a lista abaixo já
+   está organizada com os títulos mais conhecidos no topo de cada
+   categoria.
+
    ============================================================ */
 
 
@@ -83,19 +92,6 @@ const LIVROS = [
   /* ===================== FINANÇAS & NEGÓCIOS ===================== */
 
   {
-    titulo: "Do Mil ao Milhão: Sem Cortar o Cafezinho",
-    destaque: true,
-    autor: "Thiago Nigro",
-    genero: "Finanças & Negócios",
-    preco: "R$ 20,00",
-    estoque: 1,
-    estado: "Com marcas de uso",
-    sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais — sem precisar cortar o cafezinho.",
-    imagem: "img/do-mil-ao-milhao.jpg",
-    dataAdicao: "2026-06-18"
-  },
-
-  {
     titulo: "Quem Pensa Enriquece",
     destaque: true,
     autor: "Napoleon Hill",
@@ -117,6 +113,19 @@ const LIVROS = [
     estado: "Bom estado, porém muito grifado",
     sinopse: "Através de parábolas ambientadas na antiga Babilônia, o autor ensina princípios atemporais sobre como economizar, investir e construir riqueza de forma simples e duradoura.",
     imagem: "img/o-homem-mais-rico-da-babilonia.jpg"
+  },
+
+  {
+    titulo: "Do Mil ao Milhão: Sem Cortar o Cafezinho",
+    destaque: true,
+    autor: "Thiago Nigro",
+    genero: "Finanças & Negócios",
+    preco: "R$ 20,00",
+    estoque: 1,
+    estado: "Com marcas de uso",
+    sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais — sem precisar cortar o cafezinho.",
+    imagem: "img/do-mil-ao-milhao.jpg",
+    dataAdicao: "2026-06-18"
   },
 
   {
@@ -156,18 +165,6 @@ const LIVROS = [
   /* ============= AUTOAJUDA & DESENVOLVIMENTO PESSOAL ============= */
 
   {
-    titulo: "O Poder do Subconsciente",
-    destaque: true,
-    autor: "Dr. Joseph Murphy",
-    genero: "Autoajuda & Desenvolvimento Pessoal",
-    preco: "R$ 25,00",
-    estoque: 1,
-    estado: "Bom estado, porém grifado",
-    sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
-    imagem: "img/o-poder-do-subconsciente.jpg"
-  },
-
-  {
     titulo: "Como Fazer Amigos e Influenciar Pessoas",
     destaque: true,
     autor: "Dale Carnegie",
@@ -177,6 +174,18 @@ const LIVROS = [
     estado: "Bom estado, porém grifado",
     sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
     imagem: "img/como-fazer-amigos.jpg"
+  },
+
+  {
+    titulo: "O Poder do Subconsciente",
+    destaque: true,
+    autor: "Dr. Joseph Murphy",
+    genero: "Autoajuda & Desenvolvimento Pessoal",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Bom estado, porém grifado",
+    sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
+    imagem: "img/o-poder-do-subconsciente.jpg"
   },
 
   {
@@ -219,7 +228,33 @@ const LIVROS = [
   /* ===================== CLÁSSICOS DA LITERATURA ===================== */
 
   {
+    titulo: "1984",
+    destaque: true,
+    autor: "George Orwell",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais influentes de todos os tempos, sobre liberdade, verdade e manipulação.",
+    imagem: "img/1984.jpg"
+  },
+
+  {
+    titulo: "A Revolução dos Bichos",
+    destaque: true,
+    autor: "George Orwell",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Cansados da exploração humana, os animais de uma fazenda se rebelam e tomam o poder em nome da igualdade. Mas o sonho logo se corrompe, nesta fábula afiada de George Orwell sobre poder, revolução e os perigos do totalitarismo.",
+    imagem: "img/a-revolucao-dos-bichos.jpg",
+    dataAdicao: "2026-06-08"
+  },
+
+  {
     titulo: "Oliver Twist",
+    destaque: true,
     autor: "Charles Dickens",
     genero: "Clássicos da Literatura",
     preco: "R$ 30,00",
@@ -227,17 +262,6 @@ const LIVROS = [
     estado: "Seminovo",
     sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebres de Charles Dickens.",
     imagem: "img/oliver-twist.jpg"
-  },
-
-  {
-    titulo: "A Volta ao Mundo em 80 Dias",
-    autor: "Júlio Verne",
-    genero: "Clássicos da Literatura",
-    preco: "R$ 40,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quatro cantos do planeta.",
-    imagem: "img/a-volta-ao-mundo-em-80-dias.jpg"
   },
 
   {
@@ -265,40 +289,28 @@ const LIVROS = [
   },
 
   {
-    titulo: "1984",
+    titulo: "A Volta ao Mundo em 80 Dias",
     destaque: true,
-    autor: "George Orwell",
+    autor: "Júlio Verne",
     genero: "Clássicos da Literatura",
-    preco: "R$ 30,00",
+    preco: "R$ 40,00",
     estoque: 1,
-    estado: "Quase novo",
-    sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais influentes de todos os tempos, sobre liberdade, verdade e manipulação.",
-    imagem: "img/1984.jpg"
+    estado: "Estado perfeito",
+    sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quatro cantos do planeta.",
+    imagem: "img/a-volta-ao-mundo-em-80-dias.jpg"
   },
 
   {
-    titulo: "A Revolução dos Bichos",
+    titulo: "Memórias do Subsolo",
     destaque: true,
-    autor: "George Orwell",
+    autor: "Fiódor Dostoiévski",
     genero: "Clássicos da Literatura",
     preco: "R$ 30,00",
     estoque: 1,
-    estado: "Quase novo",
-    sinopse: "Cansados da exploração humana, os animais de uma fazenda se rebelam e tomam o poder em nome da igualdade. Mas o sonho logo se corrompe, nesta fábula afiada de George Orwell sobre poder, revolução e os perigos do totalitarismo.",
-    imagem: "img/a-revolucao-dos-bichos.jpg",
-    dataAdicao: "2026-06-08"
-  },
-
-  {
-    titulo: "Dentro da Baleia e Outros Ensaios",
-    autor: "George Orwell",
-    genero: "Clássicos da Literatura",
-    preco: "R$ 25,00",
-    estoque: 1,
-    estado: "Quase novo",
-    sinopse: "Uma reunião de ensaios de George Orwell que revela seu olhar agudo sobre literatura, política e a sociedade de seu tempo. Textos lúcidos e provocadores que mostram por que Orwell é um dos maiores pensadores do século XX.",
-    imagem: "img/dentro-da-baleia-e-outros-ensaios.jpg",
-    dataAdicao: "2026-06-08"
+    estado: "Novo",
+    sinopse: "Um funcionário público amargurado e recluso escreve do \"subsolo\" suas confissões, num monólogo que mistura ironia, raiva e implacável autoanálise. Precursora do existencialismo, esta novela de Dostoiévski é um mergulho perturbador no livre-arbítrio e nas contradições da consciência humana. Edição da Editora 34, com tradução de Boris Schnaiderman.",
+    imagem: "",
+    dataAdicao: "2026-06-30"
   },
 
   {
@@ -338,28 +350,69 @@ const LIVROS = [
   },
 
   {
-    titulo: "Memórias do Subsolo",
-    autor: "Fiódor Dostoiévski",
+    titulo: "Dentro da Baleia e Outros Ensaios",
+    autor: "George Orwell",
     genero: "Clássicos da Literatura",
-    preco: "R$ 30,00",
+    preco: "R$ 25,00",
     estoque: 1,
-    estado: "Novo",
-    sinopse: "Um funcionário público amargurado e recluso escreve do \"subsolo\" suas confissões, num monólogo que mistura ironia, raiva e implacável autoanálise. Precursora do existencialismo, esta novela de Dostoiévski é um mergulho perturbador no livre-arbítrio e nas contradições da consciência humana. Edição da Editora 34, com tradução de Boris Schnaiderman.",
-    imagem: "",
-    dataAdicao: "2026-06-30"
+    estado: "Quase novo",
+    sinopse: "Uma reunião de ensaios de George Orwell que revela seu olhar agudo sobre literatura, política e a sociedade de seu tempo. Textos lúcidos e provocadores que mostram por que Orwell é um dos maiores pensadores do século XX.",
+    imagem: "img/dentro-da-baleia-e-outros-ensaios.jpg",
+    dataAdicao: "2026-06-08"
   },
 
   /* ===================== ROMANCE & LITERATURA ===================== */
 
   {
-    titulo: "O Guardião do Tempo",
-    autor: "Mitch Albom",
+    titulo: "A Hora da Estrela",
+    destaque: true,
+    autor: "Clarice Lispector",
     genero: "Romance & Literatura",
-    preco: "R$ 20,00",
+    preco: "R$ 40,00",
     estoque: 1,
-    estado: "Bom estado",
-    sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
-    imagem: "img/o-guardiao-do-tempo.jpg"
+    estado: "Estado perfeito",
+    sinopse: "A última obra de Clarice Lispector acompanha Macabéa, uma jovem nordestina pobre e ingênua que tenta sobreviver na cidade grande. Uma narrativa intensa e comovente sobre solidão, existência e a busca por sentido — um dos maiores clássicos da literatura brasileira.",
+    imagem: "img/a-hora-da-estrela.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "your name.",
+    destaque: true,
+    autor: "Makoto Shinkai",
+    genero: "Romance & Literatura",
+    preco: "R$ 45,00",
+    estoque: 1,
+    estado: "Ótimo estado",
+    sinopse: "Mitsuha, uma garota presa numa cidadezinha, e Taki, um garoto de Tóquio, começam misteriosamente a trocar de corpo enquanto dormem. Entre confusões e risadas, nasce um laço profundo entre os dois — até descobrirem um segredo que desafia o tempo e a distância. O romance escrito por Makoto Shinkai que deu origem ao aclamado filme de animação.",
+    imagem: "img/your-name.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "O Príncipe Cruel",
+    destaque: true,
+    autor: "Holly Black",
+    genero: "Romance & Literatura",
+    preco: "R$ 55,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal — e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
+    imagem: "img/o-principe-cruel.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "A Batalha do Apocalipse",
+    destaque: true,
+    autor: "Eduardo Spohr",
+    genero: "Romance & Literatura",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Com marcas de uso",
+    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
+    imagem: "img/a-batalha-do-apocalipse.jpg",
+    dataAdicao: "2026-06-08"
   },
 
   {
@@ -371,6 +424,17 @@ const LIVROS = [
     estado: "Bom estado",
     sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
     imagem: "img/o-xango-de-baker-street.jpg"
+  },
+
+  {
+    titulo: "O Guardião do Tempo",
+    autor: "Mitch Albom",
+    genero: "Romance & Literatura",
+    preco: "R$ 20,00",
+    estoque: 1,
+    estado: "Bom estado",
+    sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
+    imagem: "img/o-guardiao-do-tempo.jpg"
   },
 
   {
@@ -398,6 +462,19 @@ const LIVROS = [
   /* ========================= FILOSOFIA ========================= */
 
   {
+    titulo: "O Príncipe",
+    destaque: true,
+    autor: "Nicolau Maquiavel",
+    genero: "Filosofia",
+    preco: "R$ 14,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "O mais célebre tratado político de todos os tempos. Com frieza e realismo, Maquiavel analisa como o poder é conquistado e mantido, separando a política da moral e inaugurando o pensamento político moderno. Leitura indispensável para compreender as relações de poder.",
+    imagem: "img/o-principe.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
     titulo: "A Política",
     destaque: true,
     autor: "Aristóteles",
@@ -422,87 +499,7 @@ const LIVROS = [
     dataAdicao: "2026-06-17"
   },
 
-  {
-    titulo: "O Príncipe",
-    destaque: true,
-    autor: "Nicolau Maquiavel",
-    genero: "Filosofia",
-    preco: "R$ 14,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "O mais célebre tratado político de todos os tempos. Com frieza e realismo, Maquiavel analisa como o poder é conquistado e mantido, separando a política da moral e inaugurando o pensamento político moderno. Leitura indispensável para compreender as relações de poder.",
-    imagem: "img/o-principe.jpg",
-    dataAdicao: "2026-06-27"
-  },
-
-  /* =================== ROMANCE & LITERATURA =================== */
-
-  {
-    titulo: "A Batalha do Apocalipse",
-    destaque: true,
-    autor: "Eduardo Spohr",
-    genero: "Romance & Literatura",
-    preco: "R$ 25,00",
-    estoque: 1,
-    estado: "Com marcas de uso",
-    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
-    imagem: "img/a-batalha-do-apocalipse.jpg",
-    dataAdicao: "2026-06-08"
-  },
-
-  {
-    titulo: "A Hora da Estrela",
-    destaque: true,
-    autor: "Clarice Lispector",
-    genero: "Romance & Literatura",
-    preco: "R$ 40,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "A última obra de Clarice Lispector acompanha Macabéa, uma jovem nordestina pobre e ingênua que tenta sobreviver na cidade grande. Uma narrativa intensa e comovente sobre solidão, existência e a busca por sentido — um dos maiores clássicos da literatura brasileira.",
-    imagem: "img/a-hora-da-estrela.jpg",
-    dataAdicao: "2026-06-27"
-  },
-
-  {
-    titulo: "O Príncipe Cruel",
-    destaque: true,
-    autor: "Holly Black",
-    genero: "Romance & Literatura",
-    preco: "R$ 55,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal — e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
-    imagem: "img/o-principe-cruel.jpg",
-    dataAdicao: "2026-06-27"
-  },
-
-  {
-    titulo: "your name.",
-    destaque: true,
-    autor: "Makoto Shinkai",
-    genero: "Romance & Literatura",
-    preco: "R$ 45,00",
-    estoque: 1,
-    estado: "Ótimo estado",
-    sinopse: "Mitsuha, uma garota presa numa cidadezinha, e Taki, um garoto de Tóquio, começam misteriosamente a trocar de corpo enquanto dormem. Entre confusões e risadas, nasce um laço profundo entre os dois — até descobrirem um segredo que desafia o tempo e a distância. O romance escrito por Makoto Shinkai que deu origem ao aclamado filme de animação.",
-    imagem: "img/your-name.jpg",
-    dataAdicao: "2026-06-27"
-  },
-
   /* ===================== SUSPENSE & TERROR ===================== */
-
-  {
-    titulo: "Saboroso Cadáver",
-    destaque: true,
-    autor: "Agustina Bazterrica",
-    genero: "Suspense & Terror",
-    preco: "R$ 45,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "Em um futuro distópico no qual a carne animal se tornou tóxica, a humanidade passa a criar e consumir seres humanos de forma legalizada. Vencedor do Prêmio Clarín de Romance, este perturbador best-seller de Agustina Bazterrica é uma crítica feroz e visceral à sociedade de consumo.",
-    imagem: "img/saboroso-cadaver.jpg",
-    dataAdicao: "2026-06-27"
-  },
 
   {
     titulo: "O Chamado de Cthulhu e Outros Contos",
@@ -514,6 +511,19 @@ const LIVROS = [
     estado: "Estado perfeito",
     sinopse: "Uma coletânea com os contos mais marcantes de H. P. Lovecraft, mestre do horror cósmico. Entidades ancestrais, cultos secretos e o terror do desconhecido se revelam em histórias que influenciaram gerações de escritores e fãs do gênero.",
     imagem: "img/o-chamado-de-cthulhu.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "Saboroso Cadáver",
+    destaque: true,
+    autor: "Agustina Bazterrica",
+    genero: "Suspense & Terror",
+    preco: "R$ 45,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Em um futuro distópico no qual a carne animal se tornou tóxica, a humanidade passa a criar e consumir seres humanos de forma legalizada. Vencedor do Prêmio Clarín de Romance, este perturbador best-seller de Agustina Bazterrica é uma crítica feroz e visceral à sociedade de consumo.",
+    imagem: "img/saboroso-cadaver.jpg",
     dataAdicao: "2026-06-27"
   },
 
