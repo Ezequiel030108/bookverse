@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base: Material3, sem ActionBar. As cores da UI vêm do Compose. -->
+    <style name="Theme.BookVerse" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/noite_profunda</item>
+        <item name="android:navigationBarColor">@color/noite_profunda</item>
+        <item name="android:windowBackground">@color/noite</item>
+    </style>
+</resources>

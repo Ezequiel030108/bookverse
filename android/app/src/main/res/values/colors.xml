@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta cósmica do BookVerse (espelha css/style.css) -->
+    <color name="noite_profunda">#0a0524</color>
+    <color name="noite">#14093a</color>
+    <color name="indigo">#1f1466</color>
+    <color name="violeta">#4a2bb5</color>
+    <color name="lavanda">#b89eff</color>
+    <color name="estrela">#ffd966</color>
+    <color name="ic_launcher_background">#14093a</color>
+</resources>
