@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.bookverse.app.data.Cart
 import com.bookverse.app.data.Pricing
 import com.bookverse.app.ui.components.BookCover
+import com.bookverse.app.ui.components.StarField
 import com.bookverse.app.ui.theme.Estrela
 import com.bookverse.app.ui.theme.Indigo
 import com.bookverse.app.ui.theme.LavandaClara
@@ -60,11 +62,14 @@ fun CartScreen(
 ) {
     val carrinho = Cart.resolver()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(fundoBrush()),
     ) {
+        StarField(Modifier.fillMaxSize())
+
+        Column(Modifier.fillMaxSize()) {
         // Barra superior
         Row(
             modifier = Modifier
@@ -77,11 +82,14 @@ fun CartScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Voltar", tint = TextoClaro)
             }
+            Text("✦", color = Estrela, fontSize = 14.sp)
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = "Seu carrinho",
                 color = TextoClaro,
+                fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontSize = 19.sp,
             )
         }
 
@@ -93,7 +101,7 @@ fun CartScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text("Seu carrinho está vazio", color = TextoClaro, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Seu carrinho está vazio", color = TextoClaro, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Explore a estante e adicione os livros que quiser levar.",
@@ -151,6 +159,7 @@ fun CartScreen(
             ) {
                 Text("Finalizar compra", fontWeight = FontWeight.Bold)
             }
+        }
         }
     }
 }

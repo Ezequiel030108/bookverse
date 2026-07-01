@@ -66,6 +66,7 @@ import com.bookverse.app.data.Perfil
 import com.bookverse.app.data.PixGen
 import com.bookverse.app.data.Pricing
 import com.bookverse.app.data.QrCode
+import com.bookverse.app.ui.components.StarField
 import com.bookverse.app.ui.theme.Estrela
 import com.bookverse.app.ui.theme.Indigo
 import com.bookverse.app.ui.theme.Lavanda
@@ -232,9 +233,12 @@ fun CheckoutScreen(
         Account.reservarLivros(idsPedido)
     }
 
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize().background(fundoBrush()),
     ) {
+        StarField(Modifier.fillMaxSize())
+
+        Column(Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -246,6 +250,8 @@ fun CheckoutScreen(
             IconButton(onClick = { if (etapa == Etapa.FORM) onBack() else etapa = Etapa.FORM }) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Voltar", tint = TextoClaro)
             }
+            Text("✦", color = Estrela, fontSize = 14.sp)
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = when (etapa) {
                     Etapa.FORM -> "Finalizar compra"
@@ -253,8 +259,9 @@ fun CheckoutScreen(
                     Etapa.DONE -> "Pedido recebido"
                 },
                 color = TextoClaro,
+                fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontSize = 19.sp,
             )
         }
 
@@ -503,6 +510,7 @@ fun CheckoutScreen(
                     }
                 }
             }
+        }
         }
     }
 }
