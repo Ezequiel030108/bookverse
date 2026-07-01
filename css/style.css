@@ -741,37 +741,27 @@ main {
 .fileira-trilho::-webkit-scrollbar { display: none; }
 
 /* Setas das fileiras — só desktop (no mobile usa-se o swipe).
-   Botões redondos "de vidro": fundo translúcido com blur, centrados na
-   capa. Sem faixa retangular — isso eliminava o recorte branco nas quinas. */
+   Faixa que escurece a borda e some (fica transparente) em direção ao
+   centro, com o chevron. Sem border-radius e sem recuos no topo/base:
+   era isso que deixava aquele "recorte branco" na quina de cima. */
 .fileira-seta {
   position: absolute;
-  top: calc(50% - 14px);
-  width: 46px;
-  height: 46px;
+  top: 0;
+  bottom: 0;
+  width: 56px;
   z-index: 4;
   display: none;
   align-items: center;
   justify-content: center;
-  padding-bottom: 3px;            /* centra opticamente o chevron */
-  font-size: 1.7rem;
-  line-height: 1;
-  color: var(--texto-claro);
-  border-radius: 50%;
-  background: rgba(10, 5, 36, .55);
-  border: 1px solid rgba(184, 158, 255, .32);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, .5);
+  font-size: 2rem;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, .55);
   opacity: 0;
-  transform: translateY(-50%) scale(.7);
-  transition: opacity .25s ease,
-              transform .35s cubic-bezier(.34, 1.56, .64, 1),
-              background .2s ease,
-              border-color .2s ease;
+  transition: opacity .25s ease;
 }
-.fileira-seta-esq { left: 12px; }
-.fileira-seta-dir { right: 12px; }
-.fileira-seta.oculta { opacity: 0 !important; pointer-events: none; transform: translateY(-50%) scale(.7); }
+.fileira-seta-esq { left: 0;  background: linear-gradient(90deg,  rgba(10, 5, 36, .92), transparent); }
+.fileira-seta-dir { right: 0; background: linear-gradient(270deg, rgba(10, 5, 36, .92), transparent); }
+.fileira-seta.oculta { opacity: 0 !important; pointer-events: none; }
 
 /* ============================================================
    CARD DE LIVRO
@@ -1214,7 +1204,7 @@ main {
 
   /* Setas das fileiras visíveis no hover */
   .fileira-seta { display: flex; }
-  .fileira-area:hover .fileira-seta:not(.oculta) { opacity: 1; transform: translateY(-50%) scale(1); }
+  .fileira-area:hover .fileira-seta:not(.oculta) { opacity: 1; }
 
   /* Folga no topo do trilho para o card "saltar" sem ser cortado, sem
      mexer no espaçamento (compensa-se reduzindo a margem do cabeçalho). */
@@ -1257,9 +1247,6 @@ main {
     box-shadow: 0 26px 40px rgba(0,0,0,.6), 0 0 34px rgba(184, 158, 255, .45);
   }
   .card-livro:hover .capa-overlay { opacity: 1; }
-
-  /* Feedback ao passar o mouse direto na seta */
-  .fileira-seta:hover { background: rgba(74, 43, 181, .72); border-color: var(--lavanda); }
 
   .hero-seta:hover { background: var(--violeta); }
   .hero-capa-wrap:hover { transform: translateY(-5px); }
