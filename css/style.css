@@ -740,24 +740,38 @@ main {
 }
 .fileira-trilho::-webkit-scrollbar { display: none; }
 
-/* Setas das fileiras — só desktop (no mobile usa-se o swipe) */
+/* Setas das fileiras — só desktop (no mobile usa-se o swipe).
+   Botões redondos "de vidro": fundo translúcido com blur, centrados na
+   capa. Sem faixa retangular — isso eliminava o recorte branco nas quinas. */
 .fileira-seta {
   position: absolute;
-  top: 6px;
-  bottom: 12px;
-  width: 52px;
-  z-index: 3;
+  top: calc(50% - 14px);
+  width: 46px;
+  height: 46px;
+  z-index: 4;
   display: none;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  color: #fff;
+  padding-bottom: 3px;            /* centra opticamente o chevron */
+  font-size: 1.7rem;
+  line-height: 1;
+  color: var(--texto-claro);
+  border-radius: 50%;
+  background: rgba(10, 5, 36, .55);
+  border: 1px solid rgba(184, 158, 255, .32);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .5);
   opacity: 0;
-  transition: opacity .2s ease;
+  transform: translateY(-50%) scale(.7);
+  transition: opacity .25s ease,
+              transform .35s cubic-bezier(.34, 1.56, .64, 1),
+              background .2s ease,
+              border-color .2s ease;
 }
-.fileira-seta-esq { left: 0;  background: linear-gradient(90deg, rgba(10,5,36,.95), transparent); border-radius: 12px 0 0 12px; }
-.fileira-seta-dir { right: 0; background: linear-gradient(270deg, rgba(10,5,36,.95), transparent); border-radius: 0 12px 12px 0; }
-.fileira-seta.oculta { opacity: 0 !important; pointer-events: none; }
+.fileira-seta-esq { left: 12px; }
+.fileira-seta-dir { right: 12px; }
+.fileira-seta.oculta { opacity: 0 !important; pointer-events: none; transform: translateY(-50%) scale(.7); }
 
 /* ============================================================
    CARD DE LIVRO
@@ -773,7 +787,8 @@ main {
   animation: surgir .5s ease both;
   animation-delay: var(--atraso, 0s);
   -webkit-tap-highlight-color: transparent;
-  transition: transform .2s ease;
+  /* "ir e voltar": curva com leve overshoot dá vida ao destaque */
+  transition: transform .45s cubic-bezier(.34, 1.56, .64, 1);
 }
 
 .capa {
@@ -1199,7 +1214,12 @@ main {
 
   /* Setas das fileiras visíveis no hover */
   .fileira-seta { display: flex; }
-  .fileira-area:hover .fileira-seta:not(.oculta) { opacity: 1; }
+  .fileira-area:hover .fileira-seta:not(.oculta) { opacity: 1; transform: translateY(-50%) scale(1); }
+
+  /* Folga no topo do trilho para o card "saltar" sem ser cortado, sem
+     mexer no espaçamento (compensa-se reduzindo a margem do cabeçalho). */
+  .fileira-trilho { padding-top: 18px; }
+  .fileira-cabecalho { margin-bottom: 2px; }
 
   .modal { align-items: center; padding: 24px; }
   .modal-caixa { border-radius: 16px; max-height: 88vh; animation: surgirCaixa .3s ease both; }
@@ -1224,9 +1244,23 @@ main {
 
 /* Refinos só para quem tem mouse (hover real) */
 @media (hover: hover) and (pointer: fine) {
-  .card-livro:hover { transform: translateY(-6px); z-index: 5; }
-  .card-livro:hover .capa { box-shadow: 0 22px 36px rgba(0,0,0,.6), 0 0 30px rgba(184, 158, 255, .4); }
+  /* Sem scroll-snap no mouse: o snap "puxava" de volta o auto-scroll contínuo.
+     No toque (mobile) o snap continua valendo para o swipe. */
+  .fileira-trilho { scroll-snap-type: none; scroll-behavior: auto; }
+
+  /* A capa ganha a mesma curva com overshoot só no desktop; no mobile o
+     :active continua rápido (transição base curta). */
+  .card-livro .capa { transition: transform .45s cubic-bezier(.34, 1.56, .64, 1), box-shadow .3s ease; }
+  .card-livro:hover { transform: translateY(-9px); z-index: 5; }
+  .card-livro:hover .capa {
+    transform: scale(1.045);
+    box-shadow: 0 26px 40px rgba(0,0,0,.6), 0 0 34px rgba(184, 158, 255, .45);
+  }
   .card-livro:hover .capa-overlay { opacity: 1; }
+
+  /* Feedback ao passar o mouse direto na seta */
+  .fileira-seta:hover { background: rgba(74, 43, 181, .72); border-color: var(--lavanda); }
+
   .hero-seta:hover { background: var(--violeta); }
   .hero-capa-wrap:hover { transform: translateY(-5px); }
   .hero-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(74, 43, 181, .65), 0 0 24px rgba(184, 158, 255, .4); }

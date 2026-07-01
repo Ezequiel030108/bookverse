@@ -343,19 +343,67 @@ function criarFileira(titulo, livros, opts = {}) {
   area.appendChild(sDir);
   secao.appendChild(area);
 
-  // Rola ~85% da largura visível
+  // Rola ~85% da largura visível (clique e teclado/acessibilidade)
   const passo = () => Math.max(trilho.clientWidth * 0.85, 220);
   sEsq.addEventListener("click", () => trilho.scrollBy({ left: -passo(), behavior: "smooth" }));
   sDir.addEventListener("click", () => trilho.scrollBy({ left:  passo(), behavior: "smooth" }));
 
+  // Mostra cada seta só quando dá para rolar naquele sentido.
   const atualizarSetas = () => {
-    const max = trilho.scrollWidth - trilho.clientWidth - 2;
-    sEsq.classList.toggle("oculta", trilho.scrollLeft <= 2);
-    sDir.classList.toggle("oculta", trilho.scrollLeft >= max || max <= 0);
+    const max = trilho.scrollWidth - trilho.clientWidth - 1;
+    sEsq.classList.toggle("oculta", trilho.scrollLeft <= 1);
+    sDir.classList.toggle("oculta", max <= 0 || trilho.scrollLeft >= max);
   };
   trilho.addEventListener("scroll", atualizarSetas, { passive: true });
+  window.addEventListener("resize", atualizarSetas);
+  // Recalcula quando as medidas mudam (capas carregando, fontes, layout).
+  // É o que evita a seta "que às vezes some, às vezes não".
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(atualizarSetas).observe(trilho);
+  }
   requestAnimationFrame(atualizarSetas);
   setTimeout(atualizarSetas, 400);
+
+  // ---- Auto-scroll por proximidade (só mouse; respeita "reduzir movimento") ----
+  // Aproximar o ponteiro de uma borda já rola sozinho; quanto mais perto da
+  // seta, mais rápido. Curva quadrática: suave de longe, firme em cima da seta.
+  const podeAutoScroll =
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (podeAutoScroll) {
+    const ZONA = 120;     // faixa sensível em cada borda (px)
+    const VEL_MAX = 15;   // px por frame quando o ponteiro encosta na seta
+    let vel = 0;          // px/frame: negativo = esquerda, positivo = direita
+    let raf = null;
+
+    const frame = () => {
+      const max = trilho.scrollWidth - trilho.clientWidth - 1;
+      if (vel < 0 && trilho.scrollLeft <= 0)  vel = 0;
+      if (vel > 0 && trilho.scrollLeft >= max) vel = 0;
+      if (vel === 0) { raf = null; return; }
+      trilho.scrollLeft += vel;
+      raf = requestAnimationFrame(frame);
+    };
+    const ligar = () => { if (raf === null && vel !== 0) raf = requestAnimationFrame(frame); };
+
+    area.addEventListener("mousemove", (e) => {
+      const r = area.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const max = trilho.scrollWidth - trilho.clientWidth - 1;
+      let v = 0;
+      if (x < ZONA && trilho.scrollLeft > 0) {
+        const t = (ZONA - x) / ZONA;            // 0..1 (1 = colado na borda)
+        v = -VEL_MAX * t * t;
+      } else if (x > r.width - ZONA && trilho.scrollLeft < max) {
+        const t = (x - (r.width - ZONA)) / ZONA;
+        v = VEL_MAX * t * t;
+      }
+      vel = v;
+      ligar();
+    });
+    area.addEventListener("mouseleave", () => { vel = 0; });
+  }
 
   return secao;
 }
