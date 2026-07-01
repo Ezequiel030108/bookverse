@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Necessário para enviar o pedido por e-mail (Web3Forms). -->
+    <!-- Necessário para enviar o pedido por e-mail (Web3Forms), o login com
+         Google e o Firestore (contas, pedidos, disponibilidade). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"

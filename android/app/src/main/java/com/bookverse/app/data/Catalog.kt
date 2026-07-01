@@ -442,4 +442,26 @@ object Catalog {
     )
 
     val byId: Map<String, Book> by lazy { livros.associateBy { it.id } }
+
+    /**
+     * Junta o catálogo do admin (Firestore) ao catálogo base — mesma lógica de
+     * carregarCatalogo() em js/main.js: se o id já existe, o registro do admin
+     * substitui (edição); se não, entra como livro novo.
+     */
+    fun mesclarComAdmin(extras: List<Book>): List<Book> {
+        if (extras.isEmpty()) return livros
+        val base = livros.toMutableList()
+        val indice = HashMap<String, Int>()
+        base.forEachIndexed { i, b -> indice[b.id] = i }
+        extras.forEach { extra ->
+            val i = indice[extra.id]
+            if (i != null) {
+                base[i] = extra
+            } else {
+                base.add(extra)
+                indice[extra.id] = base.size - 1
+            }
+        }
+        return base
+    }
 }
