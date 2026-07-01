@@ -6,15 +6,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bookverse.app.data.Pricing
 import com.bookverse.app.model.Book
 import com.bookverse.app.ui.theme.Estrela
+import com.bookverse.app.ui.theme.EstrelaClara
 import com.bookverse.app.ui.theme.TextoDiscreto
 import com.bookverse.app.ui.theme.TextoSuave
 
@@ -23,12 +26,16 @@ import com.bookverse.app.ui.theme.TextoSuave
  * fora da promoção mostra o preço cheio; durante a promoção mostra o
  * preço cheio riscado + o promocional, e (quando [mostrarDupla]) a
  * linha "levando 2 livros".
+ *
+ * [centralizado] alinha ao centro e usa o dourado claro (estilo do card
+ * no mobile, `.info-preco`).
  */
 @Composable
 fun BookPrice(
     book: Book,
     modifier: Modifier = Modifier,
     mostrarDupla: Boolean = true,
+    centralizado: Boolean = false,
     precoStyle: TextStyle = LocalTextStyle.current,
 ) {
     val promo = if (Pricing.promoAtiva()) Pricing.precosPromo(book) else null
@@ -37,12 +44,17 @@ fun BookPrice(
             text = book.preco,
             modifier = modifier,
             style = precoStyle,
-            fontWeight = FontWeight.SemiBold,
-            color = TextoSuave,
+            fontWeight = FontWeight.Bold,
+            color = if (centralizado) EstrelaClara else TextoSuave,
+            textAlign = if (centralizado) TextAlign.Center else TextAlign.Start,
         )
         return
     }
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(1.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(1.dp),
+        horizontalAlignment = if (centralizado) Alignment.CenterHorizontally else Alignment.Start,
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 text = book.preco,
@@ -54,7 +66,7 @@ fun BookPrice(
                 text = Pricing.formatarReal(promo.um),
                 style = precoStyle,
                 fontWeight = FontWeight.Bold,
-                color = Estrela,
+                color = if (centralizado) EstrelaClara else Estrela,
             )
         }
         if (mostrarDupla && !promo.limitado) {
