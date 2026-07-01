@@ -63,5 +63,13 @@ dependencies {
     // Geração do QR Code do Pix
     implementation("com.google.zxing:core:3.5.3")
 
+    // Contas: Firebase Auth + Firestore (mesmo backend do site) e login Google.
+    // Inicializado por código (FirebaseOptions), sem google-services.json.
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
