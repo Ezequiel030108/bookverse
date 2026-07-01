@@ -574,7 +574,7 @@ private fun AdminRow(livro: Book, onDefinir: (String) -> Unit) {
     val disp = Account.disponibilidade[livro.id]
     val estadoAtual = when {
         disp?.estado == "vendido" -> "vendido"
-        disp?.estado == "reservado" && (disp.ate == 0L || disp.ate > System.currentTimeMillis()) -> "reservado"
+        disp != null && disp.estado == "reservado" && (disp.ate == 0L || disp.ate > System.currentTimeMillis()) -> "reservado"
         else -> "disponivel"
     }
     Column(
