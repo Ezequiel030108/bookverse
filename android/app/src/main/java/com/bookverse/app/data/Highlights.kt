@@ -32,12 +32,17 @@ object Highlights {
         return (System.currentTimeMillis() - t) / 86_400_000.0
     }
 
-    private fun disponivel(livro: Book) = livro.estoque > 0
-
     data class Resultado(val destaques: List<Book>, val temSemana: Boolean)
 
-    fun calcular(): Resultado {
-        val disp = Catalog.livros.filter { disponivel(it) }
+    /**
+     * @param livros catálogo já mesclado com o do admin (ou o base).
+     * @param indisponivel esconde reservados/vendidos (Account.indisponivel).
+     */
+    fun calcular(
+        livros: List<Book> = Catalog.livros,
+        indisponivel: (String) -> Boolean = { false },
+    ): Resultado {
+        val disp = livros.filter { it.estoque > 0 && !indisponivel(it.id) }
         val porDataDesc = compareByDescending<Book> { dataMs(it) ?: Long.MIN_VALUE }
 
         val semana = disp.filter { diasDesde(it) <= DIAS_NOVIDADE }.sortedWith(porDataDesc)

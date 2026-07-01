@@ -13,8 +13,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bookverse.app.data.Account
 import com.bookverse.app.data.Cart
 import com.bookverse.app.model.Book
+import com.bookverse.app.ui.AccountScreen
 import com.bookverse.app.ui.BookDetailSheet
 import com.bookverse.app.ui.CartScreen
 import com.bookverse.app.ui.CheckoutScreen
@@ -25,6 +27,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Cart.init(applicationContext)
+        Account.init(applicationContext)
         setContent {
             BookVerseTheme {
                 BookVerseApp()
@@ -43,6 +46,7 @@ private fun BookVerseApp() {
             StoreScreen(
                 onOpenBook = { selecionado = it },
                 onOpenCart = { nav.navigate("cart") },
+                onOpenAccount = { nav.navigate("conta") },
             )
         }
         composable("cart") {
@@ -50,6 +54,9 @@ private fun BookVerseApp() {
                 onBack = { nav.popBackStack() },
                 onCheckout = { nav.navigate("checkout") },
             )
+        }
+        composable("conta") {
+            AccountScreen(onBack = { nav.popBackStack() })
         }
         composable(
             route = "checkout?book={book}",
@@ -65,6 +72,7 @@ private fun BookVerseApp() {
                 directBookId = entry.arguments?.getString("book"),
                 onBack = { nav.popBackStack() },
                 onFinish = { nav.popBackStack("store", inclusive = false) },
+                onOpenAccount = { nav.navigate("conta") },
             )
         }
     }

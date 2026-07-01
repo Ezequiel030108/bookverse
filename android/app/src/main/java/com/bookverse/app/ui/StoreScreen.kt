@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material.icons.rounded.Star
@@ -67,6 +68,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bookverse.app.data.Account
 import com.bookverse.app.data.Cart
 import com.bookverse.app.data.Catalog
 import com.bookverse.app.data.Highlights
@@ -101,11 +103,19 @@ private fun normalizar(texto: String): String =
 fun StoreScreen(
     onOpenBook: (Book) -> Unit,
     onOpenCart: () -> Unit,
+    onOpenAccount: () -> Unit,
 ) {
     var busca by remember { mutableStateOf("") }
     var buscaAberta by remember { mutableStateOf(false) }
-    val destaques = remember { Highlights.calcular() }
-    val idsDestaque = remember(destaques) { destaques.destaques.map { it.id }.toSet() }
+
+    // Catálogo mesclado com o do admin; leituras de snapshot fazem a loja
+    // recompor quando a disponibilidade/catálogo chegam do Firestore.
+    val extras = Account.catalogoAdmin.toList()
+    val livros = remember(extras) { Catalog.mesclarComAdmin(extras) }
+    fun disponivel(b: Book) = b.estoque > 0 && !Account.indisponivel(b.id)
+
+    val destaques = Highlights.calcular(livros) { Account.indisponivel(it) }
+    val idsDestaque = destaques.destaques.map { it.id }.toSet()
 
     Box(
         modifier = Modifier
@@ -124,13 +134,15 @@ fun StoreScreen(
                     if (!buscaAberta) busca = ""
                 },
                 onOpenCart = onOpenCart,
+                onOpenAccount = onOpenAccount,
+                mostrarConta = Account.configurado,
             )
 
             val termo = normalizar(busca.trim())
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (termo.isNotEmpty()) {
-                    val resultados = Catalog.livros.filter {
-                        it.estoque > 0 && normalizar("${it.titulo} ${it.autor}").contains(termo)
+                    val resultados = livros.filter {
+                        disponivel(it) && normalizar("${it.titulo} ${it.autor}").contains(termo)
                     }
                     SearchResults(resultados, busca, idsDestaque, onOpenBook)
                 } else {
@@ -145,11 +157,11 @@ fun StoreScreen(
                         }
                         val generos = buildList {
                             addAll(Catalog.ordemGeneros)
-                            Catalog.livros.forEach { if (it.genero !in this) add(it.genero) }
+                            livros.forEach { if (it.genero !in this) add(it.genero) }
                         }
                         generos.forEach { genero ->
-                            val lista = Catalog.livros
-                                .filter { it.genero == genero && it.estoque > 0 }
+                            val lista = livros
+                                .filter { it.genero == genero && disponivel(it) }
                                 .sortedByDescending { it.destaque }
                             if (lista.isNotEmpty()) {
                                 item(key = genero) { BookRow(genero, lista, idsDestaque, onOpenBook) }
@@ -174,6 +186,8 @@ private fun MobileTopBar(
     buscaAberta: Boolean,
     onToggleBusca: () -> Unit,
     onOpenCart: () -> Unit,
+    onOpenAccount: () -> Unit,
+    mostrarConta: Boolean,
 ) {
     val total = Cart.totalItens
     Column(
@@ -206,6 +220,10 @@ private fun MobileTopBar(
                 descricao = "Buscar",
                 onClick = onToggleBusca,
             )
+            if (mostrarConta) {
+                Spacer(Modifier.width(6.dp))
+                GlassIcon(Icons.Rounded.Person, "Minha conta", onOpenAccount)
+            }
             Spacer(Modifier.width(6.dp))
             BadgedBox(
                 badge = { if (total > 0) Badge(containerColor = Estrela, contentColor = NoiteProfunda) { Text("$total") } },

@@ -38,6 +38,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,9 +55,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bookverse.app.data.Account
 import com.bookverse.app.data.Cart
 import com.bookverse.app.data.Config
+import com.bookverse.app.data.Endereco
+import com.bookverse.app.data.ItemPedido
 import com.bookverse.app.data.OrderSender
+import com.bookverse.app.data.Pedido
+import com.bookverse.app.data.Perfil
 import com.bookverse.app.data.PixGen
 import com.bookverse.app.data.Pricing
 import com.bookverse.app.data.QrCode
@@ -80,11 +86,45 @@ fun CheckoutScreen(
     directBookId: String?,
     onBack: () -> Unit,
     onFinish: () -> Unit,
+    onOpenAccount: () -> Unit,
 ) {
     val ehDireto = directBookId != null
     val pedido = remember(directBookId) {
         if (directBookId != null) Cart.resolverLista(listOf(directBookId to 1))
         else Cart.resolver()
+    }
+
+    // Exige conta quando EXIGIR_CONTA está ligado (e o login está disponível).
+    if (Account.exigeConta && Account.usuario == null) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(fundoBrush()).padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                "Entre na sua conta para finalizar",
+                color = TextoClaro, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Assim seus dados já ficam preenchidos e você acompanha o pedido no histórico.",
+                color = TextoSuave, fontSize = 14.sp, textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(20.dp))
+            Button(
+                onClick = onOpenAccount,
+                colors = ButtonDefaults.buttonColors(containerColor = Estrela, contentColor = NoiteProfunda),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Ir para Minha conta", fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                Text("Voltar", color = TextoClaro)
+            }
+        }
+        return
     }
 
     // Carrinho vazio (ex.: chegou aqui sem itens) — volta.
@@ -105,11 +145,15 @@ fun CheckoutScreen(
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var whatsapp by remember { mutableStateOf("") }
+    var instagram by remember { mutableStateOf("") }
     var freteId by remember { mutableStateOf(Config.fretes.first().id) }
+    var cep by remember { mutableStateOf("") }
     var rua by remember { mutableStateOf("") }
     var numero by remember { mutableStateOf("") }
     var bairro by remember { mutableStateOf("") }
     var complemento by remember { mutableStateOf("") }
+    var cidade by remember { mutableStateOf("") }
+    var uf by remember { mutableStateOf("") }
 
     var codigo by remember { mutableStateOf("") }
     var payload by remember { mutableStateOf("") }
@@ -122,6 +166,25 @@ fun CheckoutScreen(
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
 
+    // Preenche os dados a partir da conta (nome/e-mail do login + perfil salvo).
+    LaunchedEffect(Account.usuario?.uid) {
+        val u = Account.usuario ?: return@LaunchedEffect
+        if (nome.isBlank()) nome = u.nome
+        if (email.isBlank()) email = u.email
+        val p = Account.perfil() ?: return@LaunchedEffect
+        if (p.nome.isNotBlank()) nome = p.nome
+        if (p.email.isNotBlank()) email = p.email
+        if (p.telefone.isNotBlank()) whatsapp = p.telefone
+        if (p.instagram.isNotBlank()) instagram = p.instagram
+        cep = p.endereco.cep
+        rua = p.endereco.rua
+        numero = p.endereco.numero
+        complemento = p.endereco.complemento
+        bairro = p.endereco.bairro
+        cidade = p.endereco.cidade
+        uf = p.endereco.uf
+    }
+
     val enderecoValido = !frete.pedeEndereco ||
         (rua.isNotBlank() && numero.isNotBlank() && bairro.isNotBlank())
     val formValido = nome.isNotBlank() && email.contains("@") && enderecoValido
@@ -129,11 +192,44 @@ fun CheckoutScreen(
     fun enderecoTexto(): String {
         if (!frete.pedeEndereco) return "Entrega a combinar"
         val comp = if (complemento.isNotBlank()) ", $complemento" else ""
-        return "$rua, $numero — $bairro$comp"
+        val cidUf = listOf(cidade, uf).filter { it.isNotBlank() }.joinToString("/")
+        val extra = listOf(cidUf, if (cep.isNotBlank()) "CEP $cep" else "").filter { it.isNotBlank() }.joinToString(", ")
+        return "$rua, $numero — $bairro$comp" + if (extra.isNotBlank()) ", $extra" else ""
     }
 
     fun itensTexto(): String = pedido.itens.joinToString("\n") {
         "• ${it.book.titulo} (${it.book.autor}) x${it.qty} — ${Pricing.formatarBRL(it.precoLinha)}"
+    }
+
+    // ----- Salvar na conta (perfil + pedido) e reservar os livros -----
+    val idsPedido = pedido.itens.map { it.book.id }
+    fun perfilAtual() = Perfil(
+        nome = nome.trim(),
+        email = email.trim(),
+        telefone = whatsapp.trim(),
+        instagram = instagram.trim().removePrefix("@"),
+        endereco = Endereco(
+            cep = cep.trim(), rua = rua.trim(), numero = numero.trim(),
+            complemento = complemento.trim(), bairro = bairro.trim(),
+            cidade = cidade.trim(), uf = uf.trim().uppercase(),
+        ),
+    )
+    fun pedidoConta(status: String) = Pedido(
+        codigo = codigo,
+        status = status,
+        total = total,
+        subtotal = pedido.subtotal,
+        frete = frete.valor.toDouble(),
+        entrega = frete.titulo,
+        endereco = if (frete.pedeEndereco) enderecoTexto() else "",
+        itens = pedido.itens.map { ItemPedido(it.book.id, it.book.titulo, it.book.autor, it.qty, it.precoLinha) },
+    )
+    suspend fun salvarNaConta(status: String) {
+        if (Account.usuario == null) return
+        val p = perfilAtual()
+        Account.salvarPerfil(p.copy(cadastroCompleto = Account.perfilCompleto(p)))
+        Account.salvarPedido(pedidoConta(status))
+        Account.reservarLivros(idsPedido)
     }
 
     Column(
@@ -186,7 +282,8 @@ fun CheckoutScreen(
                     Secao("Seus dados") {
                         Campo(nome, { nome = it }, "Nome completo")
                         Campo(email, { email = it }, "E-mail")
-                        Campo(whatsapp, { whatsapp = it }, "WhatsApp (opcional)")
+                        Campo(whatsapp, { whatsapp = it }, "WhatsApp (com DDD)")
+                        Campo(instagram, { instagram = it }, "Instagram (opcional)")
                     }
 
                     Secao("Entrega") {
@@ -208,13 +305,22 @@ fun CheckoutScreen(
                         }
                         if (frete.pedeEndereco) {
                             Spacer(Modifier.height(8.dp))
-                            Campo(rua, { rua = it }, "Rua")
+                            Row {
+                                Box(Modifier.weight(1f)) { Campo(cep, { cep = it }, "CEP") }
+                                Spacer(Modifier.width(8.dp))
+                                Box(Modifier.weight(2f)) { Campo(rua, { rua = it }, "Rua") }
+                            }
                             Row {
                                 Box(Modifier.weight(1f)) { Campo(numero, { numero = it }, "Número") }
                                 Spacer(Modifier.width(8.dp))
                                 Box(Modifier.weight(2f)) { Campo(bairro, { bairro = it }, "Bairro") }
                             }
                             Campo(complemento, { complemento = it }, "Complemento / referência (opcional)")
+                            Row {
+                                Box(Modifier.weight(2f)) { Campo(cidade, { cidade = it }, "Cidade") }
+                                Spacer(Modifier.width(8.dp))
+                                Box(Modifier.weight(1f)) { Campo(uf, { uf = it }, "UF") }
+                            }
                         }
                     }
 
@@ -234,6 +340,9 @@ fun CheckoutScreen(
                                 valor = total,
                                 txid = codigo,
                             )
+                            // Logado: salva perfil+pedido e reserva os livros
+                            // (saem da loja enquanto o Pix está em aberto).
+                            scope.launch { salvarNaConta("pendente") }
                             etapa = Etapa.PIX
                         },
                         enabled = formValido,
@@ -320,6 +429,8 @@ fun CheckoutScreen(
                                         total = Pricing.formatarBRL(total),
                                     ),
                                 )
+                                // Atualiza o pedido na conta (aguardando confirmação do Pix).
+                                salvarNaConta("aguardando")
                                 enviando = false
                                 if (!ehDireto) Cart.limpar()
                                 etapa = Etapa.DONE
