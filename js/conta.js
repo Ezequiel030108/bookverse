@@ -58,7 +58,14 @@
     if (elErro) elErro.hidden = true;
     btnGoogle.disabled = true;
     try { await Auth.entrarComGoogle(); }
-    catch (e) { if (elErro) { elErro.hidden = false; elErro.textContent = "Não foi possível entrar com o Google. Tente novamente."; } }
+    catch (e) {
+      if (elErro) {
+        elErro.hidden = false;
+        elErro.textContent = (e && e.code === "auth/unauthorized-domain")
+          ? "Este endereço do site ainda não está liberado para login. Avise a loja para autorizar o domínio no Firebase."
+          : "Não foi possível entrar com o Google. Tente novamente.";
+      }
+    }
     finally { btnGoogle.disabled = false; }
   });
   const btnSair = document.getElementById("btn-sair");

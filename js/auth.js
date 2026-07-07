@@ -280,10 +280,31 @@
       entrarComGoogle: async function () {
         const provider = new fb.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
-        const cred = await auth.signInWithPopup(provider);
-        const u = cred && cred.user;
-        if (u) usuarioAtual = { uid: u.uid, nome: u.displayName || "", email: u.email || "", foto: u.photoURL || "" };
-        return usuarioAtual;
+        try {
+          const cred = await auth.signInWithPopup(provider);
+          const u = cred && cred.user;
+          if (u) usuarioAtual = { uid: u.uid, nome: u.displayName || "", email: u.email || "", foto: u.photoURL || "" };
+          return usuarioAtual;
+        } catch (e) {
+          // Domínio do site não autorizado no Firebase — é a causa nº 1 quando o
+          // login "para de funcionar" depois de trocar o domínio da loja.
+          if (e && e.code === "auth/unauthorized-domain") {
+            console.error(
+              '[BookVerse] Login bloqueado: o domínio "' + location.hostname +
+              '" não está na lista de domínios autorizados do Firebase.\n' +
+              'Abra o Firebase Console → Authentication → Settings → Authorized domains ' +
+              'e adicione "' + location.hostname + '" (e a versão com www, se você usar).');
+            throw e;
+          }
+          // Popup bloqueado ou sem suporte (navegador interno do Instagram e de
+          // outros apps, bloqueadores de popup): tenta de novo por REDIRECIONAMENTO,
+          // que funciona nesses ambientes. O resultado é tratado em getRedirectResult().
+          if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-environment")) {
+            await auth.signInWithRedirect(provider);
+            return null;   // a página navega para o Google; ao voltar, o login conclui
+          }
+          throw e;
+        }
       },
       sair: async function () { await auth.signOut(); },
 
@@ -464,6 +485,18 @@
         await auth.signOut();
       }
     };
+
+    // Conclui o login iniciado por redirecionamento (o fallback do popup acima).
+    // O usuário em si é aplicado pelo onAuthStateChanged logo abaixo; aqui só
+    // deixamos claro no console se o domínio não estiver autorizado.
+    auth.getRedirectResult().catch(function (e) {
+      if (e && e.code === "auth/unauthorized-domain") {
+        console.error(
+          '[BookVerse] Login bloqueado: o domínio "' + location.hostname +
+          '" não está na lista de domínios autorizados do Firebase ' +
+          '(Authentication → Settings → Authorized domains).');
+      }
+    });
 
     auth.onAuthStateChanged(function (user) {
       usuarioAtual = user ? {

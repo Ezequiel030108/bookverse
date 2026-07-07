@@ -218,8 +218,17 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
 3. No menu **Build → Authentication → Sign-in method**, ative o provedor
    **Google**.
 
-4. Em **Authentication → Settings → Authorized domains**, adicione o domínio do
-   seu site (ex.: `seu-site.vercel.app`) para o login funcionar lá.
+4. Em **Authentication → Settings → Authorized domains**, adicione **todos** os
+   endereços em que o site abre, para o login funcionar em cada um:
+   - o domínio da Vercel (ex.: `seu-site.vercel.app`);
+   - o seu domínio próprio, se tiver (ex.: `bookverse.com.br` **e**
+     `www.bookverse.com.br` — adicione as duas versões).
+
+   > ⚠️ **Trocou o domínio do site?** O login com Google só funciona em domínios
+   > que estejam nessa lista. Sempre que mudar o endereço da loja, volte aqui e
+   > adicione o novo domínio (com e sem `www`). Se o login "parar de funcionar"
+   > logo depois de trocar de domínio, é quase sempre isto que está faltando —
+   > no console do navegador (tecla F12) aparece o erro `auth/unauthorized-domain`.
 
 5. No menu **Build → Firestore Database**, clique em **Criar banco de dados**
    (modo de produção). Depois, na aba **Regras (Rules)**, cole as regras abaixo
