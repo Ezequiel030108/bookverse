@@ -133,7 +133,7 @@ window.LOJA_CONFIG = {
      Atenção: estes dados são PÚBLICOS por natureza (podem ficar no site). */
   firebase: {
     apiKey: "AIzaSyBkD1A6yvhUJPWhs6qe-EwqzRjXekDh8PU",
-    authDomain: "bookverse-69878.firebaseapp.com",
+    authDomain: "login.bookverse.com.br",
     projectId: "bookverse-69878",
     appId: "1:784486720606:web:7cefa1b2c002ddbe4e40cf"
   },
