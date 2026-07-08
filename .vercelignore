@@ -6,3 +6,11 @@ android
 README.md
 MELHORIAS.md
 .claude
+
+# Arquivos da migração para o Firebase (não são páginas do site)
+# (package.json fica de fora desta lista: a Vercel precisa dele para
+#  instalar o jpeg-js usado pela api/capa.js)
+functions
+firebase.json
+.firebaserc
+MIGRACAO-FIREBASE.md
