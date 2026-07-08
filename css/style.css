@@ -49,6 +49,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html, body { overflow-x: clip; }
 img { max-width: 100%; display: block; }
 button { font: inherit; cursor: pointer; color: inherit; border: 0; background: none; }
 a { color: inherit; }
@@ -395,45 +396,114 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
    Esta é a ÚNICA seção de novidades (não há fileira duplicada).
    ============================================================ */
 .hero {
-  max-width: 1320px;
-  margin: 14px auto 8px;
-  padding: 0 14px;
+  /* FAIXA de ponta a ponta: sem caixa, sem cantos — o céu estrelado
+     atravessa a tela inteira, separado por linhas finas. */
+  position: relative;
+  margin: 10px 0 6px;
+  padding: 18px 0 14px;
+  overflow: hidden;
+  border-top: 1px solid rgba(184, 158, 255, .16);
+  border-bottom: 1px solid rgba(184, 158, 255, .16);
+  background-color: #0a0628;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(ellipse 85% 70% at 50% -14%, rgba(74,43,181,.55), transparent 60%),
+    radial-gradient(ellipse 70% 90% at 90% 118%, rgba(255,122,217,.14), transparent 62%),
+    radial-gradient(2.4px 2.4px at 12% 22%, #fff, transparent 55%),
+    radial-gradient(2.4px 2.4px at 80% 16%, var(--estrela), transparent 55%),
+    radial-gradient(2.2px 2.2px at 64% 74%, #fff, transparent 55%),
+    radial-gradient(2.2px 2.2px at 26% 80%, var(--estrela-clara), transparent 55%),
+    radial-gradient(2px 2px at 45% 33%, #fff, transparent 55%),
+    radial-gradient(2px 2px at 92% 58%, var(--estrela), transparent 55%),
+    radial-gradient(1.8px 1.8px at 33% 55%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 72% 40%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 15% 60%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 56% 90%, #fff, transparent 55%),
+    radial-gradient(1.4px 1.4px at 6% 38%, rgba(255,255,255,.95), transparent 55%),
+    radial-gradient(1.4px 1.4px at 40% 12%, rgba(255,255,255,.95), transparent 55%),
+    radial-gradient(1.4px 1.4px at 86% 82%, rgba(255,255,255,.9), transparent 55%),
+    radial-gradient(1.4px 1.4px at 97% 30%, rgba(255,255,255,.9), transparent 55%);
 }
 .hero[hidden] { display: none; }
+/* camada de estrelas que pulsam (twinkle) */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(1.8px 1.8px at 20% 30%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 60% 24%, var(--estrela-clara), transparent 55%),
+    radial-gradient(1.8px 1.8px at 85% 66%, #fff, transparent 55%),
+    radial-gradient(1.8px 1.8px at 35% 76%, #fff, transparent 55%),
+    radial-gradient(1.6px 1.6px at 10% 50%, #fff, transparent 55%);
+  animation: pulsarCeu 3.6s ease-in-out infinite alternate;
+}
+@keyframes pulsarCeu { from { opacity: .35; } to { opacity: 1; } }
 
-/* Cabeçalho da seção de novidades — mesma linguagem dos títulos das
-   fileiras (etiqueta pequena + título serifado), só um pouco maior. */
-.hero-cabecalho { padding: 6px 8px 12px; text-align: left; }
+/* Estrelas grandes que brilham e pulsam (focos de atenção) */
+.hero-ceu { position: absolute; inset: 0; pointer-events: none; }
+.estrela-brilho {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 9px 2px rgba(255,255,255,.9), 0 0 18px 5px rgba(255,217,102,.4);
+  animation: pulsarEstrela 3.2s ease-in-out infinite;
+}
+.estrela-brilho::before,
+.estrela-brilho::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+}
+.estrela-brilho::before { width: 1px; height: 22px; background: linear-gradient(transparent, rgba(255,255,255,.7), transparent); }
+.estrela-brilho::after  { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent); }
+.estrela-brilho.e1 { top: 18%; left: 8%; animation-delay: 0s; }
+.estrela-brilho.e2 { top: 14%; left: 88%; width: 6px; height: 6px; animation-delay: .8s; }
+.estrela-brilho.e3 { top: 72%; left: 16%; width: 4px; height: 4px; animation-delay: 1.6s; }
+.estrela-brilho.e4 { top: 78%; left: 84%; animation-delay: .4s; }
+.estrela-brilho.e5 { top: 38%; left: 94%; width: 4px; height: 4px; animation-delay: 2.1s; }
+@keyframes pulsarEstrela {
+  0%, 100% { transform: scale(.6);  opacity: .5; }
+  50%      { transform: scale(1.3); opacity: 1; }
+}
+
+/* Cabeçalho da faixa — o título "bonitinho" de volta (dourado, serifado) */
+.hero-cabecalho { position: relative; padding: 4px 16px 12px; text-align: center; }
 .hero-eyebrow {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: 1.8px;
+  font-weight: 800;
+  letter-spacing: 2.4px;
   text-transform: uppercase;
-  color: var(--texto-discreto);
-  margin-bottom: 3px;
+  color: var(--lavanda);
+}
+.hero-eyebrow::before,
+.hero-eyebrow::after {
+  content: "✦";
+  color: var(--estrela);
+  font-size: .95em;
 }
 .hero-titulo-secao {
   font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(1.5rem, 6vw, 2.1rem);
-  line-height: 1.1;
-  margin: 0;
-  color: var(--texto-claro);
+  font-weight: 800;
+  font-size: clamp(1.7rem, 7vw, 2.5rem);
+  line-height: 1.05;
+  margin: 4px 0 0;
+  color: var(--estrela-clara);            /* fallback */
+  background: linear-gradient(100deg, var(--estrela) 0%, #fff 45%, var(--lavanda-clara) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Vitrine ABERTA: sem moldura/caixa — os slides flutuam direto no céu
-   do site. A profundidade vem de uma nebulosa suave atrás do livro. */
 .hero-vitrine { position: relative; }
-.hero-vitrine::before {
-  content: "";
-  position: absolute;
-  inset: -36px -10%;
-  background:
-    radial-gradient(52% 72% at 50% 44%, rgba(74, 43, 181, .30), transparent 70%),
-    radial-gradient(26% 40% at 76% 14%, rgba(255, 122, 217, .06), transparent 70%);
-  pointer-events: none;
-}
 
 /* Janela = clipa e habilita o swipe horizontal com snap */
 .hero-janela {
@@ -531,11 +601,12 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 
 /* Navegação do hero */
 .hero-nav {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 .hero-seta {
   width: 40px;
@@ -2590,6 +2661,39 @@ main {
 }
 .btn-instagram-topo:hover { filter: brightness(1.08); }
 .btn-instagram-topo:active { transform: scale(.94); }
+/* No celular a barra fica justa: o Instagram mora no fim da estante */
+@media (max-width: 699px) { .btn-instagram-topo { display: none; } }
+
+/* -------- Fale com a gente (fim da estante) -------- */
+.contato-strip {
+  position: relative;
+  z-index: 1;
+  margin-top: 26px;
+  padding: 18px 16px calc(22px + var(--safe-bottom));
+  border-top: 1px solid rgba(184, 158, 255, .14);
+  text-align: center;
+}
+.contato-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .88rem;
+  color: var(--texto-suave);
+  text-decoration: none;
+}
+.contato-ig strong { color: var(--texto-claro); }
+.contato-ig:hover strong { color: var(--lavanda-clara); }
+.contato-ig-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex: none;
+  color: #fff;
+  background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+}
 
 /* -------- Suporte WhatsApp no menu da conta -------- */
 .cmp-item.cmp-whats svg { flex: 0 0 auto; }
@@ -2727,3 +2831,10 @@ main {
 /* Páginas internas (conta/checkout) sem meteoros: em telas de formulário
    o risco diagonal parece um defeito cortando a tela. */
 .pagina-checkout .ceu-global .meteoro { display: none; }
+
+/* Desktop: dentro da faixa de ponta a ponta, o conteúdo do slide e o
+   cabeçalho continuam centralizados na largura de leitura. */
+@media (min-width: 700px) {
+  .hero { padding: 24px 0 16px; }
+  .hero-conteudo { max-width: 1080px; margin: 0 auto; }
+}

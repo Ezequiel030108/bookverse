@@ -1052,10 +1052,15 @@ function abrirLivroDaURL() {
 window.__bloqueados = montarBloqueados(lerCacheLoja(CACHE_DISP) || {});
 aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
 
-// Botão do Instagram na barra superior.
+// Links do Instagram (barra superior no desktop + faixa no fim da estante).
 (function () {
-  const a = document.getElementById("btn-instagram-topo");
-  if (a) a.href = "https://instagram.com/" + INSTAGRAM_USUARIO;
+  const url = "https://instagram.com/" + INSTAGRAM_USUARIO;
+  const topo = document.getElementById("btn-instagram-topo");
+  if (topo) topo.href = url;
+  const strip = document.getElementById("link-instagram-strip");
+  if (strip) strip.href = url;
+  const arroba = document.getElementById("contato-ig-arroba");
+  if (arroba) arroba.textContent = "@" + INSTAGRAM_USUARIO;
 })();
 
 ativarModoPromocao();
