@@ -148,17 +148,20 @@
     <div class="modal-caixa" role="document">
       <button class="modal-puxador" type="button" data-fechar-modal aria-label="Fechar"></button>
       <button class="modal-fechar" type="button" data-fechar-modal aria-label="Fechar">×</button>
-      <button class="modal-compartilhar" id="modal-compartilhar" type="button" aria-label="Compartilhar este livro" title="Compartilhar">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>
-        </svg>
-      </button>
       <div class="modal-rolavel">
         <div class="modal-conteudo">
           <div class="modal-capa"></div>
           <div class="modal-info">
             <h2 id="modal-titulo"></h2>
             <p class="modal-autor"></p>
+            <div class="modal-compartilhar-wrap">
+              <button class="modal-compartilhar" id="modal-compartilhar" type="button">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>
+                </svg>
+                Compartilhar
+              </button>
+            </div>
             <p class="modal-sinopse"></p>
             <ul class="modal-detalhes">
               <li><strong>Estado</strong><span class="badge-destaque" data-estado></span></li>

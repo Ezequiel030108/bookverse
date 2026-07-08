@@ -935,18 +935,18 @@ main {
   color: var(--texto-claro); text-align: center;
 }
 .modal-autor { order: 2; font-style: italic; margin: -6px 0 0; color: var(--lavanda); font-size: .96rem; text-align: center; }
-.modal-detalhes { order: 3; }
+.modal-detalhes { order: 5; }
 /* Sinopse logo após o preço: o começo aparece e o fim é cortado pela
    dobra (com o fade do rodapé), sinalizando que há mais para rolar. */
 .modal-sinopse {
-  order: 4;
+  order: 6;
   margin: 0;
   color: var(--texto-suave);
   font-size: 1.0rem;
   line-height: 1.6;
   text-align: left;
 }
-.modal-promo { order: 5; }
+.modal-promo { order: 7; }
 /* Lista de detalhes vira cartão com linhas "rótulo | valor". */
 .modal-detalhes {
   list-style: none; padding: 14px 16px; margin: 0;
@@ -2001,6 +2001,16 @@ main {
   .conta-btn-label { display: none; }
   .conta-btn { padding: 6px; }
 }
+/* Celular: botões da barra um pouco menores para respirar */
+@media (max-width: 480px) {
+  .topbar-acoes { gap: 4px; }
+  .btn-icon { width: 40px; height: 40px; }
+  .btn-instagram-topo { width: 34px; height: 34px; border-radius: 10px; }
+  .btn-instagram-topo svg { width: 19px; height: 19px; }
+  .conta-btn { min-height: 36px; }
+  .conta-btn-avatar { width: 26px; height: 26px; }
+}
+
 /* Telas muito pequenas: compacta ainda mais a marca */
 @media (max-width: 360px) {
   .marca-logo-wrap { width: 32px; height: 32px; }
@@ -2484,22 +2494,27 @@ main {
    ============================================================ */
 
 /* -------- Compartilhar livro (modal) -------- */
+.modal-compartilhar-wrap { order: 3; text-align: center; margin: -4px 0 0; }
 .modal-compartilhar {
-  position: absolute;
-  top: 10px; right: 58px;
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--texto-claro);
-  background: rgba(30, 18, 80, .55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  min-height: 40px;
+  border-radius: var(--raio);
+  font-weight: 600;
+  font-size: .86rem;
+  color: var(--lavanda-clara);
+  background: rgba(30, 18, 80, .45);
   border: 1px solid var(--vidro-borda);
-  z-index: 3;
+  transition: border-color .15s ease, background .15s ease, transform .12s ease;
 }
-.modal-compartilhar:hover { background: rgba(74, 43, 181, .5); }
-.modal-compartilhar:active { transform: scale(.94); }
+.modal-compartilhar:hover { border-color: var(--lavanda); background: rgba(74, 43, 181, .4); }
+.modal-compartilhar:active { transform: scale(.97); }
 
 /* -------- Variantes (novo × usado) no modal -------- */
-.modal-variantes { margin-top: 14px; }
+.modal-variantes { order: 4; margin: 0; }
 .modal-variantes-titulo {
   margin: 0 0 8px;
   font-size: .78rem;
@@ -2560,8 +2575,21 @@ main {
   border: 1px solid rgba(122, 223, 255, .25);
 }
 
-/* -------- Instagram na barra superior -------- */
-.btn-instagram-topo { display: inline-flex; align-items: center; justify-content: center; }
+/* -------- Instagram na barra superior (visual oficial) -------- */
+.btn-instagram-topo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 0;
+  color: #fff;
+  background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  box-shadow: 0 3px 10px rgba(214, 36, 159, .35);
+}
+.btn-instagram-topo:hover { filter: brightness(1.08); }
+.btn-instagram-topo:active { transform: scale(.94); }
 
 /* -------- Suporte WhatsApp no menu da conta -------- */
 .cmp-item.cmp-whats svg { flex: 0 0 auto; }
