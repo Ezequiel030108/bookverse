@@ -139,6 +139,38 @@ window.LOJA_CONFIG = {
     appId: "1:784486720606:web:7cefa1b2c002ddbe4e40cf"
   },
 
+  /* ---------- MÉTRICAS (Google Analytics + Google Ads) ----------
+     Opcional. Liga o site ao Google Analytics (relatórios de visitas,
+     livros mais vistos, funil de compra) e ao Google Ads (conversões e
+     remarketing). Enquanto os campos ficarem vazios, as métricas ficam
+     DESLIGADAS e o site funciona normal (nada do Google é carregado).
+
+     Passo a passo completo (com prints do que copiar) no arquivo
+     METRICAS.md, na raiz do projeto.
+
+     - measurementId: o "ID da métrica" do Google Analytics 4. Você pega
+       no Firebase Console → engrenagem ⚙ → Configurações do projeto →
+       aba "Integrações" → Google Analytics (ou no painel do Google
+       Analytics → Administrador → Fluxos de dados). Tem o formato
+       "G-XXXXXXXXXX".
+
+     - googleAdsId: o ID da sua conta do Google Ads, formato
+       "AW-XXXXXXXXXX". Só preencha se você já anuncia no Google Ads e
+       quer medir conversões/fazer remarketing por aqui também. (Se você
+       ligar o Analytics ao Google Ads e importar as conversões por lá,
+       nem precisa preencher isto — o Analytics já cuida de tudo.)
+
+     - conversaoCompraLabel: o identificador da conversão de COMPRA criada
+       no Google Ads. Formato "AW-XXXXXXXXXX/AbCdEfGhIj". Quando o cliente
+       finaliza um pedido, o site avisa o Google Ads que houve uma venda,
+       com o valor do pedido. Deixe vazio se você importa as conversões
+       direto do Analytics. */
+  analytics: {
+    measurementId: "",          // ex.: "G-XXXXXXXXXX"
+    googleAdsId: "",            // ex.: "AW-XXXXXXXXXX"
+    conversaoCompraLabel: ""   // ex.: "AW-XXXXXXXXXX/AbCdEfGhIj"
+  },
+
   /* ---------- ENTREGA / FRETE ----------
      Cada opção aparece como uma escolha no checkout.
      - valor: 0 significa grátis.
