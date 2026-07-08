@@ -157,9 +157,9 @@
   /* ---------- "Continuar" depois do onboarding ---------- */
   const btnContinuar = document.getElementById("btn-continuar");
   if (btnContinuar) btnContinuar.addEventListener("click", () => {
-    let retorno = "index.html";
+    let retorno = "./";
     try {
-      retorno = sessionStorage.getItem("bookverse_retorno") || "index.html";
+      retorno = sessionStorage.getItem("bookverse_retorno") || "./";
       sessionStorage.removeItem("bookverse_retorno");
     } catch (e) {}
     window.location.href = retorno;
@@ -1141,7 +1141,7 @@
     if (modalErro) modalErro.hidden = true;
     try {
       await Auth.apagarConta();
-      window.location.href = "index.html";
+      window.location.href = "./";
     } catch (e) {
       if (modalErro) { modalErro.hidden = false; modalErro.textContent = "Não foi possível apagar a conta agora. Tente novamente."; }
       btnModalConfirmar.disabled = false;

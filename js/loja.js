@@ -194,7 +194,7 @@
       let completo = false;
       try { completo = await window.Auth.cadastroCompleto(); } catch (e) {}
       if (!completo) {
-        try { sessionStorage.setItem("bookverse_retorno", "index.html"); } catch (e) {}
+        try { sessionStorage.setItem("bookverse_retorno", "./"); } catch (e) {}
         window.location.href = "conta.html";
       }
     });

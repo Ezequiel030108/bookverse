@@ -2,7 +2,7 @@
   "name": "BookVerse",
   "short_name": "BookVerse",
   "description": "Livros novos e seminovos com entrega em Juazeirinho. Pague com Pix.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0a0524",
   "theme_color": "#0a0524",

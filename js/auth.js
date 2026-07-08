@@ -128,7 +128,7 @@
       pop.querySelector(".cmp-sair").addEventListener("click", async () => {
         fecharPop();
         await Auth.sair();
-        window.location.href = "index.html";
+        window.location.href = "./";
       });
     }
 

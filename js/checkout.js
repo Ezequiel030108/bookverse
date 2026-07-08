@@ -778,7 +778,7 @@
     if (!exigeConta()) return;
     window.Auth.onChange(function (user) {
       if (!window.Auth.pronto) return;     // espera saber o estado
-      if (!user) window.location.replace("index.html");
+      if (!user) window.location.replace("./");
     });
   }
 
