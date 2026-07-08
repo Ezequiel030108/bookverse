@@ -719,11 +719,18 @@ const renderizarComPausa = (window.Util && window.Util.debounce)
   ? window.Util.debounce(v => renderizar(v), 140)
   : renderizar;
 
+/* Métrica de busca: dispara UMA vez quando o cliente para de digitar
+   (não a cada tecla). Só age se as métricas estiverem ligadas. */
+const medirBusca = (window.Util && window.Util.debounce)
+  ? window.Util.debounce(v => { if (window.Analytics) window.Analytics.busca(v); }, 900)
+  : () => {};
+
 function sincronizarBusca(origem) {
   const val = origem.value;
   if (origem === campoBusca && campoBuscaMob)  campoBuscaMob.value  = val;
   if (origem === campoBuscaMob && campoBusca)  campoBusca.value     = val;
   renderizarComPausa(val);
+  medirBusca(val);
 }
 
 campoBusca.addEventListener("input",    () => sincronizarBusca(campoBusca));
@@ -793,6 +800,8 @@ function travarScrollFundo(travar) {
 }
 
 function abrirModal(livro) {
+  // Métrica de "livro visualizado" (só dispara se as métricas estiverem ligadas).
+  if (window.Analytics) window.Analytics.verItem(livro);
   modal.querySelector("#modal-titulo").textContent    = livro.titulo;
   modal.querySelector(".modal-autor").textContent     = livro.autor;
   modal.querySelector(".modal-sinopse").textContent   = livro.sinopse || "";

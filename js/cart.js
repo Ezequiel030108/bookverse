@@ -110,6 +110,8 @@ window.Carrinho = (function () {
     if (existente) existente.qty = Math.min(existente.qty + qty, max);
     else estado.push({ id, qty: Math.min(qty, max) });
     salvar(estado);
+    // Métrica de "adicionar ao carrinho" (só dispara se as métricas estiverem ligadas).
+    if (window.Analytics) window.Analytics.adicionarCarrinho(livro, qty);
   }
   function definirQty(id, qty) {
     const item = estado.find(i => i.id === id);
