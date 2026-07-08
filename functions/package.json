@@ -1,0 +1,13 @@
+{
+  "name": "bookverse-functions",
+  "private": true,
+  "description": "BookVerse — APIs no Firebase Functions (Pix, IA e compartilhamento)",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.1.0",
+    "jpeg-js": "^0.4.4"
+  }
+}

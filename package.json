@@ -1,7 +1,11 @@
 {
   "name": "bookverse",
   "private": true,
-  "description": "Loja BookVerse — site estático + funções serverless (Vercel)",
+  "description": "Loja BookVerse — site estático + funções serverless (Firebase Hosting + Functions; Vercel mantida durante a transição)",
+  "scripts": {
+    "deploy": "firebase deploy",
+    "emulador": "firebase emulators:start"
+  },
   "dependencies": {
     "jpeg-js": "^0.4.4"
   }

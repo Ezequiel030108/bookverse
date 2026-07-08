@@ -13,6 +13,13 @@ explica tudo passo a passo.
 > **"💳 Como receber os pagamentos (Pix)"** mais abaixo. É só preencher seus
 > dados no arquivo `js/config.js`.
 
+> 🚚 **ESTAMOS DE MUDANÇA PARA O FIREBASE!** A hospedagem e as funções do
+> site estão migrando da Vercel para o Firebase (o MESMO projeto onde já
+> ficam o login e o banco de dados — nenhum dado muda de lugar). O passo a
+> passo completo está em **`MIGRACAO-FIREBASE.md`**. Onde este guia disser
+> "configure na Vercel (Environment Variables)", no Firebase o equivalente
+> é o comando `firebase functions:secrets:set NOME_DA_VARIAVEL`.
+
 ---
 
 ## 🗂️ O que tem dentro da pasta

@@ -1,0 +1,49 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "api/**",
+      "android/**",
+      "Livros/**",
+      "Livros novos 2/**",
+      "LOGO.jpg",
+      "README.md",
+      "MELHORIAS.md",
+      "MIGRACAO-FIREBASE.md",
+      "package.json",
+      "package-lock.json",
+      "vercel.json"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": {
+          "functionId": "api",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/livro/**",
+        "function": {
+          "functionId": "api",
+          "region": "us-central1"
+        }
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default"
+    }
+  ],
+  "emulators": {
+    "hosting": { "port": 5000 },
+    "functions": { "port": 5001 },
+    "ui": { "enabled": true }
+  }
+}
