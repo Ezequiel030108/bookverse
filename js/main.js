@@ -1101,7 +1101,7 @@ function abrirLivroDaURL() {
 window.__bloqueados = montarBloqueados(lerCacheLoja(CACHE_DISP) || {});
 aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
 
-// Links do Instagram (barra superior no desktop + faixa no fim da estante).
+// Contatos: Instagram (barra no desktop + faixa) e WhatsApp (faixa).
 (function () {
   const url = "https://instagram.com/" + INSTAGRAM_USUARIO;
   const topo = document.getElementById("btn-instagram-topo");
@@ -1110,6 +1110,18 @@ aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
   if (strip) strip.href = url;
   const arroba = document.getElementById("contato-ig-arroba");
   if (arroba) arroba.textContent = "@" + INSTAGRAM_USUARIO;
+
+  // WhatsApp da loja (js/config.js) — só aparece se estiver configurado.
+  const numero = String((window.LOJA_CONFIG && window.LOJA_CONFIG.whatsapp) || "").replace(/\D/g, "");
+  const whats = document.getElementById("link-whats-strip");
+  if (whats && numero) {
+    whats.href = "https://wa.me/" + numero;
+    whats.hidden = false;
+    // "5514982241492" -> "(14) 98224-1492"
+    const num = document.getElementById("contato-whats-num");
+    const m = numero.match(/^55(\d{2})(\d{5})(\d{4})$/);
+    if (num && m) num.textContent = "(" + m[1] + ") " + m[2] + "-" + m[3];
+  }
 })();
 
 ativarModoPromocao();

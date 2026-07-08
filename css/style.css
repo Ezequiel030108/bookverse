@@ -2691,30 +2691,61 @@ main {
   position: relative;
   z-index: 1;
   margin-top: 26px;
-  padding: 18px 16px calc(22px + var(--safe-bottom));
+  padding: 20px 16px calc(24px + var(--safe-bottom));
   border-top: 1px solid rgba(184, 158, 255, .14);
   text-align: center;
 }
-.contato-ig {
+.contato-titulo {
+  margin: 0 0 12px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--texto-discreto);
+}
+/* Instagram de um lado, WhatsApp do outro — sempre lado a lado */
+.contato-opcoes {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  max-width: 430px;
+  margin: 0 auto;
+}
+.contato-opcao {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: .88rem;
-  color: var(--texto-suave);
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--raio);
+  border: 1px solid var(--vidro-borda);
+  background: rgba(30, 18, 80, .35);
   text-decoration: none;
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease, transform .12s ease;
 }
-.contato-ig strong { color: var(--texto-claro); }
-.contato-ig:hover strong { color: var(--lavanda-clara); }
-.contato-ig-icone {
+.contato-opcao:hover { border-color: var(--lavanda); background: rgba(74, 43, 181, .3); }
+.contato-opcao:active { transform: scale(.98); }
+.contato-icone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   flex: none;
   color: #fff;
+}
+.contato-icone-ig {
   background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+}
+.contato-icone-whats { background: #25D366; }
+.contato-textos { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.contato-textos strong { font-size: .88rem; color: var(--texto-claro); }
+.contato-textos small {
+  font-size: .74rem; color: var(--texto-suave);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* -------- Suporte WhatsApp no menu da conta -------- */
