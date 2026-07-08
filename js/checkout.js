@@ -698,15 +698,16 @@
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
 
-    // Métrica de compra (GA4 "purchase" + conversão do Google Ads).
-    // Só dispara se as métricas estiverem ligadas em js/config.js.
+    // Métrica de compra (GA4 "purchase" + conversão do Google Ads, com
+    // conversões otimizadas a partir dos dados do cliente). Só dispara se
+    // as métricas estiverem ligadas em js/config.js.
     if (window.Analytics) window.Analytics.compra({
       codigo: codigoPedido,
       total: total,
       subtotal: dados.subtotal,
       frete: frete,
       itens: dados.itens
-    });
+    }, cliente);
 
     const linhas = dados.itens.map(i =>
       `<li><span>${i.qty}× ${esc(i.livro.titulo)}${i.livro.condicao ? ` <span class="ci-condicao">${i.livro.condicao === "novo" ? "Novo" : "Usado"}</span>` : ""}</span><span>${Precos.formatarBRL(i.precoLinha)}</span></li>`).join("");

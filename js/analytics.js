@@ -3,8 +3,8 @@
    ------------------------------------------------------------
    Liga o site ao Google Analytics (relatórios de visitas, livros
    mais vistos, funil de compra) e ao Google Ads (acompanhamento de
-   conversões e público de remarketing). Usa o mesmo "gtag.js" do
-   Google para os dois.
+   conversões, conversões otimizadas e público de remarketing). Usa
+   o mesmo "gtag.js" do Google para os dois.
 
    👉 VOCÊ NÃO PRECISA MEXER AQUI. Basta preencher os IDs no bloco
       "analytics" do arquivo js/config.js. Enquanto os IDs ficarem
@@ -16,9 +16,10 @@
 window.Analytics = (function () {
 
   const CFG = (window.LOJA_CONFIG && window.LOJA_CONFIG.analytics) || {};
-  const GA_ID      = String(CFG.measurementId || "").trim();       // GA4: "G-XXXXXXXXXX"
-  const ADS_ID     = String(CFG.googleAdsId || "").trim();         // Google Ads: "AW-XXXXXXXXXX"
-  const ADS_COMPRA = String(CFG.conversaoCompraLabel || "").trim();// Conversão de compra: "AW-XXXXXXXXXX/rótulo"
+  const GA_ID       = String(CFG.measurementId || "").trim();        // GA4: "G-XXXXXXXXXX"
+  const ADS_ID      = String(CFG.googleAdsId || "").trim();          // Google Ads: "AW-XXXXXXXXXX"
+  const ADS_COMPRA  = String(CFG.conversaoCompraLabel || "").trim(); // Compra:  "AW-XXXXXXXXXX/rótulo"
+  const ADS_CONTATO = String(CFG.conversaoContatoLabel || "").trim();// Contato: "AW-XXXXXXXXXX/rótulo"
 
   const moeda = (window.LOJA_CONFIG && window.LOJA_CONFIG.moeda && window.LOJA_CONFIG.moeda.codigo) || "BRL";
   const ligado = !!(GA_ID || ADS_ID);
@@ -68,7 +69,6 @@ window.Analytics = (function () {
   }
 
   // Linhas resolvidas do carrinho/pedido -> itens do GA4.
-  // Cada linha vem como { id, qty, livro, precoUnit, ... }.
   function itensDeLinhas(linhas) {
     return (linhas || []).map(function (l, i) {
       const it = itemDeLivro(l.livro || l, l.qty, l.precoUnit);
@@ -77,13 +77,46 @@ window.Analytics = (function () {
     });
   }
 
+  // Telefone brasileiro no formato internacional E.164 exigido pelas
+  // conversões otimizadas do Google (ex.: "+5583999998888").
+  function telefoneE164(tel) {
+    let d = String(tel || "").replace(/\D/g, "");
+    if (!d) return "";
+    if ((d.length === 12 || d.length === 13) && d.indexOf("55") === 0) d = d.slice(2);
+    return "+55" + d;
+  }
+
+  // Monta os dados do cliente para as CONVERSÕES OTIMIZADAS (enhanced
+  // conversions). O próprio gtag criptografa (hash SHA-256) esses dados
+  // no navegador antes de enviar — o Google recebe só o hash, nunca o
+  // e-mail/telefone em texto puro. Isso faz o Google casar mais vendas
+  // com os cliques nos anúncios.
+  function dadosDoCliente(cliente) {
+    if (!cliente) return null;
+    const ud = {};
+    const email = String(cliente.email || "").trim().toLowerCase();
+    const fone = telefoneE164(cliente.telefone);
+    if (email) ud.email = email;
+    if (fone) ud.phone_number = fone;
+
+    const nome = String(cliente.nome || "").trim();
+    if (nome) {
+      const partes = nome.split(/\s+/);
+      ud.address = {
+        first_name: partes[0] || "",
+        last_name: partes.length > 1 ? partes.slice(1).join(" ") : ""
+      };
+    }
+    return (email || fone) ? ud : null;
+  }
+
   function evento(nome, params) {
     if (!ligado) return;
     try { window.gtag("event", nome, params || {}); } catch (e) {}
   }
 
   /* ---------- API pública ---------- */
-  return {
+  const API = {
     ligado: ligado,
 
     // Evento genérico (use se quiser medir algo específico).
@@ -119,12 +152,26 @@ window.Analytics = (function () {
       });
     },
 
-    // Compra concluída. Dispara o "purchase" do GA4 E a conversão do Google Ads.
-    // pedido = { codigo, total, subtotal, frete, itens: [linhas resolvidas] }.
-    compra: function (pedido) {
+    // Cliente clicou para falar pelo WhatsApp / Instagram Direct (lead).
+    contato: function (canal) {
+      evento("generate_lead", { method: canal || "whatsapp" });
+      if (ADS_CONTATO) evento("conversion", { send_to: ADS_CONTATO });
+    },
+
+    // Compra concluída. Dispara o "purchase" do GA4 E a conversão do
+    // Google Ads (com conversões otimizadas, se vier o cliente).
+    // pedido  = { codigo, total, subtotal, frete, itens: [linhas resolvidas] }.
+    // cliente = { nome, email, telefone } (opcional; ativa as conversões otimizadas).
+    compra: function (pedido, cliente) {
       if (!pedido) return;
       const valor = Number(pedido.total != null ? pedido.total : pedido.subtotal) || 0;
       const itens = itensDeLinhas(pedido.itens);
+
+      // Conversões otimizadas: informa os dados do cliente ANTES da conversão.
+      if (ligado) {
+        const ud = dadosDoCliente(cliente);
+        if (ud) { try { window.gtag("set", "user_data", ud); } catch (e) {} }
+      }
 
       evento("purchase", {
         transaction_id: pedido.codigo || "",
@@ -145,4 +192,20 @@ window.Analytics = (function () {
       }
     }
   };
+
+  // Detecta automaticamente cliques em links de contato (WhatsApp ou
+  // Instagram Direct) em qualquer página e conta como "lead". Assim não
+  // é preciso instrumentar cada botão individualmente.
+  if (ligado && document.addEventListener) {
+    document.addEventListener("click", function (e) {
+      const alvo = e.target;
+      const a = (alvo && alvo.closest) ? alvo.closest("a[href]") : null;
+      if (!a) return;
+      const href = a.getAttribute("href") || "";
+      if (/wa\.me|api\.whatsapp\.com|whatsapp:/i.test(href)) API.contato("whatsapp");
+      else if (/ig\.me/i.test(href)) API.contato("instagram");
+    }, true);
+  }
+
+  return API;
 })();

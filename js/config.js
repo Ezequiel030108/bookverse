@@ -164,11 +164,18 @@ window.LOJA_CONFIG = {
        no Google Ads. Formato "AW-XXXXXXXXXX/AbCdEfGhIj". Quando o cliente
        finaliza um pedido, o site avisa o Google Ads que houve uma venda,
        com o valor do pedido. Deixe vazio se você importa as conversões
-       direto do Analytics. */
+       direto do Analytics.
+
+     - conversaoContatoLabel: (opcional) o identificador de uma conversão
+       de CONTATO/LEAD criada no Google Ads (mesmo formato). Quando o
+       cliente clica para falar pelo WhatsApp/Instagram, o site conta como
+       lead. Crie essa conversão como SECUNDÁRIA no Google Ads para não
+       misturar com a otimização de vendas. Deixe vazio para não usar. */
   analytics: {
     measurementId: "G-M4K2WTHCFF",                         // ID da métrica do Google Analytics 4
     googleAdsId: "AW-17981859266",                          // ID da conta do Google Ads
-    conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C"  // conversão "Compra BookVerse"
+    conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C",  // conversão "Compra BookVerse"
+    conversaoContatoLabel: ""                              // conversão de contato/lead (opcional)
   },
 
   /* ---------- ENTREGA / FRETE ----------
