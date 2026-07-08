@@ -146,6 +146,7 @@ Google Ads entendem todos, com nome, autor, gênero, preço e quantidade):
 | `add_to_cart`    | Cliente adiciona um livro ao carrinho              |
 | `begin_checkout` | Cliente entra no checkout com itens                |
 | `purchase`       | Pedido concluído — com código, total e itens       |
+| `generate_lead`  | Cliente clica para falar no WhatsApp/Instagram Direct |
 
 O código-fonte dessa parte fica em **`js/analytics.js`** (você não precisa
 mexer nele).
@@ -166,6 +167,47 @@ mexer nele).
 
 > Se você usa bloqueador de anúncios no navegador, ele pode esconder os
 > eventos no seu próprio teste. Teste numa aba anônima sem bloqueador.
+
+---
+
+## Parte 7 — Máximo de informação para o Google Ads
+
+Recursos extras já prontos no código para entregar o máximo de dados ao
+Google Ads. As partes de painel são feitas no site do Google Ads/Analytics.
+
+### 7.1 Conversões otimizadas (enhanced conversions) — já ligado no código
+Na compra, o site envia **e-mail, telefone e nome** do cliente junto com a
+conversão. O próprio gtag **criptografa (hash SHA-256)** esses dados no
+navegador — o Google recebe só o hash, nunca o dado em texto puro. Isso faz
+o Google **casar muito mais vendas** com os cliques nos anúncios.
+
+No painel, confirme que está ativo: **Google Ads → Metas → Conversões →
+Configurações → Conversões otimizadas** → ativado, com método **Tag do
+Google (gtag.js)**, e aceite os termos de dados do cliente.
+
+> ⚠️ **Privacidade (LGPD):** como dados do cliente (com hash) são enviados
+> ao Google para medição, informe isso na sua **política de privacidade**.
+
+### 7.2 Funil como conversões secundárias
+O site envia `add_to_cart` e `begin_checkout`. Importe-os no Google Ads como
+conversões **secundárias** (só observação, não atrapalham a otimização da
+compra): **Google Ads → Metas → Conversões → + Nova ação de conversão →
+Importar → Google Analytics 4 → Web** → selecione os eventos → depois marque
+cada um como **Secundária**. (Eles só aparecem depois que acontecerem no
+site — basta navegar/adicionar ao carrinho para gerá-los.)
+
+### 7.3 Lead de contato (WhatsApp/Instagram)
+O site já dispara `generate_lead` quando o cliente clica para falar no
+WhatsApp/Instagram Direct. Para contar isso como conversão no Google Ads:
+crie uma ação de conversão (categoria **Contato**, contagem **Uma**, marcada
+como **Secundária**), pegue o `send_to` dela (`AW-…/rótulo`) e cole no
+`conversaoContatoLabel` do `js/config.js`.
+
+### 7.4 Públicos de remarketing
+Com o vínculo GA4 ↔ Google Ads, os eventos acima já alimentam públicos.
+Crie públicos em **Google Analytics → Administrador → Públicos-alvo**, por
+exemplo **"adicionou ao carrinho e não comprou"** (inclui `add_to_cart`,
+exclui `purchase`). Eles ficam disponíveis no Google Ads automaticamente.
 
 ---
 
