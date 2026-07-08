@@ -166,9 +166,9 @@ window.LOJA_CONFIG = {
        com o valor do pedido. Deixe vazio se você importa as conversões
        direto do Analytics. */
   analytics: {
-    measurementId: "G-M4K2WTHCFF",   // ID da métrica do Google Analytics 4
-    googleAdsId: "",            // ex.: "AW-XXXXXXXXXX"
-    conversaoCompraLabel: ""   // ex.: "AW-XXXXXXXXXX/AbCdEfGhIj"
+    measurementId: "G-M4K2WTHCFF",                         // ID da métrica do Google Analytics 4
+    googleAdsId: "AW-17981859266",                          // ID da conta do Google Ads
+    conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C"  // conversão "Compra BookVerse"
   },
 
   /* ---------- ENTREGA / FRETE ----------
