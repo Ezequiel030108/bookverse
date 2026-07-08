@@ -15,8 +15,7 @@
       "MELHORIAS.md",
       "MIGRACAO-FIREBASE.md",
       "package.json",
-      "package-lock.json",
-      "vercel.json"
+      "package-lock.json"
     ],
     "rewrites": [
       {

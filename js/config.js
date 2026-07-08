@@ -76,9 +76,10 @@ window.LOJA_CONFIG = {
                          confirmado AUTOMATICAMENTE. O e-mail do pedido
                          chega no momento exato em que o dinheiro cai.
 
-       👉 Só mude para "mercadopago" DEPOIS de configurar as variáveis
-          na Vercel (MP_ACCESS_TOKEN, WEB3FORMS_KEY) — veja o README,
-          seção "⚡ Confirmação automática do Pix". Antes disso, deixe
+       👉 Só mude para "mercadopago" DEPOIS de cadastrar os segredos no
+          Firebase (MP_ACCESS_TOKEN, WEB3FORMS_KEY) com
+          `firebase functions:secrets:set` — veja o README, seção
+          "⚡ Confirmação automática do Pix". Antes disso, deixe
           em "manual" para o checkout continuar funcionando. */
     modo: "mercadopago"
   },

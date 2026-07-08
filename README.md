@@ -13,12 +13,12 @@ explica tudo passo a passo.
 > **"💳 Como receber os pagamentos (Pix)"** mais abaixo. É só preencher seus
 > dados no arquivo `js/config.js`.
 
-> 🚚 **ESTAMOS DE MUDANÇA PARA O FIREBASE!** A hospedagem e as funções do
-> site estão migrando da Vercel para o Firebase (o MESMO projeto onde já
-> ficam o login e o banco de dados — nenhum dado muda de lugar). O passo a
-> passo completo está em **`MIGRACAO-FIREBASE.md`**. Onde este guia disser
-> "configure na Vercel (Environment Variables)", no Firebase o equivalente
-> é o comando `firebase functions:secrets:set NOME_DA_VARIAVEL`.
+> ☁️ **Onde o site fica hospedado:** tudo roda no **Firebase** — hospedagem
+> do site, funções (Pix, IA), login com Google e banco de dados, no mesmo
+> projeto. O site atualiza **sozinho** a cada mudança que você salva no
+> GitHub. As "variáveis de ambiente" (tokens secretos) ficam guardadas com
+> o comando `firebase functions:secrets:set NOME_DA_VARIAVEL`. Histórico da
+> mudança da Vercel para o Firebase: veja **`MIGRACAO-FIREBASE.md`**.
 
 ---
 
@@ -29,10 +29,11 @@ projeto livros/
 ├── index.html         ← a vitrine (estante de livros)
 ├── checkout.html      ← a página de finalizar compra (pagamento)
 ├── conta.html         ← a página "Minha conta" (login Google + pedidos)
-├── api/               ← backend (Vercel) — Pix automático
-│   ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
-│   ├── status-pix.js  ← o checkout pergunta "já caiu?"
-│   └── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
+├── functions/         ← backend (Firebase) — Pix automático, IA, etc.
+│   └── api/
+│       ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
+│       ├── status-pix.js  ← o checkout pergunta "já caiu?"
+│       └── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
@@ -150,7 +151,7 @@ no exato momento em que o dinheiro cai** — mesmo que o cliente feche o site.
 > dinheiro passa pela conta dele antes de você sacar para o banco. Em troca,
 > você não precisa conferir pagamento manualmente.
 
-Tudo já está programado (pastas `api/`). Falta só **você** ligar:
+Tudo já está programado (pasta `functions/`). Falta só **você** ligar:
 
 ### Passo a passo
 
@@ -159,14 +160,22 @@ Tudo já está programado (pastas `api/`). Falta só **você** ligar:
    aplicação → *Credenciais de produção* → copie o **Access Token**
    (começa com `APP_USR-...`). **Esse token é secreto — nunca coloque no código.**
 
-2. **No painel da Vercel** (o site já está hospedado lá), abra o projeto →
-   **Settings → Environment Variables** e crie:
+2. **Cadastre os segredos no Firebase.** No computador, na pasta do projeto,
+   rode um por um (cada comando pergunta o valor — cole e dê Enter):
 
-   | Nome | Valor |
+   ```bash
+   firebase functions:secrets:set MP_ACCESS_TOKEN
+   firebase functions:secrets:set WEB3FORMS_KEY
+   firebase functions:secrets:set MP_WEBHOOK_SECRET
+   ```
+
+   | Segredo | Valor |
    |---|---|
    | `MP_ACCESS_TOKEN` | seu Access Token do Mercado Pago |
    | `WEB3FORMS_KEY` | a mesma chave do Web3Forms que está no `js/config.js` |
-   | `MP_WEBHOOK_SECRET` | *(opcional)* segredo da assinatura do webhook (ver passo 4) |
+   | `MP_WEBHOOK_SECRET` | segredo da assinatura do webhook (ver passo 4); se não usar, cadastre o valor `-` |
+
+   > Depois de mexer nos segredos, publique as funções: `firebase deploy --only functions`.
 
 3. No `js/config.js`, mude o **modo** do Pix para `"mercadopago"`:
 
@@ -178,12 +187,12 @@ Tudo já está programado (pastas `api/`). Falta só **você** ligar:
    ```
 
 4. *(Opcional, mais seguro)* No Mercado Pago, em *Webhooks*, aponte para
-   `https://SEU-SITE.vercel.app/api/webhook-mp`, gere a **assinatura secreta** e
-   cole o valor em `MP_WEBHOOK_SECRET` (passo 2). Sem isso já funciona — o
+   `https://bookverse.com.br/api/webhook-mp`, gere a **assinatura secreta** e
+   cadastre o valor em `MP_WEBHOOK_SECRET` (passo 2). Sem isso já funciona — o
    servidor sempre confere o pagamento direto no Mercado Pago antes de enviar
    o e-mail —, mas a assinatura adiciona uma camada extra de proteção.
 
-5. **Publique de novo** (a Vercel republica sozinha quando você salva no GitHub).
+5. **Publique as funções:** `firebase deploy --only functions`.
 
 Pronto! No checkout, ao gerar o Pix, a tela fica *"Aguardando o pagamento…"* e
 vira *"Pagamento confirmado!"* sozinha quando o cliente paga — e o **e-mail do
@@ -227,8 +236,8 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
 
 4. Em **Authentication → Settings → Authorized domains**, adicione **todos** os
    endereços em que o site abre, para o login funcionar em cada um:
-   - o domínio da Vercel (ex.: `seu-site.vercel.app`);
-   - o seu domínio próprio, se tiver (ex.: `bookverse.com.br` **e**
+   - o domínio do Firebase (ex.: `bookverse-69878.web.app`);
+   - o seu domínio próprio (ex.: `bookverse.com.br` **e**
      `www.bookverse.com.br` — adicione as duas versões).
 
    > ⚠️ **Trocou o domínio do site?** O login com Google só funciona em domínios
@@ -351,19 +360,22 @@ lista `admin.emails`), ao adicionar ou editar um livro existe o botão
 **"✨ Gerar sinopse com IA"**. Ele escreve uma sinopse curta e elegante a partir
 do título, autor e gênero — e você ainda pode editar o texto depois.
 
-Para ativar, configure **uma** chave de IA na Vercel (em **Settings →
-Environment Variables**). Recomendamos o **Google Gemini**, que é **gratuito** e
-**não pede cartão**:
+Para ativar, cadastre **uma** chave de IA como segredo no Firebase.
+Recomendamos o **Google Gemini**, que é **gratuito** e **não pede cartão**:
 
 1. Acesse <https://aistudio.google.com/apikey> e entre com sua conta Google.
 2. Clique em **Create API key** e **copie** a chave gerada.
-3. Na Vercel, crie a variável:
+3. No computador, na pasta do projeto, cadastre o segredo:
 
-   | Nome             | Valor                    |
+   ```bash
+   firebase functions:secrets:set GEMINI_API_KEY
+   ```
+
+   | Segredo          | Valor                    |
    | ---------------- | ------------------------ |
    | `GEMINI_API_KEY` | a chave que você copiou  |
 
-4. **Publique de novo** (a Vercel republica sozinha ao salvar). Pronto: o botão
+4. **Publique as funções:** `firebase deploy --only functions`. Pronto: o botão
    de gerar sinopse passa a funcionar.
 
 > O plano gratuito do Gemini é mais que suficiente para uma livraria (centenas
