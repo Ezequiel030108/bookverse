@@ -1,0 +1,8 @@
+{
+  "name": "bookverse",
+  "private": true,
+  "description": "Loja BookVerse — site estático + funções serverless (Vercel)",
+  "dependencies": {
+    "jpeg-js": "^0.4.4"
+  }
+}

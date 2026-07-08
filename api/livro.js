@@ -32,13 +32,12 @@ module.exports = async (req, res) => {
 
   const urlLoja = "/?livro=" + encodeURIComponent(id);
 
-  // Imagem da prévia: capa estática, ou capa do admin (base64) servida
-  // por /api/capa, ou a logo como último recurso.
-  let ogImage = base + "/img/logo.png";
+  // Imagem da prévia: a MOLDURA da BookVerse com a foto do livro no
+  // meio (gerada por /api/capa). Sem foto, vai a logo.
   const img = String(livro.imagem || "");
-  if (/^img\//.test(img)) ogImage = base + "/" + img.split("/").map(encodeURIComponent).join("/");
-  else if (/^data:image\//.test(img)) ogImage = base + "/api/capa?id=" + encodeURIComponent(id);
-  else if (/^https:\/\//.test(img)) ogImage = img;
+  const ogImage = img
+    ? base + "/api/capa?id=" + encodeURIComponent(id)
+    : base + "/img/logo.png";
 
   const titulo = `${livro.titulo || "Livro"} — ${livro.autor || "BookVerse"}`;
   const desc = (livro.sinopse || `Disponível na BookVerse por ${livro.preco || "um precinho especial"}.`).slice(0, 220);
