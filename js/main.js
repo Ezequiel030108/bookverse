@@ -784,6 +784,14 @@ window.addEventListener("scroll", () => {
 
 let soltarFocoModal = null;
 
+/* Trava/destrava o scroll da página de fundo (html E body — no celular,
+   travar só o body deixa a página de trás rolando junto com o modal). */
+function travarScrollFundo(travar) {
+  const v = travar ? "hidden" : "";
+  document.body.style.overflow = v;
+  document.documentElement.style.overflow = v;
+}
+
 function abrirModal(livro) {
   modal.querySelector("#modal-titulo").textContent    = livro.titulo;
   modal.querySelector(".modal-autor").textContent     = livro.autor;
@@ -816,6 +824,10 @@ function abrirModal(livro) {
 
   const capa = modal.querySelector(".modal-capa");
   capa.innerHTML = capaHTML(livro, false);
+  // Foto real: tocar na capa abre a foto INTEIRA em tela cheia (sem cortes).
+  const srcFoto = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : livro.imagem;
+  capa.classList.toggle("tem-zoom", !!srcFoto);
+  capa.onclick = srcFoto ? (() => abrirFoto(livro)) : null;
 
   // ---- Outras versões do mesmo livro (ex.: novo × usado), estilo Amazon ----
   const elVar = document.getElementById("modal-variantes");
@@ -866,7 +878,7 @@ function abrirModal(livro) {
   const jaAberto = !modal.hidden;
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
+  travarScrollFundo(true);
   // Prende o Tab dentro do modal (acessibilidade) — só na primeira abertura.
   if (!jaAberto && window.Util && window.Util.prenderFoco) {
     soltarFocoModal = window.Util.prenderFoco(modal.querySelector(".modal-caixa"));
@@ -876,12 +888,37 @@ function abrirModal(livro) {
 function fecharModal() {
   modal.hidden = true;
   modal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+  travarScrollFundo(false);
   if (soltarFocoModal) { soltarFocoModal(); soltarFocoModal = null; }
 }
 
+/* ---------- Visualizador de foto em tela cheia ---------- */
+const fotoViewer    = document.getElementById("foto-viewer");
+const fotoViewerImg = document.getElementById("foto-viewer-img");
+
+function abrirFoto(livro) {
+  const src = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : livro.imagem;
+  if (!src || !fotoViewer) return;
+  fotoViewerImg.src = src;
+  fotoViewerImg.alt = "Foto de " + (livro.titulo || "livro");
+  fotoViewer.hidden = false;
+  travarScrollFundo(true);
+}
+function fecharFoto() {
+  if (!fotoViewer || fotoViewer.hidden) return;
+  fotoViewer.hidden = true;
+  fotoViewerImg.src = "";
+  // o modal continua aberto atrás: mantém a página de fundo travada
+  travarScrollFundo(!modal.hidden);
+}
+if (fotoViewer) fotoViewer.addEventListener("click", fecharFoto);
+
 modal.addEventListener("click", (e) => { if (e.target.hasAttribute("data-fechar-modal")) fecharModal(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) fecharModal(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (fotoViewer && !fotoViewer.hidden) { fecharFoto(); return; }   // 1º fecha a foto
+  if (!modal.hidden) fecharModal();                                  // depois o modal
+});
 
 /* ---------- Decoração da promoção (tema Copa do Mundo) ----------
    Só acontece com a promoção ativa e some sozinho quando ela acaba —
@@ -1009,26 +1046,38 @@ function carregarCatalogo() {
 
 /* ---------- Compartilhar / abrir livro por link direto ---------- */
 
+/* O link compartilhado passa por /livro/<id>: uma pagininha no servidor
+   que faz a prévia (WhatsApp/Instagram) mostrar a CAPA do livro, e
+   redireciona o visitante direto para a loja com o livro aberto. */
 function urlDoLivro(livro) {
-  return location.origin + location.pathname + "?livro=" + encodeURIComponent(idLivro(livro));
+  return location.origin + "/livro/" + encodeURIComponent(idLivro(livro));
+}
+
+function mensagemCompartilhar(livro, url) {
+  const preco = formatarReal(Precos.precoUnitario(livro, 1));
+  const condicao = livro.condicao === "novo" ? " (novo)" : (livro.condicao === "usado" ? " (usado)" : "");
+  return (
+    "💜✨ Olha esse achado na BookVerse! ✨💜\n\n" +
+    "📖 " + livro.titulo + " — " + livro.autor + "\n" +
+    "🤍 " + preco + condicao + "\n\n" +
+    "🌟 Confira já: " + url
+  );
 }
 
 async function compartilharLivro(livro) {
   const url = urlDoLivro(livro);
-  const dados = {
-    title: livro.titulo,
-    text: `${livro.titulo} — ${livro.autor} · BookVerse`,
-    url: url
-  };
+  const texto = mensagemCompartilhar(livro, url);
   if (navigator.share) {
-    try { await navigator.share(dados); return; }
+    // O link já vai dentro do texto (com a mensagem bonita); mandar o
+    // campo url separado duplicaria o link em alguns apps.
+    try { await navigator.share({ title: livro.titulo + " · BookVerse", text: texto }); return; }
     catch (e) { if (e && e.name === "AbortError") return; /* cancelou */ }
   }
   try {
-    await navigator.clipboard.writeText(url);
-    if (window.lojaToast) window.lojaToast("Link copiado! É só colar e enviar.");
+    await navigator.clipboard.writeText(texto);
+    if (window.lojaToast) window.lojaToast("Mensagem copiada! É só colar e enviar.");
   } catch (e) {
-    window.prompt("Copie o link do livro:", url);
+    window.prompt("Copie a mensagem do livro:", texto);
   }
 }
 

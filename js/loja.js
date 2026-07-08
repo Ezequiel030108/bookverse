@@ -11,6 +11,14 @@
   const Carrinho = window.Carrinho;
   const esc = window.esc || (t => String(t == null ? "" : t));
 
+  // Trava o scroll da página de fundo (html E body — no celular, só o
+  // body não basta e a página de trás rola junto).
+  function travarFundo(travar) {
+    const v = travar ? "hidden" : "";
+    document.body.style.overflow = v;
+    document.documentElement.style.overflow = v;
+  }
+
   const btnCarrinho = document.getElementById("btn-carrinho");
   const contador    = document.getElementById("carrinho-contador");
   const drawer      = document.getElementById("carrinho-drawer");
@@ -33,13 +41,13 @@
       drawer.classList.add("aberto");
       drawerFundo.classList.add("aberto");
     });
-    document.body.style.overflow = "hidden";
+    travarFundo(true);
     if (window.Util && window.Util.prenderFoco) soltarFocoDrawer = window.Util.prenderFoco(drawer);
   }
   function fecharDrawer() {
     drawer.classList.remove("aberto");
     drawerFundo.classList.remove("aberto");
-    document.body.style.overflow = "";
+    travarFundo(false);
     setTimeout(() => { drawer.hidden = true; drawerFundo.hidden = true; }, 280);
     if (soltarFocoDrawer) { soltarFocoDrawer(); soltarFocoDrawer = null; }
   }
@@ -159,12 +167,12 @@
     if (!avisoConta) { toast("Crie sua conta para adicionar livros"); return; }
     avisoConta.hidden = false;
     requestAnimationFrame(() => avisoConta.classList.add("aberto"));
-    document.body.style.overflow = "hidden";
+    travarFundo(true);
   }
   function fecharAvisoConta() {
     if (!avisoConta) return;
     avisoConta.classList.remove("aberto");
-    document.body.style.overflow = "";
+    travarFundo(false);
     setTimeout(() => { avisoConta.hidden = true; }, 250);
   }
   if (avisoConta) {

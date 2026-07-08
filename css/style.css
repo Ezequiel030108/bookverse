@@ -395,12 +395,13 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
    Vitrine "livro em destaque": a capa é a estrela.
    Esta é a ÚNICA seção de novidades (não há fileira duplicada).
    ============================================================ */
-.hero {
-  /* FAIXA de ponta a ponta: sem caixa, sem cantos — o céu estrelado
-     atravessa a tela inteira, separado por linhas finas. */
+.hero { position: relative; margin: 14px 0 6px; }
+
+/* FAIXA de ponta a ponta: sem caixa, sem cantos — só o carrossel dentro,
+   com o céu estrelado atravessando a tela, entre duas linhas finas. */
+.hero-faixa {
   position: relative;
-  margin: 10px 0 6px;
-  padding: 18px 0 14px;
+  padding: 6px 0;
   overflow: hidden;
   border-top: 1px solid rgba(184, 158, 255, .16);
   border-bottom: 1px solid rgba(184, 158, 255, .16);
@@ -426,7 +427,7 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 }
 .hero[hidden] { display: none; }
 /* camada de estrelas que pulsam (twinkle) */
-.hero::after {
+.hero-faixa::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -472,8 +473,8 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   50%      { transform: scale(1.3); opacity: 1; }
 }
 
-/* Cabeçalho da faixa — o título "bonitinho" de volta (dourado, serifado) */
-.hero-cabecalho { position: relative; padding: 4px 16px 12px; text-align: center; }
+/* Cabeçalho FORA da faixa — o título dourado serifado */
+.hero-cabecalho { position: relative; padding: 0 16px 12px; text-align: center; }
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -528,7 +529,7 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   position: relative;
   scroll-snap-align: center;
   scroll-snap-stop: always;
-  min-height: 348px;
+  min-height: 300px;
   display: flex;
 }
 
@@ -546,7 +547,7 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   width: 100%;
 }
 .hero-capa-wrap {
-  width: clamp(124px, 36vw, 168px);
+  width: clamp(152px, 46vw, 212px);
   aspect-ratio: 2 / 3;
   border-radius: 12px;
   overflow: hidden;
@@ -606,7 +607,7 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .hero-seta {
   width: 40px;
@@ -988,13 +989,30 @@ main {
   padding: 4px 22px 22px;
 }
 .modal-capa {
-  width: 110px;
+  position: relative;
+  width: 150px;
   align-self: center;
   aspect-ratio: 2 / 3;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--brilho-livro);
   background: var(--indigo);
+}
+/* Capa com foto: dá para tocar e ver a foto INTEIRA em tela cheia */
+.modal-capa.tem-zoom { cursor: zoom-in; }
+.modal-capa.tem-zoom::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.5 16.5 22 22M11 8v6M8 11h6'/%3E%3C/svg%3E")
+    center / 15px no-repeat,
+    rgba(10, 5, 36, .78);
+  border: 1px solid rgba(255, 255, 255, .25);
 }
 .modal-capa img { width: 100%; height: 100%; object-fit: cover; }
 .modal-capa .capa-fallback { font-size: 2.2rem; }
@@ -1132,7 +1150,7 @@ main {
     gap: 40px;
     padding: 30px 48px;
   }
-  .hero-capa-wrap { width: 196px; flex-shrink: 0; }
+  .hero-capa-wrap { width: 232px; flex-shrink: 0; }
   .hero-texto { max-width: 60ch; }
   .hero-livro-sinopse {
     display: -webkit-box;
@@ -1176,7 +1194,7 @@ main {
 @media (min-width: 1000px) {
   :root { --card-largura: 180px; }
   .hero-slide { min-height: 360px; }
-  .hero-capa-wrap { width: 228px; }
+  .hero-capa-wrap { width: 266px; }
   .hero-livro-sinopse { -webkit-line-clamp: 4; }
   .fileira-grade .grade-livros { grid-template-columns: repeat(5, 1fr); }
 }
@@ -2835,6 +2853,54 @@ main {
 /* Desktop: dentro da faixa de ponta a ponta, o conteúdo do slide e o
    cabeçalho continuam centralizados na largura de leitura. */
 @media (min-width: 700px) {
-  .hero { padding: 24px 0 16px; }
+  .hero-faixa { padding: 10px 0; }
   .hero-conteudo { max-width: 1080px; margin: 0 auto; }
 }
+
+/* -------- Visualizador de foto em tela cheia (sem cortes) -------- */
+.foto-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px;
+  background: rgba(4, 2, 16, .96);
+  cursor: zoom-out;
+}
+.foto-viewer[hidden] { display: none; }
+.foto-viewer img {
+  max-width: 100%;
+  max-height: calc(100% - 60px);
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .7);
+}
+.foto-viewer-fechar {
+  position: absolute;
+  top: calc(10px + var(--safe-top));
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  color: #fff;
+  background: rgba(255, 255, 255, .1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.foto-viewer-dica {
+  margin: 0;
+  font-size: .78rem;
+  color: rgba(255, 255, 255, .55);
+}
+
+/* -------- Scroll do modal não "vaza" para a página de trás -------- */
+.modal-rolavel { overscroll-behavior: contain; }
+.carrinho-drawer { overscroll-behavior: contain; }
+.modal-fundo, .drawer-fundo, .aviso-conta-fundo { touch-action: none; }
+.foto-viewer { touch-action: none; overscroll-behavior: contain; }

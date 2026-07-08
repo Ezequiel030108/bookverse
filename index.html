@@ -114,25 +114,29 @@
     funcione nativamente no mobile.
   -->
   <section class="hero" id="hero" aria-label="Novidades da semana" hidden>
-    <!-- Céu estrelado da faixa de novidades (de ponta a ponta) -->
-    <div class="hero-ceu" aria-hidden="true">
-      <span class="estrela-brilho e1"></span>
-      <span class="estrela-brilho e2"></span>
-      <span class="estrela-brilho e3"></span>
-      <span class="estrela-brilho e4"></span>
-      <span class="estrela-brilho e5"></span>
-    </div>
+    <!-- Título FORA da faixa -->
     <div class="hero-cabecalho">
       <span class="hero-eyebrow">Acabou de chegar</span>
       <h2 class="hero-titulo-secao">Novidades da Semana</h2>
     </div>
-    <div class="hero-vitrine">
-      <div class="hero-janela" id="hero-janela">
-        <div class="hero-palco" id="hero-palco">
-          <!-- slides gerados pelo JS -->
+    <!-- A faixa estrelada: só o carrossel dentro dela -->
+    <div class="hero-faixa">
+      <div class="hero-ceu" aria-hidden="true">
+        <span class="estrela-brilho e1"></span>
+        <span class="estrela-brilho e2"></span>
+        <span class="estrela-brilho e3"></span>
+        <span class="estrela-brilho e4"></span>
+        <span class="estrela-brilho e5"></span>
+      </div>
+      <div class="hero-vitrine">
+        <div class="hero-janela" id="hero-janela">
+          <div class="hero-palco" id="hero-palco">
+            <!-- slides gerados pelo JS -->
+          </div>
         </div>
       </div>
     </div>
+    <!-- Navegação FORA da faixa -->
     <div class="hero-nav">
       <button class="hero-seta hero-ant" type="button" aria-label="Novidade anterior">&#8249;</button>
       <div class="hero-pontos" id="hero-pontos" aria-label="Progresso das novidades"></div>
@@ -261,6 +265,13 @@
         <a href="conta.html" class="botao-loja botao-loja-secundario botao-loja-bloco">Ir para a página de conta</a>
       </div>
     </div>
+  </div>
+
+  <!-- ===== VISUALIZADOR DE FOTO (tela cheia, sem cortes) ===== -->
+  <div class="foto-viewer" id="foto-viewer" hidden role="dialog" aria-modal="true" aria-label="Foto do livro">
+    <button class="foto-viewer-fechar" type="button" aria-label="Fechar foto">×</button>
+    <img id="foto-viewer-img" src="" alt="">
+    <p class="foto-viewer-dica">Toque em qualquer lugar para fechar</p>
   </div>
 
   <script src="js/util.js"></script>
