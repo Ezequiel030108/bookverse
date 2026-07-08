@@ -2796,3 +2796,7 @@ main {
 }
 .ploja-acoes .botao-loja { flex: 1 1 auto; font-size: .84rem; padding: 10px 14px; }
 .ploja-btn-cancelar { color: #ffb3b3; }
+
+/* Páginas internas (conta/checkout) sem meteoros: em telas de formulário
+   o risco diagonal parece um defeito cortando a tela. */
+.pagina-checkout .ceu-global .meteoro { display: none; }
