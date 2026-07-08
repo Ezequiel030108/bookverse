@@ -46,6 +46,15 @@
    destaque -> (opcional) true para o livro aparecer entre os PRIMEIROS
               da sua categoria (os principais e mais famosos). Sem isso,
               ele segue a ordem normal do arquivo.
+   condicao -> (opcional) "novo" ou "usado". Se a loja tiver o MESMO
+              livro (mesmo título e autor) nas duas versões, eles
+              aparecem juntos na mesma página — o novo em destaque e o
+              usado como opção mais barata (estilo Amazon). Nesse caso,
+              dê também um "id" diferente para cada versão (abaixo).
+   id      -> (opcional) identificador único do livro. Normalmente o
+              site gera sozinho a partir de título+autor; só preencha
+              quando houver duas versões do MESMO livro:
+              ex.: id: "1984-novo" e id: "1984-usado".
    descontoMaximo -> (opcional) limita o desconto da promoção neste livro
               (ex.: descontoMaximo: 10 -> nunca passa de 10% off).
    dataAdicao -> (opcional) A data em que você adicionou o livro, no

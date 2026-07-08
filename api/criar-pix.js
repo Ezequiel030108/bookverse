@@ -65,7 +65,12 @@ module.exports = async (req, res) => {
         first_name: pagador.nome || undefined
       },
       // Guardado como string para o Mercado Pago não mexer nas chaves.
-      metadata: emailPedido ? { pedido_json: JSON.stringify(emailPedido) } : {}
+      // total_esperado: o webhook compara com o valor REALMENTE pago e
+      // avisa no e-mail se alguém tentar pagar menos que o pedido.
+      metadata: Object.assign(
+        { total_esperado: Math.round(valor * 100) / 100 },
+        emailPedido ? { pedido_json: JSON.stringify(emailPedido) } : {}
+      )
     };
 
     const r = await fetch(`${MP_API}/v1/payments`, {

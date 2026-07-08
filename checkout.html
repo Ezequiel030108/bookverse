@@ -127,6 +127,19 @@
             <input type="hidden" id="end-uf" name="uf">
           </div>
 
+          <label class="presente-opcao" for="cli-presente">
+            <input type="checkbox" id="cli-presente" name="presente">
+            <span class="presente-check" aria-hidden="true"></span>
+            <span class="presente-texto">
+              <span class="presente-titulo">🎁 Embalar para presente <span class="presente-gratis">grátis</span></span>
+              <span class="presente-desc">Entregamos o pedido embrulhado, pronto para presentear.</span>
+            </span>
+          </label>
+          <div class="campo" id="campo-presente-msg" hidden>
+            <label for="cli-presente-msg">Mensagem do cartão <span class="opcional">(opcional)</span></label>
+            <input type="text" id="cli-presente-msg" name="presenteMsg" maxlength="140" placeholder="Ex.: Para Maria, com carinho — João">
+          </div>
+
           <div class="campo">
             <label for="cli-obs">Observações <span class="opcional">(opcional)</span></label>
             <textarea id="cli-obs" name="observacoes" rows="2" placeholder="Algo que devemos saber sobre o pedido?"></textarea>
@@ -216,11 +229,7 @@
 
   </main>
 
-  <footer class="rodape">
-    <p>© <span id="ano-atual"></span> BookVerse · Juazeirinho</p>
-    <p class="rodape-sub">Feito com carinho para nossos leitores ✦</p>
-  </footer>
-
+  <script src="js/util.js"></script>
   <script src="js/livros.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>

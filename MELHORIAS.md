@@ -1,5 +1,13 @@
 # 🔍 Varredura do projeto — melhorias e pendências
 
+> ✅ **Atualização (08/07/2026):** a grande maioria dos itens abaixo já foi
+> **aplicada no código** (escape de HTML/XSS, conferência de valor no webhook,
+> proteção das APIs de IA, correção do estoque com quantidade, vazamento de
+> listeners, Open Graph/SEO, compressão das capas, 404, manifest, ViaCEP,
+> focus trap, unificação de preços, etc.). O que ainda depende de você:
+> **colar as novas regras do Firestore** (README, seção do login) e conferir
+> o domínio usado nas tags Open Graph (www.bookverse.com.br).
+
 Relatório da revisão completa do site (vitrine, checkout, conta/admin, APIs na
 Vercel e estrutura do repositório), feita em 08/07/2026. Itens ordenados por
 prioridade: 🔴 crítico → ⚪ manutenção.

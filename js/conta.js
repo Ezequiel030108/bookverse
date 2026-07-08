@@ -14,6 +14,7 @@
   const Auth = window.Auth;
   const CFG = window.LOJA_CONFIG || {};
   const simbolo = (CFG.moeda && CFG.moeda.simbolo) || "R$";
+  const esc = window.esc || (t => String(t == null ? "" : t));
 
   const elCarregando = document.getElementById("conta-carregando");
   const elDesconfig  = document.getElementById("conta-desconfig");
@@ -31,9 +32,6 @@
   const dadosAjuda  = document.getElementById("painel-dados-ajuda");
   const btnSalvar   = document.getElementById("btn-salvar-perfil");
   const onbErro     = document.getElementById("onboarding-erro");
-
-  const anoEl = document.getElementById("ano-atual");
-  if (anoEl) anoEl.textContent = new Date().getFullYear();
 
   let modo = "dashboard";   // "onboarding" | "dashboard"
 
@@ -80,6 +78,23 @@
   if (pTel) pTel.addEventListener("input", () => { marcar("p-tel", false); atualizarDicaWhats(); });
   const pNome = document.getElementById("p-nome");
   if (pNome) pNome.addEventListener("input", () => marcar("p-nome", false));
+
+  /* ---------- CEP: preenche o endereço sozinho (ViaCEP, gratuito) ---------- */
+  const pCep = document.getElementById("p-cep");
+  if (pCep) pCep.addEventListener("blur", async () => {
+    const cep = soDigitos(pCep.value);
+    if (cep.length !== 8) return;
+    try {
+      const r = await fetch("https://viacep.com.br/ws/" + cep + "/json/");
+      const d = await r.json();
+      if (d && !d.erro) {
+        if (!v("p-rua") && d.logradouro)   set("p-rua", d.logradouro);
+        if (!v("p-bairro") && d.bairro)     set("p-bairro", d.bairro);
+        if (!v("p-cidade") && d.localidade) set("p-cidade", d.localidade);
+        if (!v("p-uf") && d.uf)             set("p-uf", d.uf);
+      }
+    } catch (e) { /* sem internet ou fora do ar: preenche à mão */ }
+  });
 
   /* ---------- Form do perfil ---------- */
   const formPerfil = document.getElementById("form-perfil");
@@ -145,11 +160,14 @@
 
   /* ---------- Menu (abas) ---------- */
   function abrirTab(tab) {
-    const abaDados   = tab === "dados" || (tab !== "pedidos" && tab !== "admin");
     const abaPedidos = tab === "pedidos";
+    const abaLoja    = tab === "loja";
     const abaAdmin   = tab === "admin";
+    const abaDados   = !abaPedidos && !abaLoja && !abaAdmin;
     if (painelDados) painelDados.hidden = !abaDados;
     if (painelPedidos) painelPedidos.hidden = !abaPedidos;
+    const painelLoja = document.getElementById("painel-pedidos-loja");
+    if (painelLoja) painelLoja.hidden = !abaLoja;
     const painelAdmin = document.getElementById("painel-admin");
     if (painelAdmin) painelAdmin.hidden = !abaAdmin;
     document.querySelectorAll(".conta-menu-item").forEach(b =>
@@ -157,6 +175,7 @@
     // Saiu da aba de pedidos: encerra o listener em tempo real (evita leak).
     if (!abaPedidos && cancelarOuvirPedidos) { cancelarOuvirPedidos(); cancelarOuvirPedidos = null; }
     if (abaPedidos) carregarPedidos();
+    if (abaLoja) carregarPedidosLoja();
     if (abaAdmin) carregarAdmin();
   }
   document.querySelectorAll(".conta-menu-item").forEach(b =>
@@ -176,6 +195,7 @@
     if (btnSalvar) btnSalvar.textContent = "Concluir cadastro";
     if (zonaPerigo) zonaPerigo.hidden = true;
     const pa = document.getElementById("painel-admin"); if (pa) pa.hidden = true;
+    const pl = document.getElementById("painel-pedidos-loja"); if (pl) pl.hidden = true;
   }
   function entrarModoDashboard() {
     modo = "dashboard";
@@ -188,14 +208,15 @@
     if (btnSalvar) btnSalvar.textContent = "Salvar alterações";
     if (zonaPerigo) zonaPerigo.hidden = false;
 
-    // Aba de administração: só para e-mails autorizados.
-    const adminBtn = document.querySelector(".conta-menu-admin");
+    // Abas de administração: só para e-mails autorizados.
     const admin = ehAdmin(Auth.usuario());
-    if (adminBtn) adminBtn.hidden = !admin;
+    document.querySelectorAll(".conta-menu-admin").forEach(b => { b.hidden = !admin; });
     adminCarregado = false;   // recarrega disponibilidade a cada abertura do painel
+    plojaCarregado = false;   // idem para os pedidos da loja
 
     let abaInicial = "dados";
     if (location.hash === "#pedidos") abaInicial = "pedidos";
+    else if (location.hash === "#loja" && admin) abaInicial = "loja";
     else if (location.hash === "#admin" && admin) abaInicial = "admin";
     abrirTab(abaInicial);
   }
@@ -206,6 +227,7 @@
     if (painelDados) painelDados.hidden = true;
     if (painelPedidos) painelPedidos.hidden = true;
     const paOk = document.getElementById("painel-admin"); if (paOk) paOk.hidden = true;
+    const plOk = document.getElementById("painel-pedidos-loja"); if (plOk) plOk.hidden = true;
     if (onbOk) onbOk.hidden = false;
     const okNome = document.getElementById("ok-nome");
     if (okNome) okNome.textContent = (v("p-nome") || "leitor(a)").split(" ")[0];
@@ -219,10 +241,34 @@
 
   /* ---------- Histórico de pedidos ---------- */
   const STATUS = {
-    pago:       { texto: "Pago",                   classe: "pedido-pago" },
+    pago:       { texto: "Pago — preparando",      classe: "pedido-pago" },
     pendente:   { texto: "Aguardando pagamento",   classe: "pedido-pendente" },
-    aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" }
+    aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" },
+    entregue:   { texto: "Entregue ✓",             classe: "pedido-entregue" },
+    cancelado:  { texto: "Cancelado",              classe: "pedido-cancelado" }
   };
+
+  /* Linha do tempo do pedido: Pedido feito → Pagamento → Entrega.
+     A baixa de "entregue" é dada pelos admins em "Pedidos da loja". */
+  function passosHTML(status) {
+    if (status === "cancelado") return "";
+    const nivel = status === "entregue" ? 3 : (status === "pago" ? 2 : 1);
+    const passos = [
+      { rotulo: "Pedido feito", feito: true },
+      { rotulo: nivel >= 2 ? "Pagamento confirmado" : "Pagamento", feito: nivel >= 2 },
+      { rotulo: nivel >= 3 ? "Entregue" : "Entrega", feito: nivel >= 3 }
+    ];
+    return `<ol class="pedido-passos" aria-label="Andamento do pedido">` + passos.map((p, i) => `
+      <li class="passo${p.feito ? " feito" : ""}${(i === nivel && nivel < 3) || (i === 1 && nivel === 1) ? " atual" : ""}">
+        <span class="passo-bola" aria-hidden="true">${p.feito ? "✓" : ""}</span>
+        <span class="passo-rotulo">${p.rotulo}</span>
+      </li>`).join("") + `</ol>`;
+  }
+
+  function itensPedidoHTML(p) {
+    return (p.itens || []).map(i =>
+      `<li>${esc(i.qty)}× ${esc(i.titulo)}${i.condicao ? ` <span class="ci-condicao">${i.condicao === "novo" ? "Novo" : "Usado"}</span>` : ""}</li>`).join("");
+  }
 
   function renderPedidos(pedidos) {
     const lista = document.getElementById("lista-pedidos");
@@ -236,31 +282,34 @@
     if (vazio) vazio.hidden = true;
     lista.innerHTML = pedidos.map(p => {
       const st = STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" };
-      const itens = (p.itens || []).map(i => `<li>${i.qty}× ${i.titulo}</li>`).join("");
       const data = p.criadoEm && p.criadoEm.toDate ? p.criadoEm.toDate().toLocaleDateString("pt-BR") : "";
-      const pago = p.status === "pago";
-      const pixBloco = (!pago && p.pix) ? `
+      const aPagar = p.status === "pendente" || p.status === "aguardando";
+      const pixBloco = (aPagar && p.pix) ? `
           <details class="pedido-pix">
             <summary>Ver código Pix para pagar</summary>
             <p class="pedido-pix-ajuda">Copie e pague no app do seu banco (Pix Copia e Cola):</p>
-            <textarea class="pedido-pix-codigo" readonly rows="3">${p.pix}</textarea>
+            <textarea class="pedido-pix-codigo" readonly rows="3">${esc(p.pix)}</textarea>
             <div class="pedido-pix-acoes">
               <button type="button" class="botao-loja botao-loja-secundario pedido-pix-copiar">Copiar código</button>
-              ${p.pixUrl ? `<a class="botao-loja botao-loja-primario" href="${p.pixUrl}" target="_blank" rel="noopener">Abrir pagamento</a>` : ""}
+              ${p.pixUrl && /^https:\/\//i.test(p.pixUrl) ? `<a class="botao-loja botao-loja-primario" href="${esc(p.pixUrl)}" target="_blank" rel="noopener">Abrir pagamento</a>` : ""}
             </div>
           </details>` : "";
-      const pagoAviso = pago ? `<p class="pedido-contato-aviso">📦 Em breve entraremos em contato para combinar a entrega.</p>` : "";
+      const aviso = p.status === "pago"
+        ? `<p class="pedido-contato-aviso">📦 Pagamento confirmado! Em breve entraremos em contato para combinar a entrega.</p>`
+        : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">🎉 Pedido entregue. Boa leitura!</p>` : "");
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
-            <span class="pedido-codigo">${p.codigo || "—"}</span>
-            <span class="pedido-status ${st.classe}">${st.texto}</span>
+            <span class="pedido-codigo">${esc(p.codigo || "—")}</span>
+            <span class="pedido-status ${st.classe}">${esc(st.texto)}</span>
           </div>
-          ${data ? `<p class="pedido-data">${data}</p>` : ""}
-          <ul class="pedido-itens">${itens}</ul>
-          <div class="pedido-rodape"><span>${p.entrega || ""}</span><strong>${fmt(p.total)}</strong></div>
+          ${data ? `<p class="pedido-data">${esc(data)}</p>` : ""}
+          ${passosHTML(p.status)}
+          <ul class="pedido-itens">${itensPedidoHTML(p)}</ul>
+          ${p.presente ? `<p class="pedido-presente">🎁 Embalado para presente${p.presenteMsg ? ` — “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
+          <div class="pedido-rodape"><span>${esc(p.entrega || "")}</span><strong>${fmt(p.total)}</strong></div>
           ${pixBloco}
-          ${pagoAviso}
+          ${aviso}
         </article>`;
     }).join("");
   }
@@ -306,7 +355,11 @@
         } catch (e) {}
         if (pago) {
           try { await Auth.atualizarStatusPedido(p.codigo, "pago"); } catch (e) {}
-          try { await Auth.marcarVendidos((p.itens || []).map(i => i.id).filter(Boolean)); } catch (e) {}
+          const itens = (p.itens || []).filter(i => i && i.id).map(i => ({ id: i.id, qty: i.qty || 1 }));
+          // Dar baixa é ação de admin; para clientes a chamada falha em
+          // silêncio e a RESERVA segura o livro até o admin dar baixa.
+          try { await Auth.marcarVendidos(itens); } catch (e) {}
+          try { await Auth.reservarLivros(itens); } catch (e) {}
           mudou = true;
         }
       }
@@ -349,6 +402,166 @@
   function ehAdmin(user) {
     return !!(user && user.email && adminEmails.indexOf(String(user.email).toLowerCase()) >= 0);
   }
+
+  /* ================================================================
+     PEDIDOS DA LOJA (admin): todos os pedidos de todos os clientes.
+     - Confirmar pagamento (quando o Pix caiu e o status não atualizou)
+     - Marcar como ENTREGUE (a "baixa" que o cliente vê na conta dele)
+     - Cancelar pedido
+     Ao marcar pago/entregue, o estoque dos itens também é baixado.
+     ================================================================ */
+  let plojaPedidos = [];
+  let plojaCarregado = false;
+  let plojaFiltro = "";
+  let plojaFiltroStatus = "todos";   // todos | apagar | pago | entregue
+
+  function plojaStatusGrupo(p) {
+    if (p.status === "pago") return "pago";
+    if (p.status === "entregue") return "entregue";
+    if (p.status === "cancelado") return "cancelado";
+    return "apagar";   // pendente / aguardando
+  }
+
+  function renderPedidosLoja() {
+    const lista = document.getElementById("ploja-lista");
+    if (!lista) return;
+    const termo = plojaFiltro.toLowerCase();
+
+    const pedidos = plojaPedidos.filter(p => {
+      if (plojaFiltroStatus !== "todos" && plojaStatusGrupo(p) !== plojaFiltroStatus) return false;
+      if (!termo) return true;
+      const texto = [
+        p.codigo, p.entrega, p.endereco,
+        p.cliente && p.cliente.nome, p.cliente && p.cliente.email, p.cliente && p.cliente.telefone
+      ].concat((p.itens || []).map(i => i.titulo)).join(" ").toLowerCase();
+      return texto.indexOf(termo) >= 0;
+    });
+
+    if (!pedidos.length) {
+      lista.innerHTML = `<p class="conta-ajuda">${plojaPedidos.length ? "Nenhum pedido com esse filtro." : "Nenhum pedido registrado ainda."}</p>`;
+      return;
+    }
+
+    lista.innerHTML = pedidos.map(p => {
+      const st = STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" };
+      const dataObj = p.criadoEm && p.criadoEm.toDate ? p.criadoEm.toDate() : null;
+      const data = dataObj ? dataObj.toLocaleDateString("pt-BR") + " " + dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
+      const c = p.cliente || {};
+      const grupo = plojaStatusGrupo(p);
+      const whats = c.whatsappLink && /^https:\/\/wa\.me\//.test(c.whatsappLink)
+        ? `<a class="ploja-whats" href="${esc(c.whatsappLink)}" target="_blank" rel="noopener">WhatsApp: ${esc(c.telefone || "")}</a>`
+        : (c.telefone ? `WhatsApp: ${esc(c.telefone)}` : "");
+
+      const acoes = [];
+      if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">✓ Confirmar pagamento</button>`);
+      if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="entregue" data-caminho="${esc(p._caminho)}">📦 Marcar como entregue</button>`);
+      if (grupo === "apagar" || grupo === "pago")
+        acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn ploja-btn-cancelar" data-acao="cancelado" data-caminho="${esc(p._caminho)}">Cancelar pedido</button>`);
+      if (grupo === "cancelado" || grupo === "entregue")
+        acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Reabrir como pago</button>`);
+
+      return `
+        <article class="pedido-card ploja-card">
+          <div class="pedido-topo">
+            <span class="pedido-codigo">${esc(p.codigo || "—")}</span>
+            <span class="pedido-status ${st.classe}">${esc(st.texto)}</span>
+          </div>
+          ${data ? `<p class="pedido-data">${esc(data)}</p>` : ""}
+          <div class="ploja-cliente">
+            <p class="ploja-cliente-nome">${esc(c.nome || "Cliente sem nome")}</p>
+            <p class="ploja-cliente-contato">${whats}${c.instagram ? ` · ${esc(c.instagram)}` : ""}${c.email ? ` · ${esc(c.email)}` : ""}</p>
+          </div>
+          <ul class="pedido-itens">${itensPedidoHTML(p)}</ul>
+          ${p.presente ? `<p class="pedido-presente">🎁 <strong>Embalar para presente</strong>${p.presenteMsg ? ` — cartão: “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
+          ${p.observacoes ? `<p class="ploja-obs">Obs.: ${esc(p.observacoes)}</p>` : ""}
+          <div class="pedido-rodape">
+            <span>${esc(p.entrega || "")}${p.endereco ? " — " + esc(p.endereco) : ""}</span>
+            <strong>${fmt(p.total)}</strong>
+          </div>
+          <div class="ploja-acoes">${acoes.join("")}</div>
+        </article>`;
+    }).join("");
+  }
+
+  /* Baixa de estoque dos itens de um pedido (com quantidade). */
+  function baixarEstoquePedido(p) {
+    const itens = (p.itens || []).filter(i => i && i.id).map(i => ({ id: i.id, qty: i.qty || 1 }));
+    if (!itens.length) return Promise.resolve();
+    return Auth.marcarVendidos(itens).catch(() => {});
+  }
+
+  async function carregarPedidosLoja() {
+    const carregando = document.getElementById("ploja-carregando");
+    const elErroLoja = document.getElementById("ploja-erro");
+    if (elErroLoja) elErroLoja.hidden = true;
+    if (plojaCarregado) { renderPedidosLoja(); return; }
+    if (carregando) carregando.hidden = false;
+    try {
+      plojaPedidos = await Auth.listarPedidosLoja();
+      plojaCarregado = true;
+
+      // Pedidos pagos que ainda não tiveram baixa de estoque: dá baixa agora.
+      // (O cliente comum não tem permissão para marcar "vendido"; o admin tem.)
+      for (const p of plojaPedidos) {
+        if (p.status === "pago" && !p.estoqueBaixado && p._caminho) {
+          await baixarEstoquePedido(p);
+          Auth.atualizarPedidoLoja(p._caminho, { estoqueBaixado: true }).catch(() => {});
+          p.estoqueBaixado = true;
+        }
+      }
+      renderPedidosLoja();
+    } catch (e) {
+      if (elErroLoja) {
+        elErroLoja.hidden = false;
+        elErroLoja.textContent = "Não foi possível carregar os pedidos. Confira as regras do Firestore (seção do README) e tente de novo.";
+      }
+    } finally {
+      if (carregando) carregando.hidden = true;
+    }
+  }
+
+  // Busca e filtros do painel de pedidos da loja
+  const plojaBusca = document.getElementById("ploja-busca");
+  if (plojaBusca) plojaBusca.addEventListener("input", () => { plojaFiltro = plojaBusca.value.trim(); renderPedidosLoja(); });
+  const plojaFiltros = document.getElementById("ploja-filtros");
+  if (plojaFiltros) plojaFiltros.addEventListener("click", (e) => {
+    const chip = e.target.closest(".admin-chip");
+    if (!chip) return;
+    plojaFiltroStatus = chip.dataset.filtro || "todos";
+    plojaFiltros.querySelectorAll(".admin-chip").forEach(c => c.classList.toggle("ativo", c === chip));
+    renderPedidosLoja();
+  });
+
+  // Ações (confirmar pagamento / entregar / cancelar) — delegação
+  const plojaListaEl = document.getElementById("ploja-lista");
+  if (plojaListaEl) plojaListaEl.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".ploja-btn");
+    if (!btn) return;
+    const caminho = btn.dataset.caminho;
+    const acao = btn.dataset.acao;
+    if (!caminho || !acao) return;
+    if (acao === "cancelado" && !window.confirm("Cancelar este pedido?")) return;
+
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = "Salvando…";
+    try {
+      const campos = { status: acao };
+      const pedido = plojaPedidos.find(x => x._caminho === caminho);
+      if (acao === "entregue") campos.entregueEm = Date.now();
+      await Auth.atualizarPedidoLoja(caminho, campos);
+      // Pagou (ou entregou sem ter passado por "pago"): baixa o estoque.
+      if ((acao === "pago" || acao === "entregue") && pedido && !pedido.estoqueBaixado) {
+        await baixarEstoquePedido(pedido);
+        Auth.atualizarPedidoLoja(caminho, { estoqueBaixado: true }).catch(() => {});
+        pedido.estoqueBaixado = true;
+      }
+      if (pedido) pedido.status = acao;
+      renderPedidosLoja();
+    } catch (err) {
+      btn.disabled = false; btn.textContent = original;
+      window.alert("Não foi possível salvar agora. Tente novamente.");
+    }
+  });
 
   const ESTADO_ADMIN = {
     vendido:    { texto: "Vendido",     classe: "admin-tag-vendido" },
@@ -471,7 +684,8 @@
       info.className = "admin-info";
       const t = document.createElement("p"); t.className = "admin-titulo"; t.textContent = l.titulo || "—";
       const a = document.createElement("p"); a.className = "admin-autor"; a.textContent = l.autor || "";
-      const metaTxt = [l.genero, l.preco].filter(Boolean).join("  ·  ");
+      const metaTxt = [l.genero, l.preco, l.condicao === "novo" ? "Novo" : (l.condicao === "usado" ? "Usado" : "")]
+        .filter(Boolean).join("  ·  ");
       const meta = document.createElement("p"); meta.className = "admin-meta"; meta.textContent = metaTxt;
 
       const tags = document.createElement("div");
@@ -659,8 +873,11 @@
     btnGerar.disabled = true; btnGerar.textContent = "Gerando…";
     if (sinopseDica) sinopseDica.hidden = true;
     try {
+      const token = await Auth.idToken().catch(() => null);
       const r = await fetch("/api/gerar-sinopse", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" },
+          token ? { "Authorization": "Bearer " + token } : {}),
         body: JSON.stringify({ titulo: titulo, autor: autor, genero: genero })
       });
       const d = await r.json();
@@ -716,8 +933,11 @@
     btnClassificar.disabled = true; btnClassificar.textContent = "Classificando…";
     mostrarGeneroDica("Analisando o livro…", "");
     try {
+      const token = await Auth.idToken().catch(() => null);
       const r = await fetch("/api/classificar-livro", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" },
+          token ? { "Authorization": "Bearer " + token } : {}),
         body: JSON.stringify({ titulo: titulo, autor: autor, sinopse: sinopse, categorias: categorias })
       });
       const d = await r.json();
@@ -763,6 +983,7 @@
     set("livro-titulo", l.titulo);
     set("livro-autor", l.autor);
     set("livro-genero", l.genero);
+    set("livro-condicao", l.condicao === "novo" ? "novo" : "usado");
     const pn = precoParaNumero(l.preco);
     set("livro-preco", pn ? String(pn) : "");
     set("livro-estoque", l.estoque != null ? String(l.estoque) : "1");
@@ -844,7 +1065,20 @@
     const idDe = window.idLivro || (l => l.id);
     // Original (loja ou catálogo) para preservar data e destaque ao editar.
     const existente = editando ? listaLivrosAdmin().find(l => idDe(l) === editandoId) : null;
-    const id = editando ? editandoId : (slugLivro(titulo, autor) || ("livro-" + Date.now().toString(36)));
+    const condicao = v("livro-condicao") === "novo" ? "novo" : "usado";
+    let id = editando ? editandoId : (slugLivro(titulo, autor) || ("livro-" + Date.now().toString(36)));
+    if (!editando) {
+      // Já existe um livro com o mesmo título e autor? É uma VARIANTE
+      // (ex.: versão nova + usada): gera um id diferente para as duas
+      // conviverem — na loja elas aparecem juntas, na mesma página.
+      const idsExistentes = new Set(listaLivrosAdmin().map(l => idDe(l)));
+      if (idsExistentes.has(id)) {
+        let candidato = id + "-" + condicao;
+        let n = 2;
+        while (idsExistentes.has(candidato)) candidato = id + "-" + condicao + "-" + (n++);
+        id = candidato;
+      }
+    }
     const estoque = Math.max(1, parseInt(v("livro-estoque"), 10) || 1);
     const livro = {
       id: id,
@@ -853,6 +1087,7 @@
       genero: v("livro-genero") || "Outros",
       preco: precoBR(precoNum),
       estoque: estoque,
+      condicao: condicao,
       estado: v("livro-estado") || "Estado perfeito",
       sinopse: v("livro-sinopse"),
       imagem: fotoBase64 || "",

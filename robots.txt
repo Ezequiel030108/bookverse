@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /checkout.html
+Disallow: /conta.html
+
+Sitemap: https://www.bookverse.com.br/sitemap.xml

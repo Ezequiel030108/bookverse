@@ -174,7 +174,8 @@ body::after {
   100% { transform: translate(-130vw, 52vw) rotate(-22deg); opacity: 0; }
 }
 
-.topbar, .hero, main, .rodape, .modal { position: relative; z-index: 1; }
+.topbar, .hero, main, .modal { position: relative; z-index: 1; }
+main { padding-bottom: calc(34px + var(--safe-bottom)); }
 
 /* ============================================================
    BARRA SUPERIOR
@@ -955,20 +956,6 @@ main {
   font-size: .9rem;
   color: var(--texto-discreto);
 }
-
-/* ============================================================
-   RODAPÉ
-   ============================================================ */
-.rodape {
-  padding: 26px 16px calc(30px + var(--safe-bottom));
-  text-align: center;
-  font-size: .82rem;
-  color: var(--texto-suave);
-  border-top: 1px solid rgba(184, 158, 255, .1);
-  background: linear-gradient(180deg, transparent, rgba(10, 5, 36, .6));
-}
-.rodape p { margin: 4px 0; }
-.rodape-sub { color: var(--lavanda); font-style: italic; }
 
 /* ============================================================
    MODAL
@@ -2591,3 +2578,221 @@ main {
 .modal-overlay .modal-acoes .botao-loja-secundario { min-width: 110px; }
 .modal-overlay .modal-acoes .botao-perigo { min-width: 160px; }
 .pedido-pix-acoes .botao-loja { flex: 1 1 auto; }
+
+/* ============================================================
+   NOVIDADES 2026-07: presente, variantes novo/usado, pedidos,
+   compartilhar, Instagram na barra e painel de pedidos da loja
+   ============================================================ */
+
+/* -------- Compartilhar livro (modal) -------- */
+.modal-compartilhar {
+  position: absolute;
+  top: 10px; right: 58px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--texto-claro);
+  background: rgba(30, 18, 80, .55);
+  border: 1px solid var(--vidro-borda);
+  z-index: 3;
+}
+.modal-compartilhar:hover { background: rgba(74, 43, 181, .5); }
+.modal-compartilhar:active { transform: scale(.94); }
+
+/* -------- Variantes (novo × usado) no modal -------- */
+.modal-variantes { margin-top: 14px; }
+.modal-variantes-titulo {
+  margin: 0 0 8px;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--texto-discreto);
+}
+.modal-variantes-lista { display: flex; flex-direction: column; gap: 8px; }
+.variante-opcao {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--alvo-toque);
+  padding: 10px 14px;
+  border-radius: var(--raio);
+  border: 1px solid var(--vidro-borda);
+  background: rgba(30, 18, 80, .35);
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease;
+}
+.variante-opcao:hover { border-color: var(--lavanda); }
+.variante-opcao.ativa {
+  border-color: var(--estrela);
+  background: rgba(74, 43, 181, .35);
+  box-shadow: 0 0 0 1px var(--estrela) inset;
+}
+.variante-rotulo { font-weight: 700; font-size: .88rem; }
+.variante-opcao.ativa .variante-rotulo { color: var(--estrela-clara); }
+.variante-preco { font-weight: 700; color: var(--estrela); font-size: .9rem; white-space: nowrap; }
+.variante-estado { font-size: .78rem; color: var(--texto-suave); justify-self: end; text-align: right; }
+@media (min-width: 700px) {
+  .modal-variantes-lista { flex-direction: row; }
+  .variante-opcao { width: auto; flex: 1 1 0; grid-template-columns: auto 1fr; }
+  .variante-estado { grid-column: 1 / -1; justify-self: start; text-align: left; }
+}
+
+/* Linha "Usado por R$ X" nos cards da vitrine */
+.info-variante {
+  margin: 2px 0 0;
+  font-size: .72rem;
+  color: var(--aurora-ciano);
+}
+
+/* Etiqueta Novo/Usado em carrinho, checkout e pedidos */
+.ci-condicao {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: .66rem;
+  font-weight: 700;
+  vertical-align: 1px;
+  background: rgba(122, 223, 255, .14);
+  color: var(--aurora-ciano);
+  border: 1px solid rgba(122, 223, 255, .25);
+}
+
+/* -------- Instagram na barra superior -------- */
+.btn-instagram-topo { display: inline-flex; align-items: center; justify-content: center; }
+
+/* -------- Suporte WhatsApp no menu da conta -------- */
+.cmp-item.cmp-whats svg { flex: 0 0 auto; }
+
+/* -------- Embalar para presente (checkout) -------- */
+.presente-opcao {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 18px 0 6px;
+  padding: 14px;
+  border-radius: var(--raio);
+  border: 1px solid var(--vidro-borda);
+  background: rgba(30, 18, 80, .35);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.presente-opcao:hover { border-color: var(--lavanda); }
+.presente-opcao input { position: absolute; opacity: 0; pointer-events: none; }
+.presente-check {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  margin-top: 1px;
+  border-radius: 6px;
+  border: 2px solid var(--lavanda);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s ease, border-color .15s ease;
+}
+.presente-opcao input:checked + .presente-check {
+  background: var(--estrela);
+  border-color: var(--estrela);
+}
+.presente-opcao input:checked + .presente-check::after {
+  content: "✓";
+  color: #241a06;
+  font-size: .85rem;
+  font-weight: 800;
+}
+.presente-opcao input:focus-visible + .presente-check {
+  outline: 2px solid var(--estrela);
+  outline-offset: 3px;
+}
+.presente-texto { display: flex; flex-direction: column; gap: 2px; }
+.presente-titulo { font-weight: 700; font-size: .92rem; }
+.presente-gratis {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  background: rgba(122, 223, 130, .16);
+  color: #b6f0bd;
+}
+.presente-desc { font-size: .8rem; color: var(--texto-suave); }
+.conf-presente {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--raio);
+  background: rgba(255, 217, 102, .08);
+  border: 1px dashed rgba(255, 217, 102, .35);
+  font-size: .86rem;
+}
+
+/* -------- Status extras dos pedidos -------- */
+.pedido-status.pedido-entregue { background: rgba(122, 223, 255, .16); color: var(--aurora-ciano); }
+.pedido-status.pedido-cancelado { background: rgba(255, 122, 122, .14); color: #ffb3b3; }
+.pedido-presente { margin: 8px 0 0; font-size: .82rem; color: var(--estrela-clara); }
+.pedido-aviso-entregue { color: #b6f0bd; }
+
+/* -------- Linha do tempo do pedido (cliente) -------- */
+.pedido-passos {
+  list-style: none;
+  display: flex;
+  margin: 12px 0 4px;
+  padding: 0;
+}
+.pedido-passos .passo {
+  flex: 1 1 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+.pedido-passos .passo::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: rgba(184, 158, 255, .2);
+}
+.pedido-passos .passo:first-child::before { display: none; }
+.pedido-passos .passo.feito::before { background: var(--estrela); }
+.passo-bola {
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 800;
+  color: #241a06;
+  background: rgba(184, 158, 255, .18);
+  border: 2px solid rgba(184, 158, 255, .35);
+  position: relative;
+  z-index: 1;
+}
+.passo.feito .passo-bola { background: var(--estrela); border-color: var(--estrela); }
+.passo.atual .passo-bola { border-color: var(--estrela); box-shadow: 0 0 0 3px rgba(255, 217, 102, .18); }
+.passo-rotulo { font-size: .68rem; color: var(--texto-suave); }
+.passo.feito .passo-rotulo { color: var(--texto-claro); font-weight: 600; }
+
+/* -------- Painel: pedidos da loja (admin) -------- */
+.ploja-cliente { margin: 8px 0 2px; }
+.ploja-cliente-nome { margin: 0; font-weight: 700; font-size: .95rem; }
+.ploja-cliente-contato { margin: 2px 0 0; font-size: .8rem; color: var(--texto-suave); overflow-wrap: anywhere; }
+.ploja-whats { color: #7de3a0; font-weight: 600; text-decoration: none; }
+.ploja-whats:hover { text-decoration: underline; }
+.ploja-obs {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--vidro-borda);
+  font-size: .82rem;
+  color: var(--texto-suave);
+}
+.ploja-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ploja-acoes .botao-loja { flex: 1 1 auto; font-size: .84rem; padding: 10px 14px; }
+.ploja-btn-cancelar { color: #ffb3b3; }

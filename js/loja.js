@@ -9,6 +9,7 @@
 (function () {
   const Precos = window.Precos;
   const Carrinho = window.Carrinho;
+  const esc = window.esc || (t => String(t == null ? "" : t));
 
   const btnCarrinho = document.getElementById("btn-carrinho");
   const contador    = document.getElementById("carrinho-contador");
@@ -24,6 +25,7 @@
   if (!btnCarrinho) return; // página sem loja
 
   /* ---------- Abrir / fechar o carrinho lateral ---------- */
+  let soltarFocoDrawer = null;
   function abrirDrawer() {
     drawer.hidden = false;
     drawerFundo.hidden = false;
@@ -32,12 +34,14 @@
       drawerFundo.classList.add("aberto");
     });
     document.body.style.overflow = "hidden";
+    if (window.Util && window.Util.prenderFoco) soltarFocoDrawer = window.Util.prenderFoco(drawer);
   }
   function fecharDrawer() {
     drawer.classList.remove("aberto");
     drawerFundo.classList.remove("aberto");
     document.body.style.overflow = "";
     setTimeout(() => { drawer.hidden = true; drawerFundo.hidden = true; }, 280);
+    if (soltarFocoDrawer) { soltarFocoDrawer(); soltarFocoDrawer = null; }
   }
   btnCarrinho.addEventListener("click", abrirDrawer);
   fecharBtn.addEventListener("click", fecharDrawer);
@@ -92,17 +96,19 @@
             <span class="qty-valor">${item.qty}</span>
             <button type="button" data-acao="mais" aria-label="Aumentar quantidade" ${item.qty >= item.livro.estoque ? "disabled" : ""}>+</button>
           </div>`;
+      const condicao = item.livro.condicao
+        ? `<span class="ci-condicao">${item.livro.condicao === "novo" ? "Novo" : "Usado"}</span>` : "";
       return `
-      <div class="carrinho-item" data-id="${item.id}">
+      <div class="carrinho-item" data-id="${esc(item.id)}">
         <div class="carrinho-item-capa">${typeof capaHTML === "function" ? capaHTML(item.livro) : ""}</div>
         <div class="carrinho-item-info">
-          <p class="carrinho-item-titulo">${item.livro.titulo}</p>
-          <p class="carrinho-item-autor">${item.livro.autor}</p>
+          <p class="carrinho-item-titulo">${esc(item.livro.titulo)}${condicao}</p>
+          <p class="carrinho-item-autor">${esc(item.livro.autor)}</p>
           ${precoLinhaHTML(item)}
         </div>
         <div class="carrinho-item-controles">
           ${controleQty}
-          <button type="button" class="carrinho-remover" data-acao="remover" aria-label="Remover ${item.livro.titulo}">Remover</button>
+          <button type="button" class="carrinho-remover" data-acao="remover" aria-label="Remover ${esc(item.livro.titulo)}">Remover</button>
         </div>
       </div>`;
     }).join("");
@@ -137,7 +143,7 @@
     }
     el.innerHTML = `
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-      <span>${msg}</span>`;
+      <span>${esc(msg)}</span>`;
     requestAnimationFrame(() => el.classList.add("visivel"));
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove("visivel"), 2200);

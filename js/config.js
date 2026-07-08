@@ -14,13 +14,33 @@ window.LOJA_CONFIG = {
   cidade: "Juazeirinho",
   instagram: "mybookverse.pb",   // sem o @
   emailContato: "",              // opcional (aparece no rodapé do checkout)
-  // WhatsApp opcional para o cliente mandar o comprovante do pedido.
+  // WhatsApp da loja: usado no botão de suporte (menu da conta) e para o
+  // cliente mandar o comprovante do pedido.
   // Formato internacional só com números: 55 + DDD + número. Ex.: "5583999998888".
-  whatsapp: "",
+  whatsapp: "5514982241492",
 
   /* ---------- Moeda ---------- */
   // Moeda usada nos preços e no Pix. O Brasil usa BRL (Real).
   moeda: { codigo: "BRL", simbolo: "R$" },
+
+  /* ---------- Vitrine ----------
+     - ordemGeneros: a ordem das seções na página inicial. Gêneros que
+       não estiverem aqui aparecem depois, na ordem em que surgirem.
+     - fixarUltimoDestaque: título de um livro que deve aparecer sempre
+       POR ÚLTIMO no carrossel de novidades (deixe "" para desativar). */
+  vitrine: {
+    ordemGeneros: [
+      "Clássicos da Literatura",
+      "Romance & Literatura",
+      "Mangás",
+      "Finanças & Negócios",
+      "Autoajuda & Desenvolvimento Pessoal",
+      "Ciência & Curiosidades",
+      "Filosofia",
+      "Suspense & Terror"
+    ],
+    fixarUltimoDestaque: "O Anticristo"
+  },
 
   /* ---------- PAGAMENTO (Pix) ----------
      👉 PARA RECEBER PAGAMENTOS:

@@ -96,6 +96,7 @@
       <nav id="conta-menu" class="conta-menu" hidden aria-label="Menu da conta">
         <button type="button" class="conta-menu-item ativo" data-tab="dados">Meus dados</button>
         <button type="button" class="conta-menu-item" data-tab="pedidos">Meus pedidos</button>
+        <button type="button" class="conta-menu-item conta-menu-admin" data-tab="loja" hidden>Pedidos da loja</button>
         <button type="button" class="conta-menu-item conta-menu-admin" data-tab="admin" hidden>Administração</button>
       </nav>
 
@@ -185,6 +186,28 @@
         <p id="sem-pedidos" class="conta-ajuda" hidden>Você ainda não fez nenhum pedido por aqui.</p>
       </section>
 
+      <!-- Painel: pedidos de TODOS os clientes (só admins) -->
+      <section id="painel-pedidos-loja" class="checkout-bloco" hidden>
+        <h2 class="checkout-subtitulo">Pedidos da loja</h2>
+        <p class="conta-ajuda">Todos os pedidos feitos pelos clientes. Confirme o pagamento quando o Pix cair e dê baixa como <strong>entregue</strong> quando o pedido chegar ao cliente.</p>
+
+        <div class="admin-ferramentas">
+          <div class="admin-busca-wrap">
+            <input type="search" id="ploja-busca" class="admin-busca" placeholder="Buscar por código, cliente ou livro…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Buscar pedido" />
+          </div>
+          <div class="admin-filtros" id="ploja-filtros" role="group" aria-label="Filtrar pedidos">
+            <button type="button" class="admin-chip ativo" data-filtro="todos">Todos</button>
+            <button type="button" class="admin-chip" data-filtro="apagar">A pagar</button>
+            <button type="button" class="admin-chip" data-filtro="pago">Pagos</button>
+            <button type="button" class="admin-chip" data-filtro="entregue">Entregues</button>
+          </div>
+        </div>
+
+        <p id="ploja-carregando" class="conta-ajuda">Carregando pedidos…</p>
+        <p id="ploja-erro" class="pagamento-erro" hidden></p>
+        <div id="ploja-lista" class="lista-pedidos"></div>
+      </section>
+
       <!-- Painel: administração (só para e-mails de admin) -->
       <section id="painel-admin" class="checkout-bloco" hidden>
         <h2 class="checkout-subtitulo">Administração da loja</h2>
@@ -235,15 +258,25 @@
                 <input type="number" id="livro-estoque" inputmode="numeric" min="1" step="1" value="1" />
               </div>
             </div>
-            <div class="campo">
-              <label for="livro-estado">Estado</label>
-              <input type="text" id="livro-estado" list="estados-sugeridos" placeholder="Ex.: Estado perfeito" />
-              <datalist id="estados-sugeridos">
-                <option value="Novo, lacrado"></option>
-                <option value="Estado perfeito"></option>
-                <option value="Seminovo"></option>
-                <option value="Usado — bom estado"></option>
-              </datalist>
+            <div class="campo-linha">
+              <div class="campo">
+                <label for="livro-condicao">Condição</label>
+                <select id="livro-condicao">
+                  <option value="usado">Usado</option>
+                  <option value="novo">Novo</option>
+                </select>
+                <small class="campo-dica">Se a loja tiver o mesmo livro novo e usado, eles aparecem juntos na mesma página (o novo em destaque).</small>
+              </div>
+              <div class="campo campo-cresce">
+                <label for="livro-estado">Estado</label>
+                <input type="text" id="livro-estado" list="estados-sugeridos" placeholder="Ex.: Estado perfeito" />
+                <datalist id="estados-sugeridos">
+                  <option value="Novo, lacrado"></option>
+                  <option value="Estado perfeito"></option>
+                  <option value="Seminovo"></option>
+                  <option value="Usado — bom estado"></option>
+                </datalist>
+              </div>
             </div>
 
             <div class="campo">
@@ -311,11 +344,7 @@
     </div>
   </div>
 
-  <footer class="rodape">
-    <p>© <span id="ano-atual"></span> BookVerse · Juazeirinho</p>
-    <p class="rodape-sub">Feito com carinho para nossos leitores ✦</p>
-  </footer>
-
+  <script src="js/util.js"></script>
   <script src="js/livros.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>

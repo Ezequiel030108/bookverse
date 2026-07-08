@@ -20,7 +20,7 @@
    Se as duas estiverem configuradas, o Gemini (gratuito) é usado.
    ============================================================ */
 
-const { aplicarHeaders } = require("./_seguranca");
+const { aplicarHeaders, exigirAdmin } = require("./_seguranca");
 
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 const GEMINI_MODELO = "gemini-2.5-flash";
@@ -118,6 +118,9 @@ module.exports = async (req, res) => {
     res.status(405).json({ error: "Método não permitido." });
     return;
   }
+
+  // Só admins logados podem gerar sinopses (protege a cota da IA).
+  if (!(await exigirAdmin(req, res))) return;
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;

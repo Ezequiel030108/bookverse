@@ -4,10 +4,11 @@
    (carrosséis) que rolam para o lado por categoria.
    ============================================================ */
 
-/* ---------- CONFIGURAÇÃO RÁPIDA ---------- */
-const INSTAGRAM_USUARIO = "mybookverse.pb";
+/* ---------- CONFIGURAÇÃO RÁPIDA (vem de js/config.js) ---------- */
+const CFG_VITRINE = (window.LOJA_CONFIG && window.LOJA_CONFIG.vitrine) || {};
+const INSTAGRAM_USUARIO = (window.LOJA_CONFIG && window.LOJA_CONFIG.instagram) || "mybookverse.pb";
 
-const ORDEM_GENEROS = [
+const ORDEM_GENEROS = CFG_VITRINE.ordemGeneros || [
   "Clássicos da Literatura",
   "Romance & Literatura",
   "Mangás",
@@ -31,7 +32,7 @@ const MAX_DESTAQUES  = 10;
    estiver entre os destaques). */
 const INTERVALO_HERO = 3500;
 const PRIMEIRO_AUTO  = 2200;
-const FIXAR_ULTIMO   = "O Anticristo";
+const FIXAR_ULTIMO   = CFG_VITRINE.fixarUltimoDestaque || "";
 
 /* ---------- Referências ---------- */
 const catalogo       = document.getElementById("catalogo");
@@ -53,6 +54,9 @@ const heroEyebrow    = document.querySelector(".hero-eyebrow");
 
 /* Conjunto de livros "em destaque" (os mais recentes) — define o selo "Novo". */
 let LIVROS_DESTAQUE = new Set();
+
+const Precos = window.Precos;
+const esc    = window.esc || (t => String(t == null ? "" : t));
 
 /* ---------- Utilidades ---------- */
 
@@ -92,7 +96,7 @@ function embaralhar(arr) {
    3) último recurso (catálogo sem datas): alguns disponíveis quaisquer.
    Retorna também "temSemana" para decidir o título da seção. */
 function calcularDestaques() {
-  const disp = LIVROS.filter(disponivel);
+  const disp = livrosVitrine();
   const porDataDesc = (a, b) => (dataAdicaoMs(b) ?? -Infinity) - (dataAdicaoMs(a) ?? -Infinity);
 
   const semana = disp.filter(ehNovidade).sort(porDataDesc);
@@ -131,16 +135,64 @@ function linkInstagram() {
 }
 
 function capaHTML(livro, lazy = true) {
-  return livro.imagem
-    ? `<img src="${livro.imagem}" alt="Capa de ${livro.titulo}"${lazy ? ' loading="lazy"' : ''} />`
-    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${livro.titulo.charAt(0).toUpperCase()}</div>`;
+  const src = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : livro.imagem;
+  return src
+    ? `<img src="${esc(src)}" alt="Capa de ${esc(livro.titulo)}"${lazy ? ' loading="lazy"' : ''} />`
+    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${esc((livro.titulo || "?").charAt(0).toUpperCase())}</div>`;
 }
 
+/* Quantas unidades estão bloqueadas (reservadas ou já vendidas). */
+function qtdBloqueada(livro) {
+  const mapa = window.__bloqueados;
+  if (!mapa || typeof window.idLivro !== "function") return 0;
+  return mapa.get(window.idLivro(livro)) || 0;
+}
+/* Estoque que ainda pode ser vendido = estoque - reservados/vendidos. */
+function estoqueDisponivel(livro) {
+  return Math.max(0, (livro.estoque || 0) - qtdBloqueada(livro));
+}
+window.estoqueDisponivel = estoqueDisponivel;   // usado pelo carrinho
+
 function disponivel(livro) {
-  if (livro.estoque <= 0) return false;
-  // Livros reservados (Pix em processamento) ou vendidos saem da loja.
-  const ind = window.__indisponiveis;
-  if (ind && typeof window.idLivro === "function" && ind.has(window.idLivro(livro))) return false;
+  return estoqueDisponivel(livro) > 0;
+}
+
+/* ---------- Cache local da loja ----------
+   O Firestore demora alguns instantes para responder. Sem cache, a
+   página renderizava primeiro com TODOS os livros (inclusive vendidos)
+   e "piscava" quando os dados chegavam — inclusive trocando o título
+   do carrossel. Guardamos a última resposta no navegador e aplicamos
+   ANTES da primeira renderização; quando a resposta fresca chega, só
+   re-renderizamos se algo realmente mudou. */
+const CACHE_DISP = "bookverse_cache_disp_v1";
+const CACHE_CAT  = "bookverse_cache_catalogo_v1";
+
+function lerCacheLoja(chave) {
+  try { const s = localStorage.getItem(chave); return s ? JSON.parse(s) : null; }
+  catch (e) { return null; }
+}
+function gravarCacheLoja(chave, valor) {
+  try { localStorage.setItem(chave, JSON.stringify(valor)); } catch (e) {}
+}
+
+/* Mapa id -> quantidade bloqueada, a partir do doc de disponibilidade. */
+function montarBloqueados(mapa) {
+  const bloq = new Map();
+  const agora = Date.now();
+  Object.keys(mapa || {}).forEach(id => {
+    const d = mapa[id] || {};
+    let q = 0;
+    // Documentos antigos (sem "qtd") bloqueiam o livro inteiro, como antes.
+    if (d.estado === "vendido") q = (d.qtd > 0) ? Number(d.qtd) : Infinity;
+    else if (d.estado === "reservado" && (!d.ate || d.ate > agora)) q = (d.qtd > 0) ? Number(d.qtd) : Infinity;
+    if (q > 0) bloq.set(id, q);
+  });
+  return bloq;
+}
+function bloqueadosIguais(a, b) {
+  const ta = a || new Map(), tb = b || new Map();
+  if (ta.size !== tb.size) return false;
+  for (const [k, v] of ta) if (tb.get(k) !== v) return false;
   return true;
 }
 
@@ -148,49 +200,61 @@ function disponivel(livro) {
 function carregarDisponibilidade() {
   if (!(window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade)) return;
   window.Auth.lerDisponibilidade().then(mapa => {
-    const set = new Set();
-    const agora = Date.now();
-    Object.keys(mapa || {}).forEach(id => {
-      const d = mapa[id] || {};
-      if (d.estado === "vendido") set.add(id);
-      else if (d.estado === "reservado" && (!d.ate || d.ate > agora)) set.add(id);
-    });
-    window.__indisponiveis = set;
+    gravarCacheLoja(CACHE_DISP, mapa || {});
+    const bloq = montarBloqueados(mapa);
+    if (bloqueadosIguais(window.__bloqueados, bloq)) return;   // nada mudou: sem "pisca"
+    window.__bloqueados = bloq;
     const termo = (campoBusca && campoBusca.value) || "";
     renderizar(termo);
   }).catch(() => {});
+}
+
+/* ---------- Variantes (mesmo livro novo e usado) ----------
+   Livros com o MESMO título e autor formam um grupo. Na vitrine
+   aparece só a versão preferencial (novo antes de usado; depois,
+   o mais barato). No modal, o cliente escolhe entre as versões. */
+
+function chaveGrupo(l) {
+  return normalizar((l.titulo || "") + "|" + (l.autor || ""));
+}
+function ordenarVariantes(lista) {
+  return lista.slice().sort((a, b) => {
+    const ca = a.condicao === "novo" ? 0 : 1;
+    const cb = b.condicao === "novo" ? 0 : 1;
+    if (ca !== cb) return ca - cb;
+    return (Precos.precoNumerico(a.preco) || 0) - (Precos.precoNumerico(b.preco) || 0);
+  });
+}
+/* Todas as variantes DISPONÍVEIS do mesmo livro (inclui o próprio). */
+function variantesDe(livro) {
+  const chave = chaveGrupo(livro);
+  return ordenarVariantes(LIVROS.filter(l => chaveGrupo(l) === chave && disponivel(l)));
+}
+/* Lista da vitrine: um card por grupo, mostrando a versão preferencial. */
+function livrosVitrine() {
+  const vistos = new Set();
+  const out = [];
+  LIVROS.forEach(l => {
+    if (!disponivel(l)) return;
+    const chave = chaveGrupo(l);
+    if (vistos.has(chave)) return;
+    vistos.add(chave);
+    out.push(variantesDe(l)[0]);
+  });
+  return out;
 }
 
 /* ---------- Promoção (configurada em js/livros.js) ----------
    Liga e desliga sozinha pelas datas de PROMOCAO. Para testar antes da
    data, abra o site com ?promo=teste no final do endereço. */
 
-function promocaoAtiva() {
-  if (typeof PROMOCAO === "undefined" || !PROMOCAO) return false;
-  if (new URLSearchParams(location.search).get("promo") === "teste") return true;
-  const agora = new Date();
-  return (
-    agora >= new Date(PROMOCAO.inicio + "T00:00:00") &&
-    agora <= new Date(PROMOCAO.fim + "T23:59:59")
-  );
-}
+/* As regras de preço/promoção moram em js/precos.js (window.Precos),
+   compartilhadas com o carrinho e o checkout — assim o valor é o
+   mesmo em todo o site. Aqui ficam só atalhos. */
+function promocaoAtiva() { return Precos.promoAtiva(); }
+function formatarReal(valor) { return Precos.formatarBRL(valor); }
+function dataFimPromo() { return Precos.dataFimPromo(); }
 
-/* "R$ 45,00" -> 45 (número). */
-function precoNumerico(precoTexto) {
-  const n = parseFloat(String(precoTexto).replace(/[^\d,]/g, "").replace(",", "."));
-  return isNaN(n) ? null : n;
-}
-/* Arredonda para o real cheio, a favor do cliente (R$ 22,50 -> R$ 22). */
-function arredondarReal(valor) { return Math.ceil(valor - 0.5); }
-function formatarReal(valor) { return "R$ " + valor; }
-
-/* Último dia da promoção por extenso (ex.: "19 de julho"). */
-function dataFimPromo() {
-  const meses = ["janeiro","fevereiro","março","abril","maio","junho",
-                 "julho","agosto","setembro","outubro","novembro","dezembro"];
-  const fim = new Date(PROMOCAO.fim + "T12:00:00");
-  return fim.getDate() + " de " + meses[fim.getMonth()];
-}
 /* Hoje é o último dia da promoção? */
 function ultimoDiaPromo() {
   const h = new Date();
@@ -200,14 +264,14 @@ function ultimoDiaPromo() {
 }
 /* Preços promocionais (sozinho e na dupla). descontoMaximo limita o teto. */
 function precosPromo(livro) {
-  const cheio = precoNumerico(livro.preco);
+  const cheio = Precos.precoNumerico(livro.preco);
   if (cheio === null) return null;
   const teto = livro.descontoMaximo || 100;
   const pctUm = Math.min(PROMOCAO.descontoUm, teto);
   const pctDupla = Math.min(PROMOCAO.descontoDupla, teto);
   return {
-    um: arredondarReal(cheio * (1 - pctUm / 100)),
-    dupla: arredondarReal(cheio * (1 - pctDupla / 100)),
+    um: Precos.arredondarReal(cheio * (1 - pctUm / 100)),
+    dupla: Precos.arredondarReal(cheio * (1 - pctDupla / 100)),
     limitado: pctDupla < PROMOCAO.descontoDupla
   };
 }
@@ -221,23 +285,23 @@ function precoCardHTML(livro) {
         : `<p class="preco-dupla">levando 2 livros: ${formatarReal(p.dupla)}</p>`;
       return `
         <p class="info-preco em-promo">
-          <s class="preco-antigo">${livro.preco}</s>
+          <s class="preco-antigo">${esc(livro.preco)}</s>
           <span class="preco-promo">${formatarReal(p.um)}</span>
         </p>
         ${linhaDupla}`;
     }
   }
-  return `<p class="info-preco">${livro.preco}</p>`;
+  return `<p class="info-preco">${esc(livro.preco)}</p>`;
 }
 /* Preço no carrossel (hero). */
 function precoHeroHTML(livro) {
   if (promocaoAtiva()) {
     const p = precosPromo(livro);
     if (p) {
-      return `<span class="hero-preco em-promo"><s>${livro.preco}</s> ${formatarReal(p.um)}</span>`;
+      return `<span class="hero-preco em-promo"><s>${esc(livro.preco)}</s> ${formatarReal(p.um)}</span>`;
     }
   }
-  return `<span class="hero-preco">${livro.preco}</span>`;
+  return `<span class="hero-preco">${esc(livro.preco)}</span>`;
 }
 
 /* ---------- Cards das fileiras ---------- */
@@ -255,6 +319,17 @@ function criarCard(livro, indice, seloNovo) {
   const eNovo = seloNovo || LIVROS_DESTAQUE.has(livro);
   const seloHTML = eNovo ? `<span class="selo novo">Novo</span>` : "";
 
+  // Existe outra versão deste livro (ex.: novo + usado)? Mostra no card.
+  const variantes = variantesDe(livro);
+  let linhaVariante = "";
+  if (variantes.length > 1) {
+    const outra = variantes.find(vl => vl !== livro);
+    if (outra) {
+      const rot = outra.condicao === "novo" ? "Novo" : "Usado";
+      linhaVariante = `<p class="info-variante">${rot} por ${formatarReal(Precos.precoUnitario(outra, 1))}</p>`;
+    }
+  }
+
   card.innerHTML = `
     <div class="capa">
       ${seloHTML}
@@ -262,15 +337,16 @@ function criarCard(livro, indice, seloNovo) {
       <div class="capa-overlay" aria-hidden="true">
         <span class="overlay-ver">Ver detalhes</span>
       </div>
-      <button class="card-add" type="button" data-add-id="${idLivro(livro)}" aria-label="Adicionar ${livro.titulo} ao carrinho">
+      <button class="card-add" type="button" data-add-id="${esc(idLivro(livro))}" aria-label="Adicionar ${esc(livro.titulo)} ao carrinho">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         <span>Carrinho</span>
       </button>
     </div>
     <div class="info-livro">
-      <h3 class="info-titulo">${livro.titulo}</h3>
-      <p class="info-autor">${livro.autor}</p>
+      <h3 class="info-titulo">${esc(livro.titulo)}</h3>
+      <p class="info-autor">${esc(livro.autor)}</p>
       ${precoCardHTML(livro)}
+      ${linhaVariante}
     </div>
   `;
 
@@ -296,6 +372,15 @@ function criarCard(livro, indice, seloNovo) {
 }
 
 /* ---------- Fileiras (carrosséis) ---------- */
+
+/* Funções de limpeza das fileiras anteriores. Sem isso, cada re-render
+   (a cada tecla na busca) deixaria listeners de resize e ResizeObservers
+   órfãos acumulando para sempre. */
+let limparFileiras = [];
+function limparFileirasAntigas() {
+  limparFileiras.forEach(fn => { try { fn(); } catch (e) {} });
+  limparFileiras = [];
+}
 
 function criarFileira(titulo, livros, opts = {}) {
   const { seloNovo = false, etiqueta = "" } = opts;
@@ -358,9 +443,15 @@ function criarFileira(titulo, livros, opts = {}) {
   window.addEventListener("resize", atualizarSetas);
   // Recalcula quando as medidas mudam (capas carregando, fontes, layout).
   // É o que evita a seta "que às vezes some, às vezes não".
+  let observador = null;
   if ("ResizeObserver" in window) {
-    new ResizeObserver(atualizarSetas).observe(trilho);
+    observador = new ResizeObserver(atualizarSetas);
+    observador.observe(trilho);
   }
+  limparFileiras.push(() => {
+    window.removeEventListener("resize", atualizarSetas);
+    if (observador) observador.disconnect();
+  });
   requestAnimationFrame(atualizarSetas);
   setTimeout(atualizarSetas, 400);
 
@@ -415,19 +506,23 @@ function renderizar(termoBusca) {
   const buscando = termo.length > 0;
 
   function combina(livro) {
-    if (!disponivel(livro)) return false;
     if (!termo) return true;
     return normalizar(livro.titulo + " " + livro.autor).includes(termo);
   }
 
+  limparFileirasAntigas();
   catalogo.innerHTML = "";
   pararHero();
+
+  // Um card por livro: se existe a versão nova e a usada, a vitrine
+  // mostra a preferencial e o modal oferece a outra.
+  const vitrine = livrosVitrine();
 
   if (buscando) {
     // Modo busca: hero oculto, grade de resultados
     hero.hidden = true;
     document.body.classList.add("modo-busca");
-    const resultados = LIVROS.filter(combina);
+    const resultados = vitrine.filter(combina);
     if (resultados.length > 0) {
       const sec = document.createElement("section");
       sec.className = "fileira fileira-grade";
@@ -463,12 +558,12 @@ function renderizar(termoBusca) {
   montarHero(ordem, temSemana);
 
   const generos = [...ORDEM_GENEROS];
-  LIVROS.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
+  vitrine.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
 
   generos.forEach(genero => {
     // Livros em destaque (principais/mais famosos) primeiro na fileira.
     // sort estável: os demais mantêm a ordem do arquivo livros.js.
-    const lista = LIVROS.filter(l => (l.genero || "Outros") === genero && disponivel(l))
+    const lista = vitrine.filter(l => (l.genero || "Outros") === genero)
       .sort((a, b) => (b.destaque ? 1 : 0) - (a.destaque ? 1 : 0));
     if (lista.length === 0) return;
     catalogo.appendChild(criarFileira(genero, lista));
@@ -515,9 +610,9 @@ function montarHero(destaques, temSemana = true) {
       <div class="hero-conteudo">
         <div class="hero-capa-wrap">${capaHTML(livro, false)}</div>
         <div class="hero-texto">
-          <h2 class="hero-livro-titulo">${livro.titulo}</h2>
-          <p class="hero-livro-autor">${livro.autor}</p>
-          <p class="hero-livro-sinopse">${livro.sinopse || ""}</p>
+          <h2 class="hero-livro-titulo">${esc(livro.titulo)}</h2>
+          <p class="hero-livro-autor">${esc(livro.autor)}</p>
+          <p class="hero-livro-sinopse">${esc(livro.sinopse || "")}</p>
           <div class="hero-acoes">
             ${precoHeroHTML(livro)}
             <button class="hero-btn" type="button">Ver detalhes</button>
@@ -570,6 +665,7 @@ function atualizarPontos() {
    (laço contínuo). */
 function agendarAuto(atraso) {
   pararHero();
+  if (semMovimento) return;      // respeita "reduzir movimento" do sistema
   if (heroLista.length <= 1) return;
   heroTimer = setTimeout(() => {
     irParaHero(heroIndice + 1);
@@ -617,11 +713,17 @@ hero.addEventListener("mouseleave", () => agendarAuto(INTERVALO_HERO));
 
 /* ---------- Busca: sincroniza os dois campos (desktop + mobile) ---------- */
 
+/* Re-render com uma pequena pausa: digitar rápido não re-renderiza
+   a estante inteira a cada tecla. */
+const renderizarComPausa = (window.Util && window.Util.debounce)
+  ? window.Util.debounce(v => renderizar(v), 140)
+  : renderizar;
+
 function sincronizarBusca(origem) {
   const val = origem.value;
   if (origem === campoBusca && campoBuscaMob)  campoBuscaMob.value  = val;
   if (origem === campoBuscaMob && campoBusca)  campoBusca.value     = val;
-  renderizar(val);
+  renderizarComPausa(val);
 }
 
 campoBusca.addEventListener("input",    () => sincronizarBusca(campoBusca));
@@ -680,13 +782,16 @@ window.addEventListener("scroll", () => {
 
 /* ---------- Modal ---------- */
 
+let soltarFocoModal = null;
+
 function abrirModal(livro) {
   modal.querySelector("#modal-titulo").textContent    = livro.titulo;
   modal.querySelector(".modal-autor").textContent     = livro.autor;
   modal.querySelector(".modal-sinopse").textContent   = livro.sinopse || "";
   modal.querySelector("[data-estado]").textContent    = livro.estado;
+  const restante = estoqueDisponivel(livro);
   modal.querySelector("[data-estoque]").textContent   =
-    livro.estoque > 0 ? `${livro.estoque} unidade${livro.estoque > 1 ? "s" : ""}` : "Esgotado";
+    restante > 0 ? `${restante} unidade${restante > 1 ? "s" : ""}` : "Esgotado";
   const promo = promocaoAtiva() ? precosPromo(livro) : null;
   const elPreco = modal.querySelector("[data-preco]");
   if (promo) {
@@ -710,13 +815,40 @@ function abrirModal(livro) {
   }
 
   const capa = modal.querySelector(".modal-capa");
-  capa.innerHTML = livro.imagem
-    ? `<img src="${livro.imagem}" alt="Capa de ${livro.titulo}" />`
-    : `<div class="capa-fallback ${varianteFallback(livro.titulo)}">${livro.titulo.charAt(0).toUpperCase()}</div>`;
+  capa.innerHTML = capaHTML(livro, false);
+
+  // ---- Outras versões do mesmo livro (ex.: novo × usado), estilo Amazon ----
+  const elVar = document.getElementById("modal-variantes");
+  const elVarLista = document.getElementById("modal-variantes-lista");
+  if (elVar && elVarLista) {
+    const grupo = variantesDe(livro);
+    if (grupo.length > 1) {
+      elVar.hidden = false;
+      elVarLista.innerHTML = grupo.map(vl => {
+        const atual = vl === livro;
+        const rotulo = vl.condicao === "novo" ? "Novo" : "Usado";
+        return `
+          <button type="button" class="variante-opcao${atual ? " ativa" : ""}"
+                  data-var-id="${esc(idLivro(vl))}" aria-pressed="${atual ? "true" : "false"}">
+            <span class="variante-rotulo">${rotulo}</span>
+            <span class="variante-preco">${formatarReal(Precos.precoUnitario(vl, 1))}</span>
+            <span class="variante-estado">${esc(vl.estado || "")}</span>
+          </button>`;
+      }).join("");
+      elVarLista.querySelectorAll("[data-var-id]").forEach(btn =>
+        btn.addEventListener("click", () => {
+          const alvo = grupo.find(x => idLivro(x) === btn.dataset.varId);
+          if (alvo && alvo !== livro) abrirModal(alvo);
+        }));
+    } else {
+      elVar.hidden = true;
+      elVarLista.innerHTML = "";
+    }
+  }
 
   // Botões de compra (carrinho / comprar agora) + Instagram como suporte
   window.__livroModal = livro;
-  const semEstoque = livro.estoque <= 0;
+  const semEstoque = restante <= 0;
   const btnAdd     = document.getElementById("modal-add-carrinho");
   const btnComprar = document.getElementById("modal-comprar");
   if (btnAdd) {
@@ -726,15 +858,26 @@ function abrirModal(livro) {
   if (btnComprar) btnComprar.disabled = semEstoque;
   if (botaoIG) botaoIG.href = linkInstagram();
 
+  // Compartilhar: onclick (e não addEventListener) para não acumular
+  // um listener a cada abertura do modal.
+  const btnShare = document.getElementById("modal-compartilhar");
+  if (btnShare) btnShare.onclick = () => compartilharLivro(livro);
+
+  const jaAberto = !modal.hidden;
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+  // Prende o Tab dentro do modal (acessibilidade) — só na primeira abertura.
+  if (!jaAberto && window.Util && window.Util.prenderFoco) {
+    soltarFocoModal = window.Util.prenderFoco(modal.querySelector(".modal-caixa"));
+  }
 }
 
 function fecharModal() {
   modal.hidden = true;
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
+  if (soltarFocoModal) { soltarFocoModal(); soltarFocoModal = null; }
 }
 
 modal.addEventListener("click", (e) => { if (e.target.hasAttribute("data-fechar-modal")) fecharModal(); });
@@ -795,10 +938,6 @@ function ativarModoPromocao() {
     ceu.appendChild(bola);
   }
   document.body.appendChild(ceu);
-
-  // Mensagem especial no rodapé.
-  const sub = document.querySelector(".rodape-sub");
-  if (sub) sub.textContent = "É Copa do Mundo! Feito com paixão para nossos leitores ⚽🏆";
 }
 
 /* ---------- Ações de compra no modal ---------- */
@@ -807,7 +946,7 @@ function ativarModoPromocao() {
   const btnComprar = document.getElementById("modal-comprar");
   if (btnAdd) btnAdd.addEventListener("click", () => {
     const l = window.__livroModal;
-    if (!l || l.estoque <= 0 || !window.Carrinho) return;
+    if (!l || estoqueDisponivel(l) <= 0 || !window.Carrinho) return;
     if (window.podeUsarCarrinho && !window.podeUsarCarrinho({ tipo: "carrinho", id: window.idLivro(l) })) return;
     window.Carrinho.add(l, 1);
     if (window.lojaToast) window.lojaToast(`"${l.titulo}" no carrinho`);
@@ -816,7 +955,7 @@ function ativarModoPromocao() {
   });
   if (btnComprar) btnComprar.addEventListener("click", () => {
     const l = window.__livroModal;
-    if (!l || l.estoque <= 0 || !window.Carrinho) return;
+    if (!l || estoqueDisponivel(l) <= 0 || !window.Carrinho) return;
     if (window.podeUsarCarrinho && !window.podeUsarCarrinho({ tipo: "comprar", id: window.idLivro(l) })) return;
     // Compra direta: leva só este livro ao checkout, sem mexer no carrinho.
     try { sessionStorage.setItem("bookverse_compra_direta", JSON.stringify({ id: window.idLivro(l), qty: 1 })); } catch (e) {}
@@ -824,38 +963,103 @@ function ativarModoPromocao() {
   });
 })();
 
+/* Junta os livros cadastrados/editados pelo admin ao catálogo local.
+   Devolve true só quando algo REALMENTE mudou (evita re-render à toa). */
+function aplicarCatalogoExtras(extras) {
+  if (!Array.isArray(extras) || !extras.length) return false;
+  const idDe = window.idLivro || (l => l.id);
+  const indice = new Map();
+  LIVROS.forEach((l, i) => indice.set(idDe(l), i));
+  let mudou = false;
+  extras.forEach(l => {
+    if (!l || !l.id) return;
+    if (indice.has(l.id)) {
+      // Edição de um livro existente: aplica as alterações por cima do original.
+      const atual = LIVROS[indice.get(l.id)];
+      const novo = Object.assign({}, atual, l);
+      if (JSON.stringify(novo) !== JSON.stringify(atual)) {
+        LIVROS[indice.get(l.id)] = novo;
+        mudou = true;
+      }
+    } else {
+      // Livro novo, cadastrado pelo admin.
+      LIVROS.push(l);
+      indice.set(l.id, LIVROS.length - 1);
+      mudou = true;
+    }
+  });
+  return mudou;
+}
+
 /* Carrega os livros cadastrados pelo admin (Firestore) e os junta ao catálogo. */
 function carregarCatalogo() {
   if (!(window.Auth && window.Auth.configurado && window.Auth.lerCatalogo)) return;
   window.Auth.lerCatalogo().then(extras => {
-    if (!Array.isArray(extras) || !extras.length) return;
-    const idDe = window.idLivro || (l => l.id);
-    const indice = new Map();
-    LIVROS.forEach((l, i) => indice.set(idDe(l), i));
-    let mudou = false;
-    extras.forEach(l => {
-      if (!l || !l.id) return;
-      if (indice.has(l.id)) {
-        // Edição de um livro existente: aplica as alterações por cima do original.
-        LIVROS[indice.get(l.id)] = Object.assign({}, LIVROS[indice.get(l.id)], l);
-      } else {
-        // Livro novo, cadastrado pelo admin.
-        LIVROS.push(l);
-        indice.set(l.id, LIVROS.length - 1);
-      }
-      mudou = true;
-    });
+    if (!Array.isArray(extras)) return;
+    gravarCacheLoja(CACHE_CAT, extras);
+    const mudou = aplicarCatalogoExtras(extras);
     if (mudou) {
       const termo = (campoBusca && campoBusca.value) || "";
       renderizar(termo);
       carregarDisponibilidade();
     }
+    abrirLivroDaURL();   // o livro do link pode ter vindo do catálogo do admin
   }).catch(() => {});
 }
 
+/* ---------- Compartilhar / abrir livro por link direto ---------- */
+
+function urlDoLivro(livro) {
+  return location.origin + location.pathname + "?livro=" + encodeURIComponent(idLivro(livro));
+}
+
+async function compartilharLivro(livro) {
+  const url = urlDoLivro(livro);
+  const dados = {
+    title: livro.titulo,
+    text: `${livro.titulo} — ${livro.autor} · BookVerse`,
+    url: url
+  };
+  if (navigator.share) {
+    try { await navigator.share(dados); return; }
+    catch (e) { if (e && e.name === "AbortError") return; /* cancelou */ }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    if (window.lojaToast) window.lojaToast("Link copiado! É só colar e enviar.");
+  } catch (e) {
+    window.prompt("Copie o link do livro:", url);
+  }
+}
+
+/* Se a página abriu com ?livro=<id>, mostra esse livro no modal. */
+let livroDaURLJaAberto = false;
+function abrirLivroDaURL() {
+  if (livroDaURLJaAberto) return;
+  let id = null;
+  try { id = new URLSearchParams(location.search).get("livro"); } catch (e) {}
+  if (!id) { livroDaURLJaAberto = true; return; }
+  const livro = LIVROS.find(l => idLivro(l) === id);
+  if (livro) {
+    livroDaURLJaAberto = true;
+    abrirModal(livro);
+  }
+}
+
 /* ---------- Inicialização ---------- */
-document.getElementById("ano-atual").textContent = new Date().getFullYear();
+// Aplica o cache local ANTES da primeira renderização: livros vendidos
+// não "piscam" na tela e o título do carrossel não troca depois.
+window.__bloqueados = montarBloqueados(lerCacheLoja(CACHE_DISP) || {});
+aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
+
+// Botão do Instagram na barra superior.
+(function () {
+  const a = document.getElementById("btn-instagram-topo");
+  if (a) a.href = "https://instagram.com/" + INSTAGRAM_USUARIO;
+})();
+
 ativarModoPromocao();
 renderizar("");
+abrirLivroDaURL();           // abre o livro do link compartilhado (?livro=...)
 carregarDisponibilidade();   // esconde reservados/vendidos quando a lista carrega
 carregarCatalogo();          // adiciona os livros cadastrados pelo admin

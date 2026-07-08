@@ -229,21 +229,62 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
    rules_version = '2';
    service cloud.firestore {
      match /databases/{database}/documents {
+
+       // ⚠️ Troque pelos e-mails REAIS dos administradores (os mesmos
+       // do bloco admin.emails em js/config.js).
+       function ehAdmin() {
+         return request.auth != null &&
+           request.auth.token.email in [
+             "ezequielfigueiredoaraujobatist@gmail.com",
+             "cauantista@gmail.com",
+             "marialeticinha22@gmail.com",
+             "oficialpaulo6@gmail.com"
+           ];
+       }
+
+       // Cada cliente só vê e mexe nos próprios dados.
        match /users/{uid} {
          allow read, write: if request.auth != null && request.auth.uid == uid;
          match /pedidos/{pedido} {
            allow read, write: if request.auth != null && request.auth.uid == uid;
          }
        }
-       // Disponibilidade dos livros (reservados/vendidos): qualquer um lê
-       // (para esconder da loja); só quem está logado pode escrever.
+
+       // Admins enxergam e atualizam os pedidos de TODOS os clientes
+       // (é o que alimenta o painel "Pedidos da loja").
+       match /{path=**}/pedidos/{pedido} {
+         allow read, write: if ehAdmin();
+       }
+
+       // Disponibilidade (reservados/vendidos): qualquer um LÊ (para a
+       // vitrine esconder). Cliente comum só pode RESERVAR — com o
+       // próprio uid e por no máximo 45 minutos. Marcar VENDIDO, repor
+       // ou apagar é só para admins (a baixa é dada em "Pedidos da loja").
        match /disponibilidade/{livro} {
          allow read: if true;
-         allow write: if request.auth != null;
+         allow write: if ehAdmin() ||
+           (request.auth != null &&
+            request.resource.data.estado == "reservado" &&
+            request.resource.data.uid == request.auth.uid &&
+            request.resource.data.ate is number &&
+            request.resource.data.ate < request.time.toMillis() + 45 * 60 * 1000);
+         allow delete: if ehAdmin();
+       }
+
+       // Catálogo do admin (livros adicionados/editados pelo site):
+       // qualquer um LÊ (é a vitrine); só admins escrevem. Sem isso,
+       // qualquer pessoa logada conseguiria alterar a sua loja.
+       match /catalogo/{livro} {
+         allow read: if true;
+         allow write: if ehAdmin();
        }
      }
    }
    ```
+
+   > ⚠️ **Importante:** se você já usava as regras antigas, substitua TUDO
+   > pelas de cima. As antigas deixavam qualquer pessoa logada marcar seus
+   > livros como vendidos e mexer no catálogo da loja.
 
 6. **Salve e publique o site.** Agora aparece o botão **"Entrar"** no topo. O
    cliente entra com o Google, salva os dados na página **Minha conta** e os
@@ -251,6 +292,39 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
 
 > Os pedidos confirmados pelo Pix automático (seção acima) são marcados como
 > **"Pago"** no histórico assim que o cliente conclui o pagamento.
+
+---
+
+## 📦 Pedidos da loja (painel do admin)
+
+Quem está na lista `admin.emails` (js/config.js) vê, dentro de **Minha conta**,
+a aba **"Pedidos da loja"** com os pedidos de TODOS os clientes:
+
+- **Confirmar pagamento** — para quando o Pix caiu mas o status não atualizou
+  sozinho (ex.: modo manual).
+- **Marcar como entregue** — a "baixa" do pedido. O cliente vê o status
+  **Entregue ✓** na linha do tempo do pedido dele.
+- **Cancelar pedido** — libera o pedido sem entrega.
+
+Ao confirmar o pagamento (ou entregar), o estoque dos itens é baixado
+automaticamente: um livro com 3 unidades continua na loja com 2.
+
+O cliente acompanha tudo em **Meus pedidos**, numa linha do tempo:
+**Pedido feito → Pagamento → Entrega**.
+
+## 🎁 Embalar para presente
+
+No checkout o cliente pode marcar **"Embalar para presente"** (grátis) e
+escrever uma mensagem para o cartão. A informação chega destacada no e-mail do
+pedido e aparece no painel "Pedidos da loja".
+
+## 📚 Mesmo livro novo e usado (variantes)
+
+Se a loja tiver o MESMO livro nas versões **nova e usada** (mesmo título e
+autor), eles aparecem **juntos na mesma página** — a versão nova em destaque e
+a usada como opção mais barata, estilo Amazon. No painel de Administração,
+basta cadastrar o segundo exemplar com a **Condição** certa (Novo/Usado); o
+site cuida do resto.
 
 ---
 

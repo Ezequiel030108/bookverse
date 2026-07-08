@@ -76,8 +76,27 @@ async function enviarEmail(pagamento) {
     };
   }
 
+  /* Conferência de valor: o total do pedido é calculado no navegador do
+     cliente, então NUNCA confiamos só nele. Comparamos com o valor que o
+     Mercado Pago diz ter recebido de verdade e avisamos se for diferente. */
+  const recebido = Number(pagamento.transaction_amount);
+  const esperado = Number(meta.total_esperado);
+  const divergente = isFinite(recebido) && isFinite(esperado) &&
+    Math.abs(recebido - esperado) > 0.01;
+
+  pedido["Valor recebido (Mercado Pago)"] = "R$ " + (isFinite(recebido) ? recebido.toFixed(2).replace(".", ",") : "?");
+  if (pedido.message) {
+    pedido.message += `\n\n💰 Valor RECEBIDO no Mercado Pago: R$ ${isFinite(recebido) ? recebido.toFixed(2).replace(".", ",") : "?"}`;
+    if (divergente) {
+      pedido.message += `\n⚠️ ATENÇÃO: o valor recebido é DIFERENTE do total do pedido (esperado: R$ ${esperado.toFixed(2).replace(".", ",")}). Confira antes de entregar!`;
+    }
+  }
+
   pedido.access_key = key;
-  pedido.subject = `✅ PAGO — ${pedido.subject || ("pedido " + (pagamento.external_reference || pagamento.id))}`;
+  const base = pedido.subject || ("pedido " + (pagamento.external_reference || pagamento.id));
+  pedido.subject = divergente
+    ? `⚠️ VALOR DIVERGENTE — ${base}`
+    : `✅ PAGO — ${base}`;
 
   await fetch("https://api.web3forms.com/submit", {
     method: "POST",

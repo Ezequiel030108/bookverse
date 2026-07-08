@@ -84,9 +84,12 @@
     async lerCarrinho()     { await prontoPromise; return impl.lerCarrinho(); },
     async cadastroCompleto(){ await prontoPromise; return impl.cadastroCompleto(); },
     async lerDisponibilidade() { await prontoPromise; return impl.lerDisponibilidade(); },
-    async reservarLivros(ids)  { await prontoPromise; return impl.reservarLivros(ids); },
-    async marcarVendidos(ids)  { await prontoPromise; return impl.marcarVendidos(ids); },
+    async reservarLivros(itens) { await prontoPromise; return impl.reservarLivros(itens); },
+    async marcarVendidos(itens) { await prontoPromise; return impl.marcarVendidos(itens); },
     async liberarLivros(ids)   { await prontoPromise; return impl.liberarLivros(ids); },
+    async idToken()            { await prontoPromise; return impl.idToken ? impl.idToken() : null; },
+    async listarPedidosLoja()  { await prontoPromise; return impl.listarPedidosLoja ? impl.listarPedidosLoja() : []; },
+    async atualizarPedidoLoja(caminho, campos) { await prontoPromise; return impl.atualizarPedidoLoja ? impl.atualizarPedidoLoja(caminho, campos) : null; },
     async lerCatalogo()        { await prontoPromise; return impl.lerCatalogo(); },
     async adicionarLivro(l)    { await prontoPromise; return impl.adicionarLivro(l); },
     async removerLivro(id)     { await prontoPromise; return impl.removerLivro(id); },
@@ -108,10 +111,17 @@
       pop.id = "conta-menu-pop";
       pop.className = "conta-menu-pop";
       pop.hidden = true;
+      const whatsappLoja = String((window.LOJA_CONFIG && window.LOJA_CONFIG.whatsapp) || "").replace(/\D/g, "");
+      const itemWhats = whatsappLoja
+        ? '<a class="cmp-item cmp-whats" href="https://wa.me/' + whatsappLoja + '" target="_blank" rel="noopener">' +
+          '<svg viewBox="0 0 24 24" width="17" height="17" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.1-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Suporte no WhatsApp</a>'
+        : '';
       pop.innerHTML =
         '<div class="cmp-head"><p class="cmp-nome"></p><p class="cmp-email"></p></div>' +
         '<a class="cmp-item" href="conta.html#dados"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Meus dados</a>' +
         '<a class="cmp-item" href="conta.html#pedidos"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M9 12h6M9 16h6"/></svg> Meus pedidos</a>' +
+        itemWhats +
+        '<a class="cmp-item cmp-admin" href="conta.html#loja" hidden><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9M3 9h18M3 9v11h18V9M9 13h6"/></svg> Pedidos da loja</a>' +
         '<a class="cmp-item cmp-admin" href="conta.html#admin" hidden><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Administração</a>' +
         '<button type="button" class="cmp-item cmp-sair"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5M21 12H9M9 21H4V3h5"/></svg> Sair</button>';
       document.body.appendChild(pop);
@@ -158,13 +168,12 @@
         const n = pop.querySelector(".cmp-nome"), em = pop.querySelector(".cmp-email");
         if (n) n.textContent = user.nome || "Leitor(a)";
         if (em) em.textContent = user.email || "";
-        const adminItem = pop.querySelector(".cmp-admin");
-        if (adminItem) adminItem.hidden = !(user.email && adminEmails.indexOf(String(user.email).toLowerCase()) >= 0);
+        const ehAdm = !!(user.email && adminEmails.indexOf(String(user.email).toLowerCase()) >= 0);
+        pop.querySelectorAll(".cmp-admin").forEach(el => { el.hidden = !ehAdm; });
       } else {
         if (label) label.textContent = "Entrar";
         if (av) av.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
-        const adminItem = pop.querySelector(".cmp-admin");
-        if (adminItem) adminItem.hidden = true;
+        pop.querySelectorAll(".cmp-admin").forEach(el => { el.hidden = true; });
         fecharPop();
       }
     });
@@ -393,20 +402,40 @@
           return mapa;
         } catch (e) { return {}; }
       },
-      reservarLivros: async function (ids) {
-        if (!usuarioAtual || !Array.isArray(ids)) return;
+      // itens aceita ["id"] ou [{id, qty}] — a quantidade permite que um
+      // livro com várias unidades continue na loja após vender uma.
+      reservarLivros: async function (itens) {
+        if (!usuarioAtual || !Array.isArray(itens)) return;
         const ate = Date.now() + 30 * 60 * 1000;   // reserva vale 30 min
-        await Promise.all(ids.map(id => id
-          ? comTimeout(db.collection("disponibilidade").doc(id)
-              .set({ estado: "reservado", ate: ate, uid: usuarioAtual.uid }, { merge: true }), 8000).catch(() => {})
-          : Promise.resolve()));
+        await Promise.all(itens.map(item => {
+          const id = typeof item === "string" ? item : (item && item.id);
+          const qty = (typeof item === "object" && item && item.qty > 0) ? item.qty : 1;
+          return id
+            ? comTimeout(db.collection("disponibilidade").doc(id)
+                .set({ estado: "reservado", ate: ate, uid: usuarioAtual.uid, qtd: qty }, { merge: true }), 8000).catch(() => {})
+            : Promise.resolve();
+        }));
       },
-      marcarVendidos: async function (ids) {
-        if (!usuarioAtual || !Array.isArray(ids)) return;
-        await Promise.all(ids.map(id => id
-          ? comTimeout(db.collection("disponibilidade").doc(id)
-              .set({ estado: "vendido", uid: usuarioAtual.uid }, { merge: true }), 8000).catch(() => {})
-          : Promise.resolve()));
+      marcarVendidos: async function (itens) {
+        if (!usuarioAtual || !Array.isArray(itens)) return;
+        await Promise.all(itens.map(async item => {
+          const id = typeof item === "string" ? item : (item && item.id);
+          const qty = (typeof item === "object" && item && item.qty > 0) ? item.qty : 0;
+          if (!id) return;
+          try {
+            const ref = db.collection("disponibilidade").doc(id);
+            let vendidos = 0;
+            if (qty > 0) {
+              // Soma às unidades já vendidas antes (venda parcial do estoque).
+              const doc = await comTimeout(ref.get(), 6000).catch(() => null);
+              const d = doc && doc.exists ? doc.data() : null;
+              vendidos = ((d && d.estado === "vendido" && d.qtd > 0) ? Number(d.qtd) : 0) + qty;
+            }
+            const dados = { estado: "vendido", uid: usuarioAtual.uid };
+            if (vendidos > 0) dados.qtd = vendidos;
+            await comTimeout(ref.set(dados, { merge: qty > 0 }), 8000);
+          } catch (e) { /* sem permissão (não-admin): o painel da loja dá baixa */ }
+        }));
       },
       // Repõe o livro na loja: apaga o registro de disponibilidade.
       liberarLivros: async function (ids) {
@@ -431,6 +460,34 @@
       removerLivro: async function (id) {
         if (!usuarioAtual || !id) return;
         await comTimeout(db.collection("catalogo").doc(id).delete(), 8000).catch(() => {});
+      },
+
+      // Token de identidade (JWT) do usuário logado — usado para provar ao
+      // backend que quem chama as APIs de IA é um admin de verdade.
+      idToken: async function () {
+        const u = auth.currentUser;
+        if (!u) return null;
+        try { return await comTimeout(u.getIdToken(), 6000); } catch (e) { return null; }
+      },
+
+      // ---- Pedidos de TODOS os clientes (painel do admin) ----
+      // Busca em todas as subcoleções "pedidos" (collection group). As regras
+      // do Firestore só permitem isso para os e-mails de admin.
+      listarPedidosLoja: async function () {
+        if (!usuarioAtual) return [];
+        const snap = await comTimeout(db.collectionGroup("pedidos").limit(500).get(), 12000);
+        const pedidos = snap.docs.map(d => Object.assign({ _caminho: d.ref.path }, d.data()));
+        // Mais recentes primeiro (ordenado aqui para não exigir índice extra).
+        pedidos.sort((a, b) => {
+          const ta = a.criadoEm && a.criadoEm.toMillis ? a.criadoEm.toMillis() : 0;
+          const tb = b.criadoEm && b.criadoEm.toMillis ? b.criadoEm.toMillis() : 0;
+          return tb - ta;
+        });
+        return pedidos;
+      },
+      atualizarPedidoLoja: async function (caminho, campos) {
+        if (!usuarioAtual || !caminho) return;
+        await comTimeout(db.doc(caminho).set(campos || {}, { merge: true }), 8000);
       },
 
       apagarConta: async function () {

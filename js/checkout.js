@@ -16,6 +16,7 @@
   const Precos   = window.Precos;
   const Carrinho = window.Carrinho;
   const CFG      = window.LOJA_CONFIG || {};
+  const esc      = window.esc || (t => String(t == null ? "" : t));
 
   /* ---------- Referências ---------- */
   const elGrid       = document.getElementById("checkout-grid");
@@ -33,8 +34,6 @@
   const erroPag      = document.getElementById("pagamento-erro");
   const btnGerar     = document.getElementById("btn-gerar-pix");
   const pixArea      = document.getElementById("pix-area");
-
-  document.getElementById("ano-atual").textContent = new Date().getFullYear();
 
   /* ---------- Estado ---------- */
   const opcoesFrete = (CFG.frete && CFG.frete.opcoes) || [];
@@ -98,15 +97,18 @@
     elResumoItens.innerHTML = dados.itens.map(item => {
       const base = Precos.precoNumerico(item.livro.preco);
       const emPromo = Precos.promoAtiva() && item.precoUnit < base;
-      const capa = item.livro.imagem
-        ? `<img src="${item.livro.imagem}" alt="" loading="lazy">`
-        : `<span class="resumo-capa-fallback">${(item.livro.titulo || "?").charAt(0)}</span>`;
+      const src = window.Util ? window.Util.imagemSrcSegura(item.livro.imagem) : item.livro.imagem;
+      const capa = src
+        ? `<img src="${esc(src)}" alt="" loading="lazy">`
+        : `<span class="resumo-capa-fallback">${esc((item.livro.titulo || "?").charAt(0))}</span>`;
+      const condicao = item.livro.condicao
+        ? ` <span class="ci-condicao">${item.livro.condicao === "novo" ? "Novo" : "Usado"}</span>` : "";
       return `
         <div class="resumo-item">
           <div class="resumo-capa">${capa}<span class="resumo-qtd">${item.qty}</span></div>
           <div class="resumo-item-info">
-            <p class="resumo-item-titulo">${item.livro.titulo}</p>
-            <p class="resumo-item-autor">${item.livro.autor}</p>
+            <p class="resumo-item-titulo">${esc(item.livro.titulo)}${condicao}</p>
+            <p class="resumo-item-autor">${esc(item.livro.autor)}</p>
           </div>
           <div class="resumo-item-preco">
             ${emPromo ? `<s>${Precos.formatarBRL(base * item.qty)}</s>` : ""}
@@ -263,6 +265,11 @@
     return { dados, frete, total };
   }
 
+  function presenteMarcado() {
+    const el = document.getElementById("cli-presente");
+    return !!(el && el.checked);
+  }
+
   function dadosCliente() {
     const op = opcaoSelecionada();
     let instagram = val("cli-instagram").replace(/^@+/, "").trim();
@@ -271,7 +278,9 @@
       nome: val("cli-nome"), email: val("cli-email"), telefone: val("cli-tel"),
       whatsappLink: "https://wa.me/55" + whatsappNacional(val("cli-tel")),
       instagram: instagram,
-      entrega: op.titulo, observacoes: val("cli-obs")
+      entrega: op.titulo, observacoes: val("cli-obs"),
+      presente: presenteMarcado(),
+      presenteMsg: presenteMarcado() ? val("cli-presente-msg") : ""
     };
     if (op.pedeEndereco) {
       c.endereco = [val("end-rua"), val("end-numero"), val("end-compl"), val("end-bairro"),
@@ -430,9 +439,25 @@
     if (btn) btn.textContent = "Já paguei — verificar agora";
   }
 
+  let pollInicio = 0;
+  const POLL_MAXIMO = 30 * 60 * 1000;   // para de checar após 30 min
+
   function iniciarPolling() {
     pararPolling();
-    pollTimer = setInterval(() => { checarPagamento(false); }, 4000);
+    pollInicio = Date.now();
+    pollTimer = setInterval(() => {
+      if (Date.now() - pollInicio > POLL_MAXIMO) {
+        pararPolling();
+        const st = document.getElementById("pix-status");
+        if (st) {
+          st.hidden = false;
+          st.className = "pix-status aguardando";
+          st.textContent = "O código Pix pode ter expirado. Se você ainda não pagou, gere um novo Pix. Se já pagou, toque em \"Já fiz o pagamento\".";
+        }
+        return;
+      }
+      checarPagamento(false);
+    }, 4000);
   }
   function pararPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -507,24 +532,48 @@
       frete: frete,
       entrega: cliente.entrega,
       endereco: cliente.endereco || "",
+      // Dados de contato: o painel "Pedidos da loja" (admin) usa isto
+      // para falar com o cliente sem precisar abrir o e-mail.
+      cliente: {
+        nome: cliente.nome || "",
+        email: cliente.email || "",
+        telefone: cliente.telefone || "",
+        whatsappLink: cliente.whatsappLink || "",
+        instagram: cliente.instagram || ""
+      },
+      presente: !!cliente.presente,
+      presenteMsg: cliente.presenteMsg || "",
+      observacoes: cliente.observacoes || "",
       pagamentoId: pagamentoId || "",
       pix: pixCopiaCola || "",
       pixUrl: pixTicketUrl || "",
       emailBody: montarEmailBody(),   // usado para avisar o lojista quando confirmar
       emailEnviado: false,
       itens: dados.itens.map(i => ({
-        id: i.id, titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty, preco: i.precoLinha
+        id: i.id, titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty,
+        preco: i.precoLinha, condicao: i.livro.condicao || ""
       }))
     };
     return window.Auth.salvarPedido(pedido).catch(() => {});
   }
 
-  function idsDoPedido() { return dadosPedido().itens.map(i => i.id).filter(Boolean); }
+  /* Itens do pedido com quantidade: [{id, qty}]. Assim um livro com
+     3 unidades em que se vendeu 1 continua na loja com 2. */
+  function itensDoPedido() {
+    return dadosPedido().itens
+      .filter(i => i.id)
+      .map(i => ({ id: i.id, qty: i.qty || 1 }));
+  }
   function reservarSeLogado() {
-    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.reservarLivros(idsDoPedido());
+    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.reservarLivros(itensDoPedido());
   }
   function marcarVendidoSeLogado() {
-    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.marcarVendidos(idsDoPedido());
+    if (!(window.Auth && window.Auth.usuario && window.Auth.usuario())) return;
+    // Dar baixa no estoque é ação de admin (regras do Firestore); para
+    // clientes comuns a chamada falha em silêncio e quem dá baixa é o
+    // painel "Pedidos da loja". A reserva abaixo segura o livro até lá.
+    window.Auth.marcarVendidos(itensDoPedido());
+    window.Auth.reservarLivros(itensDoPedido());
   }
 
   function copiarPix() {
@@ -556,8 +605,12 @@
     const loja = CFG.nomeLoja || "BookVerse";
 
     const itensTxt = dados.itens
-      .map(i => `${i.qty}x ${i.livro.titulo} (${i.livro.autor}) — ${Precos.formatarBRL(i.precoLinha)}`)
+      .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}) — ${Precos.formatarBRL(i.precoLinha)}`)
       .join("\n");
+
+    const presenteTxt = cliente.presente
+      ? `🎁 EMBALAR PARA PRESENTE${cliente.presenteMsg ? ` — cartão: "${cliente.presenteMsg}"` : ""}`
+      : "";
 
     const mensagem = [
       `NOVO PEDIDO — ${loja}`,
@@ -570,6 +623,7 @@
       ``,
       `Entrega: ${cliente.entrega}`,
       `Endereço: ${cliente.endereco || "Entrega a combinar (retirada local)"}`,
+      presenteTxt,
       ``,
       `Itens:`,
       itensTxt,
@@ -594,6 +648,7 @@
       "Instagram": cliente.instagram || "—",
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
+      "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` — "${cliente.presenteMsg}"` : "")) : "Não",
       "Total": Precos.formatarBRL(total),
       "message": mensagem
     };
@@ -644,7 +699,7 @@
     const cliente = dadosCliente();
 
     const linhas = dados.itens.map(i =>
-      `<li><span>${i.qty}× ${i.livro.titulo}</span><span>${Precos.formatarBRL(i.precoLinha)}</span></li>`).join("");
+      `<li><span>${i.qty}× ${esc(i.livro.titulo)}${i.livro.condicao ? ` <span class="ci-condicao">${i.livro.condicao === "novo" ? "Novo" : "Usado"}</span>` : ""}</span><span>${Precos.formatarBRL(i.precoLinha)}</span></li>`).join("");
 
     const det = document.getElementById("confirmacao-detalhes");
     det.innerHTML = `
@@ -658,7 +713,8 @@
         ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
         <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
-      <p class="conf-entrega"><strong>Entrega:</strong> ${cliente.entrega}${cliente.endereco ? " — " + cliente.endereco : ""}</p>
+      <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " — " + esc(cliente.endereco) : ""}</p>
+      ${cliente.presente ? `<p class="conf-presente">🎁 <strong>Embalado para presente</strong>${cliente.presenteMsg ? ` — cartão: “${esc(cliente.presenteMsg)}”` : ""}</p>` : ""}
       <p class="conf-aviso">${confirmado
         ? "✅ Pagamento confirmado! Em breve entraremos em contato para combinar a entrega. 💜"
         : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante pra agilizar 💜"}</p>`;
@@ -699,6 +755,13 @@
     document.getElementById("confirmacao").hidden = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  /* ---------- Embalar para presente ---------- */
+  const chkPresente = document.getElementById("cli-presente");
+  const campoPresenteMsg = document.getElementById("campo-presente-msg");
+  if (chkPresente) chkPresente.addEventListener("change", () => {
+    if (campoPresenteMsg) campoPresenteMsg.hidden = !chkPresente.checked;
+  });
 
   /* ---------- Liga tudo ---------- */
   if (btnGerar) btnGerar.addEventListener("click", gerarPix);

@@ -36,6 +36,13 @@ window.Carrinho = (function () {
     return mapa;
   }
 
+  /* Máximo vendável: desconta unidades reservadas/vendidas quando a
+     página conhece a disponibilidade (index); senão usa o estoque. */
+  function maxVendavel(livro) {
+    if (typeof window.estoqueDisponivel === "function") return window.estoqueDisponivel(livro);
+    return livro.estoque || 0;
+  }
+
   /* ---------- Persistência ---------- */
   function carregar() {
     try {
@@ -71,8 +78,9 @@ window.Carrinho = (function () {
 
     (lista || []).forEach(item => {
       const livro = mapa[item.id];
-      if (!livro || livro.estoque <= 0) { mudou = true; return; } // saiu de catálogo/estoque
-      const qty = Math.max(1, Math.min(item.qty, livro.estoque));  // respeita o estoque
+      const max = livro ? maxVendavel(livro) : 0;
+      if (!livro || max <= 0) { mudou = true; return; } // saiu de catálogo/estoque
+      const qty = Math.max(1, Math.min(item.qty, max));  // respeita o estoque
       if (qty !== item.qty) mudou = true;
       itens.push({ id: item.id, qty, livro });
     });
@@ -98,7 +106,7 @@ window.Carrinho = (function () {
     const id = idLivro(livro);
     qty = qty || 1;
     const existente = estado.find(i => i.id === id);
-    const max = livro.estoque || 1;
+    const max = Math.max(1, maxVendavel(livro));
     if (existente) existente.qty = Math.min(existente.qty + qty, max);
     else estado.push({ id, qty: Math.min(qty, max) });
     salvar(estado);
@@ -109,7 +117,7 @@ window.Carrinho = (function () {
     if (qty <= 0) { estado = estado.filter(i => i.id !== id); }
     else {
       const livro = mapaLivros()[id];
-      const max = livro ? livro.estoque : qty;
+      const max = livro ? maxVendavel(livro) : qty;
       item.qty = Math.min(qty, max);
     }
     salvar(estado);
