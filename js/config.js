@@ -166,7 +166,7 @@ window.LOJA_CONFIG = {
        com o valor do pedido. Deixe vazio se você importa as conversões
        direto do Analytics. */
   analytics: {
-    measurementId: "",          // ex.: "G-XXXXXXXXXX"
+    measurementId: "G-M4K2WTHCFF",   // ID da métrica do Google Analytics 4
     googleAdsId: "",            // ex.: "AW-XXXXXXXXXX"
     conversaoCompraLabel: ""   // ex.: "AW-XXXXXXXXXX/AbCdEfGhIj"
   },
