@@ -156,7 +156,7 @@
   /* ---------- Aviso "precisa de conta" (modal bloqueante) ---------- */
   const avisoConta = document.getElementById("aviso-conta");
   function abrirAvisoConta() {
-    if (!avisoConta) { toast("Crie sua conta para adicionar livros 💜"); return; }
+    if (!avisoConta) { toast("Crie sua conta para adicionar livros"); return; }
     avisoConta.hidden = false;
     requestAnimationFrame(() => avisoConta.classList.add("aberto"));
     document.body.style.overflow = "hidden";

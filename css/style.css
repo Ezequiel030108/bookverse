@@ -401,142 +401,38 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 }
 .hero[hidden] { display: none; }
 
-/* Cabeçalho da seção de novidades — propositalmente mais imponente
-   que os títulos das fileiras comuns (é a vitrine principal). */
-.hero-cabecalho { padding: 4px 6px 14px; text-align: center; }
+/* Cabeçalho da seção de novidades — mesma linguagem dos títulos das
+   fileiras (etiqueta pequena + título serifado), só um pouco maior. */
+.hero-cabecalho { padding: 6px 8px 12px; text-align: left; }
 .hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: .7rem;
-  font-weight: 800;
-  letter-spacing: 2.4px;
+  display: block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
-  color: var(--aurora-rosa);
-}
-.hero-eyebrow::before,
-.hero-eyebrow::after {
-  content: "✦";
-  color: var(--estrela);
-  font-size: .95em;
-  text-shadow: 0 0 10px rgba(255, 217, 102, .7);
+  color: var(--texto-discreto);
+  margin-bottom: 3px;
 }
 .hero-titulo-secao {
   font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 800;
-  font-size: clamp(1.85rem, 8vw, 2.8rem);
-  line-height: 1.04;
-  margin: 6px 0 0;
-  color: var(--estrela-clara);            /* fallback */
-  background: linear-gradient(100deg, var(--estrela) 0%, #fff 45%, var(--lavanda-clara) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 18px rgba(184, 158, 255, .45));
+  font-weight: 700;
+  font-size: clamp(1.5rem, 6vw, 2.1rem);
+  line-height: 1.1;
+  margin: 0;
+  color: var(--texto-claro);
 }
 
-/* Vitrine = moldura que clipa o céu e os slides */
-.hero-vitrine {
-  position: relative;
-  border-radius: 22px;
-  overflow: hidden;
-  /* borda fina + brilho lavanda discreto, só para separar do fundo do site */
-  box-shadow:
-    inset 0 0 0 1px rgba(184, 158, 255, .32),
-    0 0 0 1px rgba(184, 158, 255, .12),
-    0 0 30px rgba(184, 158, 255, .20),
-    0 24px 60px rgba(0, 0, 0, .55);
-}
-
-/* Céu estrelado do hero — PROTAGONISTA: estrelas grandes, espalhadas,
-   brilhando e pulsando, para a seção de novidades chamar atenção.
-   Fica atrás dos slides e NÃO rola com o swipe. */
-.hero-ceu {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background-color: #0a0628;
-  background-repeat: no-repeat;
-  background-image:
-    radial-gradient(ellipse 85% 70% at 50% -14%, rgba(74,43,181,.55), transparent 60%),
-    radial-gradient(ellipse 70% 90% at 90% 118%, rgba(255,122,217,.16), transparent 62%),
-    radial-gradient(2.4px 2.4px at 12% 22%, #fff, transparent 55%),
-    radial-gradient(2.4px 2.4px at 80% 16%, var(--estrela), transparent 55%),
-    radial-gradient(2.2px 2.2px at 64% 74%, #fff, transparent 55%),
-    radial-gradient(2.2px 2.2px at 26% 80%, var(--estrela-clara), transparent 55%),
-    radial-gradient(2px 2px at 45% 33%, #fff, transparent 55%),
-    radial-gradient(2px 2px at 92% 58%, var(--estrela), transparent 55%),
-    radial-gradient(1.8px 1.8px at 33% 55%, #fff, transparent 55%),
-    radial-gradient(1.8px 1.8px at 72% 40%, #fff, transparent 55%),
-    radial-gradient(1.6px 1.6px at 15% 60%, #fff, transparent 55%),
-    radial-gradient(1.6px 1.6px at 56% 90%, #fff, transparent 55%),
-    radial-gradient(1.4px 1.4px at 6% 38%, rgba(255,255,255,.95), transparent 55%),
-    radial-gradient(1.4px 1.4px at 40% 12%, rgba(255,255,255,.95), transparent 55%),
-    radial-gradient(1.4px 1.4px at 86% 82%, rgba(255,255,255,.9), transparent 55%),
-    radial-gradient(1.4px 1.4px at 97% 30%, rgba(255,255,255,.9), transparent 55%),
-    radial-gradient(1.2px 1.2px at 50% 6%, rgba(255,255,255,.85), transparent 55%);
-}
-/* duas camadas de estrelas que pulsam (twinkle) em ritmos diferentes */
-.hero-ceu::before,
-.hero-ceu::after {
+/* Vitrine ABERTA: sem moldura/caixa — os slides flutuam direto no céu
+   do site. A profundidade vem de uma nebulosa suave atrás do livro. */
+.hero-vitrine { position: relative; }
+.hero-vitrine::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background-repeat: no-repeat;
-}
-.hero-ceu::before {
-  background-image:
-    radial-gradient(1.8px 1.8px at 20% 30%, #fff, transparent 55%),
-    radial-gradient(1.8px 1.8px at 60% 24%, var(--estrela-clara), transparent 55%),
-    radial-gradient(1.8px 1.8px at 85% 66%, #fff, transparent 55%),
-    radial-gradient(1.8px 1.8px at 35% 76%, #fff, transparent 55%),
-    radial-gradient(1.8px 1.8px at 50% 50%, #fff, transparent 55%),
-    radial-gradient(1.6px 1.6px at 10% 50%, #fff, transparent 55%);
-  animation: pulsarCeu 3.6s ease-in-out infinite alternate;
-}
-.hero-ceu::after {
-  background-image:
-    radial-gradient(1.6px 1.6px at 28% 14%, #fff, transparent 55%),
-    radial-gradient(1.6px 1.6px at 74% 30%, #fff, transparent 55%),
-    radial-gradient(1.6px 1.6px at 90% 48%, var(--estrela), transparent 55%),
-    radial-gradient(1.6px 1.6px at 48% 86%, #fff, transparent 55%),
-    radial-gradient(1.6px 1.6px at 18% 88%, #fff, transparent 55%);
-  animation: pulsarCeu 2.7s ease-in-out .6s infinite alternate;
-}
-@keyframes pulsarCeu { from { opacity: .35; } to { opacity: 1; } }
-
-/* Estrelas grandes que brilham e pulsam (focos de atenção) */
-.estrela-brilho {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 9px 2px rgba(255,255,255,.95), 0 0 18px 5px rgba(255,217,102,.5);
-  animation: pulsarEstrela 3.2s ease-in-out infinite;
+  inset: -36px -10%;
+  background:
+    radial-gradient(52% 72% at 50% 44%, rgba(74, 43, 181, .30), transparent 70%),
+    radial-gradient(26% 40% at 76% 14%, rgba(255, 122, 217, .06), transparent 70%);
   pointer-events: none;
-}
-/* raios em cruz que cintilam junto */
-.estrela-brilho::before,
-.estrela-brilho::after {
-  content: "";
-  position: absolute;
-  left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
-}
-.estrela-brilho::before { width: 1px; height: 24px; background: linear-gradient(transparent, rgba(255,255,255,.75), transparent); }
-.estrela-brilho::after  { width: 24px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); }
-.estrela-brilho.e1 { top: 16%; left: 14%; animation-delay: 0s; }
-.estrela-brilho.e2 { top: 23%; left: 84%; width: 6px; height: 6px; animation-delay: .8s; }
-.estrela-brilho.e3 { top: 68%; left: 22%; width: 4px; height: 4px; animation-delay: 1.6s; }
-.estrela-brilho.e4 { top: 80%; left: 78%; animation-delay: .4s; }
-.estrela-brilho.e5 { top: 40%; left: 62%; width: 4px; height: 4px; animation-delay: 2.1s; }
-.estrela-brilho.e6 { top: 11%; left: 52%; width: 6px; height: 6px; animation-delay: 1.2s; }
-.estrela-brilho.e7 { top: 58%; left: 93%; width: 4px; height: 4px; animation-delay: 2.6s; }
-@keyframes pulsarEstrela {
-  0%, 100% { transform: scale(.6);  opacity: .5; }
-  50%      { transform: scale(1.3); opacity: 1; }
 }
 
 /* Janela = clipa e habilita o swipe horizontal com snap */
@@ -585,9 +481,8 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   border-radius: 12px;
   overflow: hidden;
   box-shadow:
-    0 28px 52px rgba(0,0,0,.62),
-    0 0 0 1px rgba(255,255,255,.1),
-    0 0 44px rgba(184,158,255,.3);
+    0 28px 52px rgba(0, 0, 0, .6),
+    0 0 0 1px rgba(255, 255, 255, .08);
   cursor: pointer;
   transition: transform .25s ease;
 }
@@ -620,18 +515,16 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 .hero-preco {
   font-weight: 800;
   font-size: 1.2rem;
-  color: var(--estrela-clara);
-  text-shadow: 0 0 10px rgba(255, 217, 102, .4);
+  color: var(--estrela);
 }
 .hero-btn {
-  padding: 11px 24px;
-  border-radius: 999px;
+  padding: 11px 22px;
+  border-radius: var(--raio);
   font-weight: 700;
   font-size: .9rem;
-  color: #fff;
-  background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
-  box-shadow: 0 6px 18px rgba(74, 43, 181, .5);
-  transition: transform .12s ease, box-shadow .15s ease;
+  color: #241a06;
+  background: var(--estrela);
+  transition: transform .12s ease, background .15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 .hero-btn:active { transform: translateY(2px) scale(.98); }
@@ -673,7 +566,7 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 }
 .hero-ponto.ativo {
   width: 26px;
-  background: linear-gradient(90deg, var(--estrela), var(--estrela-clara));
+  background: var(--estrela);
 }
 
 /* ============================================================
@@ -944,7 +837,8 @@ main {
 }
 .sem-resultados .fala {
   margin: 0;
-  font-family: 'Caveat', cursive;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
   font-size: 1.7rem;
   font-weight: 700;
   line-height: 1.2;
@@ -1073,16 +967,13 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 13px;
-  border-radius: 999px;
-  font-size: .9rem;
-  font-weight: 700;
+  font-size: .95rem;
+  font-weight: 600;
   line-height: 1.3;
-  color: #2b1d10;
-  background: linear-gradient(135deg, var(--estrela-clara), var(--estrela));
-  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  color: var(--texto-claro);
+  text-align: right;
 }
-.badge-preco { font-size: 1.02rem; box-shadow: 0 0 14px rgba(255, 217, 102, .4), 0 2px 6px rgba(0,0,0,.35); }
+.badge-preco { font-size: 1.18rem; font-weight: 800; color: var(--estrela); }
 .modal-rodape {
   position: relative;
   padding: 12px 16px calc(12px + var(--safe-bottom));
@@ -1237,7 +1128,7 @@ main {
 
   .hero-seta:hover { background: var(--violeta); }
   .hero-capa-wrap:hover { transform: translateY(-5px); }
-  .hero-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(74, 43, 181, .65), 0 0 24px rgba(184, 158, 255, .4); }
+  .hero-btn:hover { transform: translateY(-1px); background: var(--estrela-clara); }
   .link-instagram:hover { transform: translateY(-1px); box-shadow: 0 0 24px rgba(220, 39, 67, .5), 0 6px 14px rgba(0,0,0,.4); }
   .botao-instagram:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(220, 39, 67, .55), 0 10px 22px rgba(0,0,0,.45); }
   .btn-icon:hover { background: rgba(74,43,181,.5); }
@@ -1348,9 +1239,7 @@ main {
 .hero-preco.em-promo s { color: var(--texto-discreto); font-weight: 500; margin-right: 6px; font-size: .85em; }
 
 /* ---- Promoção no modal ---- */
-/* preço bem escuro p/ contrastar com o fundo dourado do selo */
-.badge-preco { color: #13100a; }
-.modal-preco-antigo { color: rgba(19,16,10,.55); text-decoration: line-through; margin-right: 6px; font-weight: 600; }
+.modal-preco-antigo { color: var(--texto-discreto); text-decoration: line-through; margin-right: 6px; font-weight: 600; font-size: .85em; }
 .modal-promo {
   margin: 12px 0 0; padding: 11px 13px; font-size: .86rem; line-height: 1.4; color: #eafff2;
   background: linear-gradient(135deg, rgba(0,156,59,.22), rgba(4,83,31,.22));
@@ -1391,7 +1280,7 @@ main {
   gap: 9px;
   padding: 13px 22px;
   min-height: 50px;
-  border-radius: 14px;
+  border-radius: var(--raio);
   font-weight: 700;
   font-size: 1rem;
   text-decoration: none;
@@ -1405,11 +1294,11 @@ main {
   opacity: .45; pointer-events: none; filter: grayscale(.5); box-shadow: none;
 }
 .botao-loja-primario {
-  background: linear-gradient(135deg, var(--estrela-clara), var(--estrela));
-  color: #2b1d10;
-  box-shadow: 0 0 20px rgba(255, 217, 102, .4), 0 6px 14px rgba(0,0,0,.4);
+  background: var(--estrela);
+  color: #241a06;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
 }
-.botao-loja-primario:hover { filter: brightness(1.04); }
+.botao-loja-primario:hover { background: var(--estrela-clara); }
 .botao-loja-secundario {
   background: var(--vidro);
   border: 1px solid var(--vidro-borda);
@@ -2169,8 +2058,13 @@ main {
   background: linear-gradient(135deg, var(--violeta), var(--indigo-claro));
 }
 .conta-avatar-grande img { width: 100%; height: 100%; object-fit: cover; }
-.conta-nome { margin: 0; font-weight: 700; color: var(--texto-claro); }
-.conta-email { margin: 2px 0 0; font-size: .82rem; color: var(--texto-suave); word-break: break-all; }
+.conta-nome { margin: 0; font-weight: 700; color: var(--texto-claro); font-size: .98rem; line-height: 1.25; }
+.conta-email {
+  margin: 2px 0 0; font-size: .8rem; color: var(--texto-suave);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Botão "Sair" compacto para caber ao lado do nome no celular */
+.conta-perfil-head .botao-loja { min-height: 40px; padding: 8px 16px; font-size: .86rem; flex: none; }
 .conta-ajuda { font-size: .82rem; color: var(--texto-suave); margin: 0 0 12px; }
 .conta-sub { font-size: .95rem; color: var(--texto-claro); margin: 18px 0 10px; }
 .conta-salvo { color: #b6f0bd; font-weight: 600; margin: 10px 0 0; }
@@ -2288,17 +2182,22 @@ main {
 
 /* Abas do painel da conta */
 .conta-menu {
-  display: flex; gap: 4px; margin: 0 0 16px;
-  background: var(--vidro); border: 1px solid var(--vidro-borda);
-  border-radius: 999px; padding: 5px;
+  display: flex; gap: 6px; margin: 0 0 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--vidro-borda);
 }
+.conta-menu::-webkit-scrollbar { display: none; }
 .conta-menu-item {
-  flex: 1; padding: 9px 8px; border-radius: 999px;
-  color: var(--texto-suave); font-weight: 600; font-size: .82rem;
+  flex: 0 0 auto; padding: 11px 10px;
+  color: var(--texto-suave); font-weight: 600; font-size: .86rem;
   white-space: nowrap; text-align: center; line-height: 1.2;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
 }
-.conta-menu-item.ativo { background: linear-gradient(135deg, var(--violeta), var(--indigo-claro)); color: #fff; }
-@media (min-width: 420px) { .conta-menu-item { font-size: .9rem; padding: 9px 12px; } }
+.conta-menu-item.ativo { color: var(--estrela); border-bottom-color: var(--estrela); }
+@media (min-width: 480px) { .conta-menu-item { font-size: .92rem; padding: 11px 14px; } }
 
 /* Asterisco de campo obrigatório */
 .obrig { color: var(--aurora-rosa); font-weight: 700; }

@@ -162,7 +162,7 @@
     if (limite) {
       const nota = document.createElement("p");
       nota.className = "entrega-nota";
-      nota.innerHTML = `🚚 Frete grátis em compras a partir de ${Precos.formatarBRL(limite)}.`;
+      nota.innerHTML = `Frete grátis em compras a partir de ${Precos.formatarBRL(limite)}.`;
       elEntrega.appendChild(nota);
     }
 
@@ -433,7 +433,7 @@
     if (st) {
       st.hidden = false;
       st.className = "pix-status aguardando";
-      st.textContent = "⏳ Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
+      st.textContent = "Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
     }
     const btn = document.getElementById("btn-ja-paguei");
     if (btn) btn.textContent = "Já paguei — verificar agora";
@@ -478,7 +478,7 @@
         const st = document.getElementById("pix-status");
         if (st) {
           st.className = "pix-status aguardando";
-          st.textContent = "Ainda não identificamos o pagamento. Se você acabou de pagar, aguarde alguns segundos 💜";
+          st.textContent = "Ainda não identificamos o pagamento. Se você acabou de pagar, aguarde alguns segundos e verifique de novo.";
         }
       }
     } catch (e) { /* silencioso: tenta de novo no próximo ciclo */ }
@@ -487,7 +487,7 @@
 
   async function aoConfirmarPagamento() {
     const st = document.getElementById("pix-status");
-    if (st) { st.className = "pix-status confirmado"; st.textContent = "✅ Pagamento confirmado!"; }
+    if (st) { st.className = "pix-status confirmado"; st.textContent = "Pagamento confirmado ✓"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
     marcarVendidoSeLogado();   // vendido: sai da loja de vez
     // Garante o aviso ao lojista pelo próprio site (além do webhook).
@@ -714,10 +714,10 @@
         <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
       <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " — " + esc(cliente.endereco) : ""}</p>
-      ${cliente.presente ? `<p class="conf-presente">🎁 <strong>Embalado para presente</strong>${cliente.presenteMsg ? ` — cartão: “${esc(cliente.presenteMsg)}”` : ""}</p>` : ""}
+      ${cliente.presente ? `<p class="conf-presente"><strong>Embalado para presente</strong>${cliente.presenteMsg ? ` — cartão: “${esc(cliente.presenteMsg)}”` : ""}</p>` : ""}
       <p class="conf-aviso">${confirmado
-        ? "✅ Pagamento confirmado! Em breve entraremos em contato para combinar a entrega. 💜"
-        : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante pra agilizar 💜"}</p>`;
+        ? "Pagamento confirmado! Em breve entraremos em contato para combinar a entrega."
+        : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante para agilizar."}</p>`;
 
     const sub = document.getElementById("confirmacao-sub");
     sub.textContent = `Obrigado, ${cliente.nome || "leitor(a)"}! Recebemos seu pedido.`;

@@ -179,6 +179,9 @@
     if (painelAdmin) painelAdmin.hidden = !abaAdmin;
     document.querySelectorAll(".conta-menu-item").forEach(b =>
       b.classList.toggle("ativo", b.dataset.tab === tab));
+    // Traz a aba ativa para a área visível (o menu rola na horizontal).
+    const abaAtiva = document.querySelector(".conta-menu-item.ativo");
+    if (abaAtiva && abaAtiva.scrollIntoView) abaAtiva.scrollIntoView({ block: "nearest", inline: "center" });
     // Saiu da aba de pedidos: encerra o listener em tempo real (evita leak).
     if (!abaPedidos && cancelarOuvirPedidos) { cancelarOuvirPedidos(); cancelarOuvirPedidos = null; }
     if (abaPedidos) carregarPedidos();
@@ -302,8 +305,8 @@
             </div>
           </details>` : "";
       const aviso = p.status === "pago"
-        ? `<p class="pedido-contato-aviso">📦 Pagamento confirmado! Em breve entraremos em contato para combinar a entrega.</p>`
-        : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">🎉 Pedido entregue. Boa leitura!</p>` : "");
+        ? `<p class="pedido-contato-aviso">Pagamento confirmado — em breve entraremos em contato para combinar a entrega.</p>`
+        : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue — boa leitura!</p>` : "");
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
@@ -313,7 +316,7 @@
           ${data ? `<p class="pedido-data">${esc(data)}</p>` : ""}
           ${passosHTML(p.status)}
           <ul class="pedido-itens">${itensPedidoHTML(p)}</ul>
-          ${p.presente ? `<p class="pedido-presente">🎁 Embalado para presente${p.presenteMsg ? ` — “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
+          ${p.presente ? `<p class="pedido-presente">Embalado para presente${p.presenteMsg ? ` — “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
           <div class="pedido-rodape"><span>${esc(p.entrega || "")}</span><strong>${fmt(p.total)}</strong></div>
           ${pixBloco}
           ${aviso}
@@ -460,8 +463,8 @@
         : (c.telefone ? `WhatsApp: ${esc(c.telefone)}` : "");
 
       const acoes = [];
-      if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">✓ Confirmar pagamento</button>`);
-      if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="entregue" data-caminho="${esc(p._caminho)}">📦 Marcar como entregue</button>`);
+      if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Confirmar pagamento</button>`);
+      if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="entregue" data-caminho="${esc(p._caminho)}">Marcar como entregue</button>`);
       if (grupo === "apagar" || grupo === "pago")
         acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn ploja-btn-cancelar" data-acao="cancelado" data-caminho="${esc(p._caminho)}">Cancelar pedido</button>`);
       if (grupo === "cancelado" || grupo === "entregue")
@@ -479,7 +482,7 @@
             <p class="ploja-cliente-contato">${whats}${c.instagram ? ` · ${esc(c.instagram)}` : ""}${c.email ? ` · ${esc(c.email)}` : ""}</p>
           </div>
           <ul class="pedido-itens">${itensPedidoHTML(p)}</ul>
-          ${p.presente ? `<p class="pedido-presente">🎁 <strong>Embalar para presente</strong>${p.presenteMsg ? ` — cartão: “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
+          ${p.presente ? `<p class="pedido-presente"><strong>Embalar para presente</strong>${p.presenteMsg ? ` — cartão: “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
           ${p.observacoes ? `<p class="ploja-obs">Obs.: ${esc(p.observacoes)}</p>` : ""}
           <div class="pedido-rodape">
             <span>${esc(p.entrega || "")}${p.endereco ? " — " + esc(p.endereco) : ""}</span>
@@ -954,7 +957,7 @@
         // Não se encaixou em nenhuma categoria: sugere criar uma nova.
         categoriaNovaSugerida = d.categoria;
         mostrarGeneroDica("Não encontrei uma categoria ideal entre as atuais. Sugestão: criar uma nova." + just, "");
-        if (btnUsarGeneroNovo) { btnUsarGeneroNovo.hidden = false; btnUsarGeneroNovo.textContent = "➕ Criar categoria “" + d.categoria + "”"; }
+        if (btnUsarGeneroNovo) { btnUsarGeneroNovo.hidden = false; btnUsarGeneroNovo.textContent = "Criar categoria “" + d.categoria + "”"; }
       } else {
         // Encaixou numa categoria existente: já preenche o campo.
         set("livro-genero", d.categoria);
@@ -1007,10 +1010,6 @@
     }
   }
 
-  function setIconeAdd(txt) {
-    const ic = document.querySelector("#admin-add-summary .admin-add-icone");
-    if (ic) ic.textContent = txt;
-  }
 
   function entrarModoEdicao(id) {
     const idDe = window.idLivro || (l => l.id);
@@ -1025,7 +1024,6 @@
     if (livroOk) livroOk.hidden = true;
     const titEl = document.getElementById("admin-add-titulo");
     if (titEl) titEl.textContent = "Editando: " + (l.titulo || "livro");
-    setIconeAdd("✏️");
     if (btnSalvarLivro) btnSalvarLivro.textContent = "Salvar alterações";
     const cancelar = document.getElementById("btn-cancelar-edicao");
     if (cancelar) cancelar.hidden = false;
@@ -1044,7 +1042,6 @@
     if (fotoPreview) fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
     const titEl = document.getElementById("admin-add-titulo");
     if (titEl) titEl.textContent = "Adicionar um novo livro";
-    setIconeAdd("➕");
     if (btnSalvarLivro) btnSalvarLivro.textContent = "Adicionar livro à loja";
     const cancelar = document.getElementById("btn-cancelar-edicao");
     if (cancelar) cancelar.hidden = true;
@@ -1112,7 +1109,7 @@
       idsCatalogo.add(id);
       sairModoEdicao();
       renderAdmin();
-      if (livroOk) { livroOk.hidden = false; livroOk.textContent = editando ? "✅ Alterações salvas!" : "✅ Livro adicionado!"; setTimeout(() => { livroOk.hidden = true; }, 3000); }
+      if (livroOk) { livroOk.hidden = false; livroOk.textContent = editando ? "Alterações salvas ✓" : "Livro adicionado ✓"; setTimeout(() => { livroOk.hidden = true; }, 3000); }
       const det = document.getElementById("admin-add");
       if (det) det.open = false;
     } catch (e) {

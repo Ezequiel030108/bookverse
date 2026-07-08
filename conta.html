@@ -72,7 +72,7 @@
 
       <!-- Intro do onboarding (só na primeira vez) -->
       <div id="onboarding-intro" class="checkout-bloco" hidden>
-        <h2 class="checkout-subtitulo">Falta pouco! 🎉</h2>
+        <h2 class="checkout-subtitulo">Quase lá</h2>
         <p class="conta-ajuda">Complete seu cadastro para finalizar seus pedidos com mais rapidez. Você só precisa fazer isso uma vez. Os campos com <span class="obrig">*</span> são obrigatórios.</p>
       </div>
 
@@ -157,7 +157,7 @@
 
           <p class="pagamento-erro" id="onboarding-erro" hidden></p>
           <button type="submit" id="btn-salvar-perfil" class="botao-loja botao-loja-primario botao-loja-bloco">Salvar</button>
-          <p id="perfil-ok" class="conta-salvo" hidden>✅ Dados salvos!</p>
+          <p id="perfil-ok" class="conta-salvo" hidden>Dados salvos ✓</p>
         </form>
 
         <!-- Zona de perigo -->
@@ -211,7 +211,7 @@
 
         <!-- Adicionar / editar livro -->
         <details id="admin-add" class="admin-add">
-          <summary id="admin-add-summary"><span class="admin-add-icone" aria-hidden="true">➕</span> <span id="admin-add-titulo">Adicionar um novo livro</span></summary>
+          <summary id="admin-add-summary"><span id="admin-add-titulo">Adicionar um novo livro</span></summary>
           <form id="form-livro" class="admin-add-form" novalidate>
             <input type="hidden" id="livro-edit-id" value="" />
             <div class="admin-foto-wrap">
@@ -237,7 +237,7 @@
                 <label for="livro-genero">Gênero</label>
                 <input type="text" id="livro-genero" list="generos-sugeridos" placeholder="Ex.: Romance & Literatura" />
                 <datalist id="generos-sugeridos"></datalist>
-                <button type="button" id="btn-classificar-genero" class="botao-loja botao-loja-secundario admin-ia-btn">🏷️ Classificar categoria com IA</button>
+                <button type="button" id="btn-classificar-genero" class="botao-loja botao-loja-secundario admin-ia-btn">Classificar categoria com IA</button>
                 <small class="campo-dica" id="genero-dica" hidden></small>
                 <button type="button" id="btn-usar-genero-novo" class="admin-genero-aplicar" hidden></button>
               </div>
@@ -275,8 +275,8 @@
 
             <div class="campo">
               <label for="livro-sinopse">Sinopse</label>
-              <textarea id="livro-sinopse" rows="4" placeholder="Clique em “Gerar com IA” ou escreva à mão."></textarea>
-              <button type="button" id="btn-gerar-sinopse" class="botao-loja botao-loja-secundario admin-ia-btn">✨ Gerar sinopse com IA</button>
+              <textarea id="livro-sinopse" rows="4" placeholder="Use o botão abaixo para gerar com IA, ou escreva à mão."></textarea>
+              <button type="button" id="btn-gerar-sinopse" class="botao-loja botao-loja-secundario admin-ia-btn">Gerar sinopse com IA</button>
               <small class="campo-dica" id="sinopse-dica" hidden></small>
             </div>
 
@@ -285,7 +285,7 @@
               <button type="submit" id="btn-salvar-livro" class="botao-loja botao-loja-primario botao-loja-bloco">Adicionar livro à loja</button>
               <button type="button" id="btn-cancelar-edicao" class="botao-loja botao-loja-secundario botao-loja-bloco" hidden>Cancelar edição</button>
             </div>
-            <p id="livro-ok" class="conta-salvo" hidden>✅ Livro adicionado!</p>
+            <p id="livro-ok" class="conta-salvo" hidden>Livro adicionado ✓</p>
           </form>
         </details>
 
@@ -314,7 +314,7 @@
           <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
         <h2>Cadastro completo!</h2>
-        <p>Tudo certo, <span id="ok-nome">leitor(a)</span>. Seus dados foram salvos. 💜</p>
+        <p>Tudo certo, <span id="ok-nome">leitor(a)</span>. Seus dados foram salvos.</p>
         <button type="button" id="btn-continuar" class="botao-loja botao-loja-primario">Continuar</button>
       </section>
 
