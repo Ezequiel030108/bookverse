@@ -2932,3 +2932,72 @@ main {
 .carrinho-drawer { overscroll-behavior: contain; }
 .modal-fundo, .drawer-fundo, .aviso-conta-fundo { touch-action: none; }
 .foto-viewer { touch-action: none; overscroll-behavior: contain; }
+
+/* ============================================================
+   RODAPÉ DO SITE
+   ============================================================ */
+.rodape-site {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 34px 20px calc(38px + var(--safe-bottom));
+  margin-top: 28px;
+  border-top: 1px solid var(--vidro-borda);
+  color: var(--texto-discreto);
+  font-size: .85rem;
+}
+.rodape-links {
+  display: flex;
+  gap: 8px 14px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+.rodape-site a { color: var(--texto-suave); text-decoration: none; }
+.rodape-site a:hover { color: var(--lavanda-clara); text-decoration: underline; }
+.rodape-sep { opacity: .5; }
+.rodape-copy { margin: 0; }
+
+/* Nota de consentimento no checkout */
+.pagamento-privacidade {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: .8rem;
+  color: var(--texto-discreto);
+}
+.pagamento-privacidade a { color: var(--lavanda); }
+
+/* ============================================================
+   PÁGINA DE DOCUMENTO (Política de Privacidade e afins)
+   ============================================================ */
+.doc-legal { max-width: 760px; margin: 0 auto; }
+.doc-legal .doc-atualizado {
+  color: var(--texto-discreto);
+  font-size: .85rem;
+  margin: 0 0 22px;
+}
+.doc-legal h2 {
+  font-size: 1.12rem;
+  color: var(--lavanda-clara);
+  margin: 28px 0 10px;
+}
+.doc-legal h3 {
+  font-size: 1rem;
+  color: var(--texto-claro);
+  margin: 18px 0 6px;
+}
+.doc-legal p { margin: 0 0 12px; line-height: 1.65; color: var(--texto-suave); }
+.doc-legal ul { margin: 0 0 14px; padding-left: 22px; }
+.doc-legal li { margin: 6px 0; line-height: 1.6; color: var(--texto-suave); }
+.doc-legal a { color: var(--lavanda); }
+.doc-legal strong { color: var(--texto-claro); }
+.doc-legal .doc-nota {
+  margin-top: 28px;
+  padding: 14px 16px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio);
+  background: var(--vidro);
+  font-size: .88rem;
+  color: var(--texto-suave);
+}
