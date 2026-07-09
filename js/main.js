@@ -900,6 +900,10 @@ function fecharModal() {
   modal.setAttribute("aria-hidden", "true");
   travarScrollFundo(false);
   if (soltarFocoModal) { soltarFocoModal(); soltarFocoModal = null; }
+  // Desfaz qualquer resto do gesto de arrastar para baixo: na próxima
+  // abertura a caixa nasce no lugar e com a animação de entrada.
+  const caixa = modal.querySelector(".modal-caixa");
+  if (caixa) { caixa.style.transform = ""; caixa.style.transition = ""; caixa.style.animation = ""; }
 }
 
 /* ---------- Visualizador de foto em tela cheia ---------- */
@@ -929,6 +933,77 @@ document.addEventListener("keydown", (e) => {
   if (fotoViewer && !fotoViewer.hidden) { fecharFoto(); return; }   // 1º fecha a foto
   if (!modal.hidden) fecharModal();                                  // depois o modal
 });
+
+/* ---------- Arrastar o modal para baixo fecha (celular) ----------
+   No celular o modal é uma "gaveta" que sobe de baixo, com a alça
+   (.modal-puxador) sugerindo o gesto de puxar. Aqui o gesto funciona
+   de verdade: a caixa segue o dedo e, soltando longe (ou num puxão
+   rápido), fecha; soltando perto, volta ao lugar. A rolagem do
+   conteúdo continua normal — o arrasto só "pega" começando na alça,
+   fora da área rolável, ou com a rolagem já no topo. */
+(function () {
+  const caixa   = modal.querySelector(".modal-caixa");
+  const puxador = modal.querySelector(".modal-puxador");
+  const rolavel = modal.querySelector(".modal-rolavel");
+  if (!caixa || !puxador) return;
+
+  let y0 = 0, x0 = 0, dy = 0, t0 = 0;
+  let arrastando = false, decidiu = false, podePuxar = false;
+  let suprimirCliqueAte = 0;   // pós-arrasto: o toque não vira clique na alça
+
+  caixa.addEventListener("touchstart", (e) => {
+    decidiu = true; arrastando = false;
+    if (puxador.offsetParent === null) return;   // layout de tela grande: sem gesto
+    const t = e.touches[0];
+    y0 = t.clientY; x0 = t.clientX; dy = 0; t0 = Date.now();
+    decidiu = false;
+    podePuxar = puxador.contains(e.target) ||
+      !rolavel || !rolavel.contains(e.target) || rolavel.scrollTop <= 0;
+  }, { passive: true });
+
+  caixa.addEventListener("touchmove", (e) => {
+    const t = e.touches[0];
+    if (!decidiu) {
+      const my = t.clientY - y0, mx = t.clientX - x0;
+      if (Math.abs(my) < 8 && Math.abs(mx) < 8) return;   // ainda pode ser só um toque
+      decidiu = true;
+      arrastando = podePuxar && my > 0 && my > Math.abs(mx);
+    }
+    if (!arrastando) return;
+    dy = Math.max(0, t.clientY - y0);
+    e.preventDefault();   // o dedo move a caixa, não a rolagem
+    // A animação de entrada (subir, fill both) "segura" o transform e
+    // ganharia do estilo inline — sai de cena enquanto o dedo manda.
+    caixa.style.animation = "none";
+    caixa.style.transition = "none";
+    caixa.style.transform = "translateY(" + dy + "px)";
+  }, { passive: false });
+
+  function soltar() {
+    if (!arrastando) return;
+    arrastando = false;
+    suprimirCliqueAte = Date.now() + 400;
+    const puxaoRapido = dy > 45 && Date.now() - t0 < 250;
+    const foiLonge    = dy > Math.min(caixa.offsetHeight * 0.28, 170);
+    if (puxaoRapido || foiLonge) {
+      caixa.style.transition = "transform .18s ease-in";
+      caixa.style.transform = "translateY(105%)";
+      setTimeout(fecharModal, 180);   // fecharModal limpa transform/animação
+    } else {
+      caixa.style.transition = "transform .2s ease-out";
+      caixa.style.transform = "";
+      setTimeout(() => { caixa.style.transition = ""; }, 220);
+    }
+  }
+  caixa.addEventListener("touchend", soltar);
+  caixa.addEventListener("touchcancel", soltar);
+
+  // Se o arrasto terminou "voltando", o navegador ainda pode disparar um
+  // clique na alça — que fecharia o modal do mesmo jeito. Engole esse clique.
+  caixa.addEventListener("click", (e) => {
+    if (Date.now() < suprimirCliqueAte) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+})();
 
 /* ---------- Decoração da promoção (tema Copa do Mundo) ----------
    Só acontece com a promoção ativa e some sozinho quando ela acaba —
