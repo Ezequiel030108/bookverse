@@ -39,43 +39,60 @@ function converterDoc(doc) {
 
 let cache = { t: 0, lista: [] };
 
-/* Lista completa de livros (estáticos + admin), com cache de 5 min. */
-async function carregarLivros(base) {
-  if (cache.lista.length && Date.now() - cache.t < 5 * 60 * 1000) return cache.lista;
-  let lista = [];
+const TEMPO_CACHE = 5 * 60 * 1000;   // idade máxima do cache em memória
+const TEMPO_LIMITE_MS = 4000;        // espera máxima por CADA busca externa
 
-  // 1) js/livros.js do site publicado
+/* 1) js/livros.js do site publicado. Devolve null se a busca falhar
+   (null ≠ lista vazia: falha permite cair no cache antigo). */
+async function livrosEstaticos(base) {
   try {
-    const r = await fetch(base + "/js/livros.js");
-    if (r.ok) {
-      const codigo = await r.text();
-      const fn = new Function("window", codigo + "\n;return (typeof LIVROS !== 'undefined') ? LIVROS : [];");
-      const arr = fn({});
-      if (Array.isArray(arr)) lista = arr.slice();
-    }
-  } catch (e) { /* segue só com o Firestore */ }
+    const r = await fetch(base + "/js/livros.js", { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
+    if (!r.ok) return null;
+    const codigo = await r.text();
+    const fn = new Function("window", codigo + "\n;return (typeof LIVROS !== 'undefined') ? LIVROS : [];");
+    const arr = fn({});
+    return Array.isArray(arr) ? arr.slice() : null;
+  } catch (e) { return null; }
+}
 
-  // 2) livros/edições do admin (Firestore, leitura pública)
+/* 2) livros/edições do admin (Firestore, leitura pública). */
+async function livrosDoAdmin() {
   try {
     const r = await fetch(
       "https://firestore.googleapis.com/v1/projects/" + PROJETO +
-      "/databases/(default)/documents/catalogo?pageSize=300");
-    if (r.ok) {
-      const data = await r.json();
-      const extras = (data.documents || []).map(converterDoc);
-      const indice = new Map(lista.map((l, i) => [idLivro(l), i]));
-      extras.forEach(l => {
-        if (!l || !l.id) return;
-        if (indice.has(l.id)) {
-          lista[indice.get(l.id)] = Object.assign({}, lista[indice.get(l.id)], l);
-        } else {
-          lista.push(l);
-        }
-      });
-    }
-  } catch (e) { /* sem Firestore, usa só os estáticos */ }
+      "/databases/(default)/documents/catalogo?pageSize=300",
+      { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return (data.documents || []).map(converterDoc);
+  } catch (e) { return null; }
+}
 
-  if (lista.length) cache = { t: Date.now(), lista };
+/* Lista completa de livros (estáticos + admin), com cache de 5 min.
+   As duas buscas correm em paralelo e têm limite de tempo; se alguma
+   falhar, a última lista completa continua valendo — assim o link de
+   um livro nunca "some" por causa de uma instabilidade momentânea. */
+async function carregarLivros(base) {
+  if (cache.lista.length && Date.now() - cache.t < TEMPO_CACHE) return cache.lista;
+
+  const [estaticos, extras] = await Promise.all([livrosEstaticos(base), livrosDoAdmin()]);
+
+  // Busca incompleta: melhor servir a lista antiga inteira do que gravar
+  // uma pela metade (o livro do link poderia desaparecer da prévia).
+  if ((!estaticos || !extras) && cache.lista.length) return cache.lista;
+
+  const lista = (estaticos || []).slice();
+  const indice = new Map(lista.map((l, i) => [idLivro(l), i]));
+  (extras || []).forEach(l => {
+    if (!l || !l.id) return;
+    if (indice.has(l.id)) {
+      lista[indice.get(l.id)] = Object.assign({}, lista[indice.get(l.id)], l);
+    } else {
+      lista.push(l);
+    }
+  });
+
+  if (lista.length && estaticos && extras) cache = { t: Date.now(), lista };
   return lista;
 }
 
