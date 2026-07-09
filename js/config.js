@@ -176,7 +176,7 @@ window.LOJA_CONFIG = {
     googleAdsId: "AW-17981859266",                          // ID da conta do Google Ads
     conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C",  // conversão "Compra BookVerse"
     conversaoContatoLabel: "",                             // conversão de contato/lead (opcional)
-    conversaoCarrinhoLabel: "",                            // conversão "Adicionar ao carrinho" (secundária, opcional)
+    conversaoCarrinhoLabel: "AW-17981859266/EKvbCI_-pM0cEMLLtf5C",  // conversão "Adicionar ao carrinho"
     conversaoCheckoutLabel: ""                             // conversão "Iniciar finalização de compra" (secundária, opcional)
   },
 
