@@ -155,7 +155,7 @@ melhoria de maior retorno imediato: adicionar `og:title`, `og:description`,
 ### 15. Metadados desatualizados
 A meta description ainda diz "Peça pelo Instagram" — hoje o site tem carrinho
 e Pix. O `<title>` genérico ("BookVerse") pode virar
-"BookVerse — Livraria em Juazeirinho | Livros novos e seminovos".
+"BookVerse — Livraria em Juazeirinho".
 
 ### 16. Sem sitemap, robots.txt e dados estruturados
 O catálogo é 100% renderizado por JS. O Google consegue indexar, mas um
