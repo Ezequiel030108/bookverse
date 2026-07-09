@@ -18,8 +18,10 @@ window.Analytics = (function () {
   const CFG = (window.LOJA_CONFIG && window.LOJA_CONFIG.analytics) || {};
   const GA_ID       = String(CFG.measurementId || "").trim();        // GA4: "G-XXXXXXXXXX"
   const ADS_ID      = String(CFG.googleAdsId || "").trim();          // Google Ads: "AW-XXXXXXXXXX"
-  const ADS_COMPRA  = String(CFG.conversaoCompraLabel || "").trim(); // Compra:  "AW-XXXXXXXXXX/rótulo"
-  const ADS_CONTATO = String(CFG.conversaoContatoLabel || "").trim();// Contato: "AW-XXXXXXXXXX/rótulo"
+  const ADS_COMPRA   = String(CFG.conversaoCompraLabel || "").trim();  // Compra:   "AW-XXXXXXXXXX/rótulo"
+  const ADS_CONTATO  = String(CFG.conversaoContatoLabel || "").trim(); // Contato:  "AW-XXXXXXXXXX/rótulo"
+  const ADS_CARRINHO = String(CFG.conversaoCarrinhoLabel || "").trim();// Add carrinho: "AW-XXXXXXXXXX/rótulo"
+  const ADS_CHECKOUT = String(CFG.conversaoCheckoutLabel || "").trim();// Início checkout: "AW-XXXXXXXXXX/rótulo"
 
   const moeda = (window.LOJA_CONFIG && window.LOJA_CONFIG.moeda && window.LOJA_CONFIG.moeda.codigo) || "BRL";
   const ligado = !!(GA_ID || ADS_ID);
@@ -133,7 +135,9 @@ window.Analytics = (function () {
     adicionarCarrinho: function (livro, qty) {
       if (!livro) return;
       const it = itemDeLivro(livro, qty || 1);
-      evento("add_to_cart", { currency: moeda, value: it.price * it.quantity, items: [it] });
+      const valor = it.price * it.quantity;
+      evento("add_to_cart", { currency: moeda, value: valor, items: [it] });
+      if (ADS_CARRINHO) evento("conversion", { send_to: ADS_CARRINHO, value: valor, currency: moeda });
     },
 
     // Cliente pesquisou algo.
@@ -145,11 +149,13 @@ window.Analytics = (function () {
     // Cliente começou o checkout (abriu a página com itens).
     iniciarCheckout: function (resumo) {
       if (!resumo || resumo.vazio) return;
+      const valor = Number(resumo.subtotal || 0) || 0;
       evento("begin_checkout", {
         currency: moeda,
-        value: Number(resumo.subtotal || 0) || 0,
+        value: valor,
         items: itensDeLinhas(resumo.itens)
       });
+      if (ADS_CHECKOUT) evento("conversion", { send_to: ADS_CHECKOUT, value: valor, currency: moeda });
     },
 
     // Cliente clicou para falar pelo WhatsApp / Instagram Direct (lead).

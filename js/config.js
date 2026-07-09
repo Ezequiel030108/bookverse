@@ -175,7 +175,9 @@ window.LOJA_CONFIG = {
     measurementId: "G-M4K2WTHCFF",                         // ID da métrica do Google Analytics 4
     googleAdsId: "AW-17981859266",                          // ID da conta do Google Ads
     conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C",  // conversão "Compra BookVerse"
-    conversaoContatoLabel: ""                              // conversão de contato/lead (opcional)
+    conversaoContatoLabel: "",                             // conversão de contato/lead (opcional)
+    conversaoCarrinhoLabel: "",                            // conversão "Adicionar ao carrinho" (secundária, opcional)
+    conversaoCheckoutLabel: ""                             // conversão "Iniciar finalização de compra" (secundária, opcional)
   },
 
   /* ---------- ENTREGA / FRETE ----------
