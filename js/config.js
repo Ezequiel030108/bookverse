@@ -175,7 +175,7 @@ window.LOJA_CONFIG = {
     measurementId: "G-M4K2WTHCFF",                         // ID da métrica do Google Analytics 4
     googleAdsId: "AW-17981859266",                          // ID da conta do Google Ads
     conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C",  // conversão "Compra BookVerse"
-    conversaoContatoLabel: "",                             // conversão de contato/lead (opcional)
+    conversaoContatoLabel: "AW-17981859266/pxOzCLecvc0cEMLLtf5C",  // conversão de contato/lead (WhatsApp/Instagram)
     conversaoCarrinhoLabel: "AW-17981859266/EKvbCI_-pM0cEMLLtf5C",  // conversão "Adicionar ao carrinho"
     conversaoCheckoutLabel: "AW-17981859266/gDtiCIn9vM0cEMLLtf5C"   // conversão "Iniciar finalização de compra"
   },
