@@ -883,6 +883,7 @@ function abrirModal(livro) {
   // um listener a cada abertura do modal.
   const btnShare = document.getElementById("modal-compartilhar");
   if (btnShare) btnShare.onclick = () => compartilharLivro(livro);
+  prepararCapaShare(livro);   // já baixa a foto que vai junto no compartilhar
 
   const jaAberto = !modal.hidden;
   modal.hidden = false;
@@ -1073,14 +1074,68 @@ function mensagemCompartilhar(livro, url) {
   );
 }
 
+/* A FOTO do livro vai junto do compartilhamento como arquivo (WhatsApp,
+   Instagram etc. mostram a imagem de verdade, não só o link). Preferimos
+   a arte da prévia (/api/capa, moldura da BookVerse); se ela não estiver
+   disponível, vai a própria foto do livro. */
+let capaShare = { id: null, promessa: null };
+
+async function baixarArquivoCapa(livro) {
+  const id = idLivro(livro);
+  const fontes = [];
+  if (livro.imagem) fontes.push("/api/capa?id=" + encodeURIComponent(id));
+  const foto = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : "";
+  if (foto) fontes.push(foto);
+  for (const src of fontes) {
+    try {
+      const r = await fetch(src);
+      if (!r.ok) continue;
+      const blob = await r.blob();
+      if (!blob.size || !/^image\//.test(blob.type)) continue;
+      const ext = blob.type === "image/png" ? ".png" : (blob.type === "image/webp" ? ".webp" : ".jpg");
+      return new File([blob], (id || "livro") + ext, { type: blob.type });
+    } catch (e) { /* tenta a próxima fonte */ }
+  }
+  return null;
+}
+
+/* Começa a baixar a foto assim que o modal abre: na hora do toque em
+   "Compartilhar" ela já está pronta e o navigator.share não perde a
+   permissão do gesto esperando a rede. */
+function prepararCapaShare(livro) {
+  if (!navigator.canShare || typeof File === "undefined") return;
+  const id = idLivro(livro);
+  if (capaShare.id === id && capaShare.promessa) return;
+  capaShare = { id, promessa: baixarArquivoCapa(livro).catch(() => null) };
+}
+
 async function compartilharLivro(livro) {
   const url = urlDoLivro(livro);
   const texto = mensagemCompartilhar(livro, url);
+  const titulo = livro.titulo + " · BookVerse";
   if (navigator.share) {
     // O link já vai dentro do texto (com a mensagem bonita); mandar o
     // campo url separado duplicaria o link em alguns apps.
-    try { await navigator.share({ title: livro.titulo + " · BookVerse", text: texto }); return; }
-    catch (e) { if (e && e.name === "AbortError") return; /* cancelou */ }
+    let dados = { title: titulo, text: texto };
+    prepararCapaShare(livro);
+    // Espera a foto só por um instante: se a rede demorar, compartilha
+    // sem ela em vez de perder a janela do gesto do usuário.
+    const arquivo = (capaShare.id === idLivro(livro) && capaShare.promessa)
+      ? await Promise.race([capaShare.promessa, new Promise(r => setTimeout(r, 2500, null))])
+      : null;
+    if (arquivo && navigator.canShare({ files: [arquivo] })) {
+      dados = { title: titulo, text: texto, files: [arquivo] };
+    }
+    try { await navigator.share(dados); return; }
+    catch (e) {
+      if (e && e.name === "AbortError") return; /* cancelou */
+      // Alguns apps/navegadores recusam arquivo+texto juntos: tenta
+      // de novo só com a mensagem antes de cair no plano B.
+      if (dados.files) {
+        try { await navigator.share({ title: titulo, text: texto }); return; }
+        catch (e2) { if (e2 && e2.name === "AbortError") return; }
+      }
+    }
   }
   try {
     await navigator.clipboard.writeText(texto);
