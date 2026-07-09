@@ -177,7 +177,7 @@ window.LOJA_CONFIG = {
     conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C",  // conversão "Compra BookVerse"
     conversaoContatoLabel: "",                             // conversão de contato/lead (opcional)
     conversaoCarrinhoLabel: "AW-17981859266/EKvbCI_-pM0cEMLLtf5C",  // conversão "Adicionar ao carrinho"
-    conversaoCheckoutLabel: ""                             // conversão "Iniciar finalização de compra" (secundária, opcional)
+    conversaoCheckoutLabel: "AW-17981859266/gDtiCIn9vM0cEMLLtf5C"   // conversão "Iniciar finalização de compra"
   },
 
   /* ---------- ENTREGA / FRETE ----------
