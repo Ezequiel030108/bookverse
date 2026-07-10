@@ -85,6 +85,10 @@
   if (pTel) pTel.addEventListener("input", () => { marcar("p-tel", false); atualizarDicaWhats(); });
   const pNome = document.getElementById("p-nome");
   if (pNome) pNome.addEventListener("input", () => marcar("p-nome", false));
+  ["p-cep", "p-rua", "p-numero", "p-bairro", "p-cidade", "p-uf"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", () => marcar(id, false));
+  });
 
   /* ---------- CEP: preenche o endereço sozinho (ViaCEP, gratuito) ---------- */
   const pCep = document.getElementById("p-cep");
@@ -113,10 +117,23 @@
     marcar("p-nome", nomeRuim);
     marcar("p-tel", telRuim);
     atualizarDicaWhats();
-    const ok = !nomeRuim && !telRuim;
+
+    /* Endereço: é opcional deixar TUDO em branco (dá para completar
+       depois), mas se começou a preencher tem que estar completo —
+       um endereço pela metade travaria a entrega a domicílio. */
+    const camposEnd = ["p-cep", "p-rua", "p-numero", "p-bairro", "p-cidade", "p-uf"];
+    const comecouEndereco = camposEnd.some(id => v(id)) || !!v("p-compl");
+    const endRuim = comecouEndereco && camposEnd.some(id => !v(id));
+    camposEnd.forEach(id => marcar(id, comecouEndereco && !v(id)));
+
+    const ok = !nomeRuim && !telRuim && !endRuim;
     if (onbErro) {
       onbErro.hidden = ok;
-      if (!ok) onbErro.textContent = "Preencha os campos obrigatórios: nome e um WhatsApp válido (com DDD).";
+      if (nomeRuim || telRuim) {
+        onbErro.textContent = "Preencha os campos obrigatórios: nome e um WhatsApp válido (com DDD).";
+      } else if (endRuim) {
+        onbErro.textContent = "Endereço incompleto: preencha CEP, rua, número, bairro, cidade e UF — ou deixe todos os campos de endereço em branco para cadastrar depois.";
+      }
     }
     return ok;
   }

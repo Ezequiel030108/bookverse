@@ -207,12 +207,38 @@
   /* ---------- Validação ---------- */
   function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
 
+  const CAMPOS_ENDERECO = ["end-cep", "end-rua", "end-numero", "end-bairro", "end-cidade", "end-uf"];
+
   function camposObrigatorios() {
     const obrig = ["cli-nome", "cli-email", "cli-tel"];
-    if (opcaoSelecionada().pedeEndereco) {
-      obrig.push("end-cep", "end-rua", "end-numero", "end-bairro", "end-cidade", "end-uf");
-    }
+    if (opcaoSelecionada().pedeEndereco) obrig.push.apply(obrig, CAMPOS_ENDERECO);
     return obrig;
+  }
+
+  /* O cliente ainda não cadastrou o endereço completo na conta. */
+  function enderecoIncompleto() {
+    return CAMPOS_ENDERECO.some(id => !val(id));
+  }
+
+  /* Compara textos ignorando maiúsculas/acentos ("Juazeirinho" = "juazeirinho"). */
+  function normalizarTexto(t) {
+    return String(t || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  /* Cidades atendidas pela opção de entrega (config "somenteCidades"). */
+  function cidadesDaOpcao() {
+    const op = opcaoSelecionada();
+    const lista = op.somenteCidades || op.somenteCidade || null;
+    if (!lista) return [];
+    return (Array.isArray(lista) ? lista : [lista]).filter(Boolean);
+  }
+
+  /* true quando a opção restringe a cidade e o endereço do cliente é de outra. */
+  function cidadeForaDaArea() {
+    const cidades = cidadesDaOpcao();
+    const atual = normalizarTexto(val("end-cidade"));
+    if (!cidades.length || !atual) return false;   // vazio = campo faltando, tratado à parte
+    return !cidades.some(c => normalizarTexto(c) === atual);
   }
   function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
@@ -230,6 +256,7 @@
     if (!el) return false;
     if (id === "cli-email") return !el.value.trim() || !emailValido(el.value.trim());
     if (id === "cli-tel")   return !whatsappValido(el.value);
+    if (id === "end-cidade") return !el.value.trim() || cidadeForaDaArea();
     return !el.value.trim();
   }
 
@@ -258,6 +285,43 @@
     return ok;
   }
 
+  /* Aviso no bloco de endereço: pede para concluir o cadastro (ou avisa
+     que o endereço está fora da área de entrega da opção escolhida). */
+  function atualizarAvisoEndereco(carregado) {
+    const el = document.getElementById("aviso-endereco");
+    if (!el) return;
+    let msg = "";
+    if (opcaoSelecionada().pedeEndereco && carregado) {
+      if (enderecoIncompleto()) {
+        msg = `Você ainda não cadastrou seu endereço de entrega. ` +
+              `<a href="conta.html#dados">Conclua seu cadastro</a> para usar esta opção — ` +
+              `ou escolha outra forma de entrega.`;
+      } else if (cidadeForaDaArea()) {
+        msg = `Esta opção de entrega está disponível apenas em <strong>${esc(cidadesDaOpcao().join(", "))}</strong>, ` +
+              `e seu endereço cadastrado fica em <strong>${esc(val("end-cidade"))}</strong>. ` +
+              `<a href="conta.html#dados">Atualize seu endereço</a> ou escolha outra forma de entrega.`;
+      }
+    }
+    el.hidden = !msg;
+    if (msg) el.innerHTML = msg;
+  }
+
+  /* Texto do aviso geral: diz exatamente o que falta no cadastro. */
+  function mensagemAvisoForm() {
+    const faltas = [];
+    if (campoRuim("cli-nome"))  faltas.push("seu nome");
+    if (campoRuim("cli-email")) faltas.push("um e-mail válido");
+    if (campoRuim("cli-tel"))   faltas.push("um WhatsApp válido (com DDD)");
+    if (opcaoSelecionada().pedeEndereco && enderecoIncompleto()) faltas.push("o endereço de entrega");
+    if (faltas.length) {
+      return `Para finalizar, conclua seu cadastro na sua <a href="conta.html#dados">conta</a> — falta: ${faltas.join(", ")}.`;
+    }
+    if (opcaoSelecionada().pedeEndereco && cidadeForaDaArea()) {
+      return `Seu endereço está fora da área desta forma de entrega. Escolha outra opção ou <a href="conta.html#dados">atualize seu endereço</a>.`;
+    }
+    return `Complete seus dados na sua <a href="conta.html#dados">conta</a> para finalizar o pedido.`;
+  }
+
   function atualizarEstadoPagamento() {
     const ok = validar(false) && !dadosPedido().vazio;
     const configurado = usaMercadoPago || pixConfigurado();
@@ -265,7 +329,11 @@
     const pagaNaEntrega = metodoPagamento === "dinheiro";
     // Dinheiro na entrega funciona mesmo sem Pix configurado.
     if (avisoConfig) avisoConfig.hidden = configurado || pagaNaEntrega;
-    if (avisoForm)   avisoForm.hidden = ok || (!configurado && !pagaNaEntrega) || !carregado;
+    if (avisoForm) {
+      avisoForm.hidden = ok || (!configurado && !pagaNaEntrega) || !carregado;
+      if (!avisoForm.hidden) avisoForm.innerHTML = mensagemAvisoForm();
+    }
+    atualizarAvisoEndereco(carregado);
     if (btnGerar)    btnGerar.disabled = !(ok && configurado && carregado);
     if (btnDinheiro) btnDinheiro.disabled = !(ok && carregado);
 
@@ -364,7 +432,7 @@
   async function gerarPix() {
     if (gerandoPix) return;
     if (!validar(true)) {
-      if (avisoForm) avisoForm.hidden = false;
+      if (avisoForm) { avisoForm.hidden = false; avisoForm.innerHTML = mensagemAvisoForm(); }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -533,7 +601,7 @@
   async function confirmarPedidoDinheiro() {
     if (confirmandoDinheiro) return;
     if (!validar(true)) {
-      if (avisoForm) avisoForm.hidden = false;
+      if (avisoForm) { avisoForm.hidden = false; avisoForm.innerHTML = mensagemAvisoForm(); }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -741,7 +809,7 @@
   /* ---------- Confirmação ---------- */
   async function finalizar() {
     if (!validar(true)) {
-      if (avisoForm) avisoForm.hidden = false;
+      if (avisoForm) { avisoForm.hidden = false; avisoForm.innerHTML = mensagemAvisoForm(); }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
