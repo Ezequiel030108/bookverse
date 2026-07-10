@@ -132,7 +132,7 @@ const LIVROS = [
     preco: "R$ 20,00",
     estoque: 1,
     estado: "Com marcas de uso",
-    sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais — sem precisar cortar o cafezinho.",
+    sinopse: "Thiago Nigro, o Primo Rico, compartilha sua jornada para a liberdade financeira e ensina como qualquer pessoa pode sair do zero e construir patrimônio real. Com linguagem direta e sem enrolação, o livro mostra como gastar bem, investir com inteligência e ganhar mais, sem precisar cortar o cafezinho.",
     imagem: "img/do-mil-ao-milhao.jpg",
     dataAdicao: "2026-06-18"
   },
@@ -144,7 +144,7 @@ const LIVROS = [
     preco: "R$ 30,00",
     estoque: 3,
     estado: "Ótimo estado",
-    sinopse: "T. Harv Eker mostra como o 'modelo de dinheiro' que carregamos desde a infância determina nossa vida financeira — e ensina a reprogramar a mente para a prosperidade e a riqueza.",
+    sinopse: "T. Harv Eker mostra como o 'modelo de dinheiro' que carregamos desde a infância determina nossa vida financeira, e ensina a reprogramar a mente para a prosperidade e a riqueza.",
     imagem: "img/os-segredos-da-mente-milionaria.jpg"
   },
 
@@ -380,7 +380,7 @@ const LIVROS = [
     preco: "R$ 40,00",
     estoque: 1,
     estado: "Estado perfeito",
-    sinopse: "A última obra de Clarice Lispector acompanha Macabéa, uma jovem nordestina pobre e ingênua que tenta sobreviver na cidade grande. Uma narrativa intensa e comovente sobre solidão, existência e a busca por sentido — um dos maiores clássicos da literatura brasileira.",
+    sinopse: "A última obra de Clarice Lispector acompanha Macabéa, uma jovem nordestina pobre e ingênua que tenta sobreviver na cidade grande. Uma narrativa intensa e comovente sobre solidão, existência e a busca por sentido. Um dos maiores clássicos da literatura brasileira.",
     imagem: "img/a-hora-da-estrela.jpg",
     dataAdicao: "2026-06-27"
   },
@@ -393,7 +393,7 @@ const LIVROS = [
     preco: "R$ 45,00",
     estoque: 1,
     estado: "Ótimo estado",
-    sinopse: "Mitsuha, uma garota presa numa cidadezinha, e Taki, um garoto de Tóquio, começam misteriosamente a trocar de corpo enquanto dormem. Entre confusões e risadas, nasce um laço profundo entre os dois — até descobrirem um segredo que desafia o tempo e a distância. O romance escrito por Makoto Shinkai que deu origem ao aclamado filme de animação.",
+    sinopse: "Mitsuha, uma garota presa numa cidadezinha, e Taki, um garoto de Tóquio, começam misteriosamente a trocar de corpo enquanto dormem. Entre confusões e risadas, nasce um laço profundo entre os dois, até descobrirem um segredo que desafia o tempo e a distância. O romance escrito por Makoto Shinkai que deu origem ao aclamado filme de animação.",
     imagem: "img/your-name.jpg",
     dataAdicao: "2026-06-27"
   },
@@ -406,7 +406,7 @@ const LIVROS = [
     preco: "R$ 55,00",
     estoque: 1,
     estado: "Estado perfeito",
-    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal — e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
+    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal, e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
     imagem: "img/o-principe-cruel.jpg",
     dataAdicao: "2026-06-27"
   },

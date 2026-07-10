@@ -127,7 +127,7 @@
     // Promoção
     if (Precos.promoAtiva()) {
       elPromo.hidden = false;
-      elPromo.innerHTML = `🎉 <strong>${Precos.nomePromo()}:</strong> descontos já aplicados${
+      elPromo.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><path d="M2 12V2h10l10 10-10 10L2 12z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg> <strong>${Precos.nomePromo()}:</strong> descontos já aplicados${
         Precos.dataFimPromo() ? " · válido até " + Precos.dataFimPromo() : ""}.`;
     } else {
       elPromo.hidden = true;
@@ -209,14 +209,23 @@
 
   const CAMPOS_ENDERECO = ["end-cep", "end-rua", "end-numero", "end-bairro", "end-cidade", "end-uf"];
 
+  /* O cliente optou por descrever o endereço com as próprias palavras. */
+  function enderecoDescrito() {
+    return val("end-modo") === "descricao";
+  }
+
   function camposObrigatorios() {
     const obrig = ["cli-nome", "cli-email", "cli-tel"];
-    if (opcaoSelecionada().pedeEndereco) obrig.push.apply(obrig, CAMPOS_ENDERECO);
+    if (opcaoSelecionada().pedeEndereco) {
+      if (enderecoDescrito()) obrig.push("end-descricao");
+      else obrig.push.apply(obrig, CAMPOS_ENDERECO);
+    }
     return obrig;
   }
 
   /* O cliente ainda não cadastrou o endereço completo na conta. */
   function enderecoIncompleto() {
+    if (enderecoDescrito()) return !val("end-descricao");
     return CAMPOS_ENDERECO.some(id => !val(id));
   }
 
@@ -233,8 +242,11 @@
     return (Array.isArray(lista) ? lista : [lista]).filter(Boolean);
   }
 
-  /* true quando a opção restringe a cidade e o endereço do cliente é de outra. */
+  /* true quando a opção restringe a cidade e o endereço do cliente é de outra.
+     Endereço descrito em texto livre não tem campo de cidade para conferir —
+     nesse caso mostramos só um lembrete (não bloqueia). */
   function cidadeForaDaArea() {
+    if (enderecoDescrito()) return false;
     const cidades = cidadesDaOpcao();
     const atual = normalizarTexto(val("end-cidade"));
     if (!cidades.length || !atual) return false;   // vazio = campo faltando, tratado à parte
@@ -268,7 +280,7 @@
     dica.classList.toggle("erro", erro);
     dica.textContent = erro
       ? "Número de WhatsApp inválido. Use DDD + número, ex.: (83) 9 9999-8888."
-      : "Com DDD — é o nosso principal contato com você.";
+      : "Com DDD. É o nosso principal contato com você.";
   }
 
   function validar(marcar) {
@@ -294,12 +306,16 @@
     if (opcaoSelecionada().pedeEndereco && carregado) {
       if (enderecoIncompleto()) {
         msg = `Você ainda não cadastrou seu endereço de entrega. ` +
-              `<a href="conta.html#dados">Conclua seu cadastro</a> para usar esta opção — ` +
+              `<a href="conta.html#dados">Conclua seu cadastro</a> para usar esta opção, ` +
               `ou escolha outra forma de entrega.`;
       } else if (cidadeForaDaArea()) {
         msg = `Esta opção de entrega está disponível apenas em <strong>${esc(cidadesDaOpcao().join(", "))}</strong>, ` +
               `e seu endereço cadastrado fica em <strong>${esc(val("end-cidade"))}</strong>. ` +
               `<a href="conta.html#dados">Atualize seu endereço</a> ou escolha outra forma de entrega.`;
+      } else if (enderecoDescrito() && cidadesDaOpcao().length) {
+        // Endereço em texto livre: não dá para conferir a cidade sozinho.
+        msg = `Lembrete: esta opção entrega apenas em <strong>${esc(cidadesDaOpcao().join(", "))}</strong>. ` +
+              `Confira se o endereço que você descreveu está na área.`;
       }
     }
     el.hidden = !msg;
@@ -314,7 +330,7 @@
     if (campoRuim("cli-tel"))   faltas.push("um WhatsApp válido (com DDD)");
     if (opcaoSelecionada().pedeEndereco && enderecoIncompleto()) faltas.push("o endereço de entrega");
     if (faltas.length) {
-      return `Para finalizar, conclua seu cadastro na sua <a href="conta.html#dados">conta</a> — falta: ${faltas.join(", ")}.`;
+      return `Para finalizar, conclua seu cadastro na sua <a href="conta.html#dados">conta</a>. Falta: ${faltas.join(", ")}.`;
     }
     if (opcaoSelecionada().pedeEndereco && cidadeForaDaArea()) {
       return `Seu endereço está fora da área desta forma de entrega. Escolha outra opção ou <a href="conta.html#dados">atualize seu endereço</a>.`;
@@ -379,9 +395,11 @@
       presenteMsg: presenteMarcado() ? val("cli-presente-msg") : ""
     };
     if (op.pedeEndereco) {
-      c.endereco = [val("end-rua"), val("end-numero"), val("end-compl"), val("end-bairro"),
-                    val("end-cidade") + "/" + val("end-uf").toUpperCase(), "CEP " + val("end-cep")]
-                    .filter(Boolean).join(", ");
+      c.endereco = enderecoDescrito()
+        ? val("end-descricao")
+        : [val("end-rua"), val("end-numero"), val("end-compl"), val("end-bairro"),
+           val("end-cidade") + "/" + val("end-uf").toUpperCase(), "CEP " + val("end-cep")]
+           .filter(Boolean).join(", ");
     }
     return c;
   }
@@ -492,7 +510,7 @@
         body: JSON.stringify({
           valor: total,
           codigo: codigoPedido,
-          descricao: `Pedido ${codigoPedido} — ${CFG.nomeLoja || "BookVerse"}`,
+          descricao: `Pedido ${codigoPedido} - ${CFG.nomeLoja || "BookVerse"}`,
           pagador: { email: cliente.email, nome: cliente.nome },
           emailPedido: montarEmailBody()
         })
@@ -532,7 +550,7 @@
       st.textContent = "Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
     }
     const btn = document.getElementById("btn-ja-paguei");
-    if (btn) btn.textContent = "Já paguei — verificar agora";
+    if (btn) btn.textContent = "Já paguei, verificar agora";
   }
 
   let pollInicio = 0;
@@ -646,11 +664,14 @@
       instagram: val("cli-instagram").replace(/^@+/, "")
     };
     if (op.pedeEndereco) {
-      perfil.endereco = {
-        cep: val("end-cep"), rua: val("end-rua"), numero: val("end-numero"),
-        complemento: val("end-compl"), bairro: val("end-bairro"),
-        cidade: val("end-cidade"), uf: val("end-uf").toUpperCase()
-      };
+      perfil.endereco = enderecoDescrito()
+        ? { modo: "descricao", descricao: val("end-descricao") }
+        : {
+            modo: "campos",
+            cep: val("end-cep"), rua: val("end-rua"), numero: val("end-numero"),
+            complemento: val("end-compl"), bairro: val("end-bairro"),
+            cidade: val("end-cidade"), uf: val("end-uf").toUpperCase()
+          };
     }
     return window.Auth.salvarPerfil(perfil).catch(() => {});
   }
@@ -741,19 +762,19 @@
     const loja = CFG.nomeLoja || "BookVerse";
     const emDinheiro = metodoPagamento === "dinheiro";
     const pagamentoTxt = emDinheiro
-      ? "DINHEIRO EM ESPÉCIE na entrega — pedido APROVADO (receber o valor ao entregar)."
-      : `Pix — código ${codigoPedido}.`;
+      ? "DINHEIRO EM ESPÉCIE na entrega. Pedido APROVADO (receber o valor ao entregar)."
+      : `Pix, código ${codigoPedido}.`;
 
     const itensTxt = dados.itens
-      .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}) — ${Precos.formatarBRL(i.precoLinha)}`)
+      .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}): ${Precos.formatarBRL(i.precoLinha)}`)
       .join("\n");
 
     const presenteTxt = cliente.presente
-      ? `🎁 EMBALAR PARA PRESENTE${cliente.presenteMsg ? ` — cartão: "${cliente.presenteMsg}"` : ""}`
+      ? `EMBALAR PARA PRESENTE${cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : ""}`
       : "";
 
     const mensagem = [
-      `NOVO PEDIDO — ${loja}`,
+      `NOVO PEDIDO - ${loja}`,
       `Código: ${codigoPedido}`,
       ``,
       `Cliente: ${cliente.nome}`,
@@ -777,8 +798,8 @@
     ].join("\n");
 
     return {
-      subject: `Novo pedido ${codigoPedido} — ${loja}`,
-      from_name: `${loja} — Loja`,
+      subject: `Novo pedido ${codigoPedido} - ${loja}`,
+      from_name: `${loja} (Loja)`,
       replyto: cliente.email || "",
       "Código do pedido": codigoPedido,
       "Cliente": cliente.nome,
@@ -788,7 +809,7 @@
       "Instagram": cliente.instagram || "—",
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
-      "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` — "${cliente.presenteMsg}"` : "")) : "Não",
+      "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : "")) : "Não",
       "Forma de pagamento": emDinheiro ? "Dinheiro em espécie (na entrega)" : "Pix",
       "Total": Precos.formatarBRL(total),
       "message": mensagem
@@ -866,8 +887,8 @@
         ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
         <div class="conf-total"><dt>${emDinheiro ? "Total a pagar na entrega" : "Total do Pix"}</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
-      <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " — " + esc(cliente.endereco) : ""}</p>
-      ${cliente.presente ? `<p class="conf-presente"><strong>Embalado para presente</strong>${cliente.presenteMsg ? ` — cartão: “${esc(cliente.presenteMsg)}”` : ""}</p>` : ""}
+      <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " · " + esc(cliente.endereco) : ""}</p>
+      ${cliente.presente ? `<p class="conf-presente"><strong>Embalado para presente</strong>${cliente.presenteMsg ? ` (cartão: “${esc(cliente.presenteMsg)}”)` : ""}</p>` : ""}
       <p class="conf-aviso">${emDinheiro
         ? "Pedido aprovado! Você paga em dinheiro em espécie quando o pedido for entregue. Em breve entraremos em contato para combinar a entrega."
         : (confirmado
@@ -883,7 +904,7 @@
     if (elWhats) {
       const resumoMsg = dados.itens.map(i => `• ${i.qty}× ${i.livro.titulo}`).join("%0A");
       const corpo = (emDinheiro
-        ? `Olá! Acabei de fazer um pedido na ${CFG.nomeLoja || "BookVerse"} — vou pagar em dinheiro na entrega.%0A%0A`
+        ? `Olá! Acabei de fazer um pedido na ${CFG.nomeLoja || "BookVerse"} e vou pagar em dinheiro na entrega.%0A%0A`
         : `Olá! Acabei de pagar via Pix na ${CFG.nomeLoja || "BookVerse"}.%0A%0A`) +
         resumoMsg +
         `%0A%0ATotal: ${Precos.formatarBRL(total)}` +
@@ -968,12 +989,17 @@
 
     const endEl = document.getElementById("show-endereco");
     if (endEl) {
-      const cidUf = (val("end-cidade") && val("end-uf"))
-        ? val("end-cidade") + "/" + val("end-uf").toUpperCase()
-        : (val("end-cidade") || val("end-uf").toUpperCase());
-      const endereco = [val("end-rua"), val("end-numero"), val("end-compl"),
-        val("end-bairro"), cidUf, val("end-cep") ? "CEP " + val("end-cep") : ""]
-        .filter(Boolean).join(", ");
+      let endereco;
+      if (enderecoDescrito()) {
+        endereco = val("end-descricao");
+      } else {
+        const cidUf = (val("end-cidade") && val("end-uf"))
+          ? val("end-cidade") + "/" + val("end-uf").toUpperCase()
+          : (val("end-cidade") || val("end-uf").toUpperCase());
+        endereco = [val("end-rua"), val("end-numero"), val("end-compl"),
+          val("end-bairro"), cidUf, val("end-cep") ? "CEP " + val("end-cep") : ""]
+          .filter(Boolean).join(", ");
+      }
       const obrig = opcaoSelecionada().pedeEndereco;
       const tem = !!endereco;
       endEl.textContent = tem ? endereco : (obrig ? "Não informado" : "—");
@@ -999,6 +1025,9 @@
             setCampo("end-numero", en.numero); setCampo("end-compl", en.complemento);
             setCampo("end-bairro", en.bairro); setCampo("end-cidade", en.cidade);
             setCampo("end-uf", en.uf);
+            setCampo("end-descricao", en.descricao);
+            // Perfis antigos não têm "modo": assume descrição se só houver o texto.
+            setCampo("end-modo", en.modo || (en.descricao && !en.rua ? "descricao" : "campos"));
           }
         } catch (e) {}
       }
@@ -1008,15 +1037,66 @@
     });
   }
 
-  function init() {
-    protegerCheckout();
+  /* ---------- Catálogo do admin (livros adicionados pelo painel) ----------
+     A vitrine junta LIVROS (js/livros.js) com o catálogo do Firestore.
+     O checkout precisa da MESMA junção: sem ela, um "Comprar agora" em um
+     livro do catálogo chegava aqui sem correspondência e a página dizia
+     que o carrinho estava vazio. */
+  function aplicarCatalogo(extras) {
+    if (!Array.isArray(extras) || !extras.length) return false;
+    if (typeof LIVROS === "undefined" || !Array.isArray(LIVROS)) return false;
+    const idDe = window.idLivro || (l => l.id);
+    const indice = new Map();
+    LIVROS.forEach((l, i) => indice.set(idDe(l), i));
+    let mudou = false;
+    extras.forEach(l => {
+      if (!l || !l.id) return;
+      if (indice.has(l.id)) {
+        const atual = LIVROS[indice.get(l.id)];
+        const novo = Object.assign({}, atual, l);
+        if (JSON.stringify(novo) !== JSON.stringify(atual)) {
+          LIVROS[indice.get(l.id)] = novo;
+          mudou = true;
+        }
+      } else {
+        LIVROS.push(l);
+        indice.set(l.id, LIVROS.length - 1);
+        mudou = true;
+      }
+    });
+    return mudou;
+  }
+
+  function carregarCatalogo() {
+    // 1) Cache local gravado pela vitrine: aplica na hora, sem esperar a rede.
+    try {
+      aplicarCatalogo(JSON.parse(localStorage.getItem("bookverse_cache_catalogo_v1") || "null"));
+    } catch (e) {}
+    // 2) Resposta fresca do Firestore: se mudar algo, refaz a página.
+    if (window.Auth && window.Auth.configurado && window.Auth.lerCatalogo) {
+      window.Auth.lerCatalogo().then(extras => {
+        if (aplicarCatalogo(extras)) initLoja();
+      }).catch(() => {});
+    }
+  }
+
+  let inicializado = false;
+  function initLoja() {
     if (dadosPedido().vazio) { render(); return; }
+    if (inicializado) { render(); atualizarEstadoPagamento(); return; }
+    inicializado = true;
     montarEntrega();
     render();
     preencherDeConta();
     atualizarEstadoPagamento();
     // Métrica de "início de checkout" (só dispara se as métricas estiverem ligadas).
     if (window.Analytics) window.Analytics.iniciarCheckout(dadosPedido());
+  }
+
+  function init() {
+    protegerCheckout();
+    carregarCatalogo();
+    initLoja();
   }
 
   init();

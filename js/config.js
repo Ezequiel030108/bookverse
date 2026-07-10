@@ -192,7 +192,7 @@ window.LOJA_CONFIG = {
       {
         id: "combinar",
         titulo: "Combinar entrega",
-        descricao: "Entramos em contato pelo WhatsApp para combinar local e horário da entrega. Opção ideal para quem estuda na ECIT Deputado Genival Matias — a mesma escola de parte da nossa equipe. 💜",
+        descricao: "Entramos em contato pelo WhatsApp para combinar local e horário da entrega. Opção ideal para quem estuda na ECIT Deputado Genival Matias, a mesma escola de parte da nossa equipe.",
         valor: 0,
         pedeEndereco: false
       },

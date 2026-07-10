@@ -1378,7 +1378,7 @@ main {
   transition: transform .12s ease, box-shadow .15s ease, filter .15s ease, background .15s ease;
 }
 .botao-loja:active { transform: translateY(2px); }
-.botao-loja-bloco { width: 100%; }
+.botao-loja-bloco { width: 100%; flex-wrap: wrap; row-gap: 2px; }
 .botao-loja[disabled], .botao-loja:disabled {
   opacity: .45; pointer-events: none; filter: grayscale(.5); box-shadow: none;
 }
@@ -1793,6 +1793,9 @@ main {
 
 /* ---------- Pagamento ---------- */
 .pagamento-metodos { margin-bottom: 14px; }
+/* Título de opção com ícone SVG à esquerda (Pix, dinheiro, presente…) */
+.titulo-com-icone { display: inline-flex; align-items: center; gap: 8px; }
+.titulo-com-icone svg { flex-shrink: 0; color: var(--estrela); }
 .pagamento-intro { margin: 0 0 14px; font-size: .9rem; color: var(--texto-suave); line-height: 1.5; }
 .pagamento-aviso {
   margin-bottom: 12px;
@@ -1897,7 +1900,10 @@ main {
 }
 
 /* ---------- Resumo do pedido ---------- */
-.checkout-resumo { min-width: 0; }
+/* No celular (uma coluna) o resumo aparece PRIMEIRO: o cliente confere
+   o que está comprando antes de preencher os dados. No desktop ele volta
+   para a coluna lateral (order zerado na media query abaixo). */
+.checkout-resumo { min-width: 0; order: -1; }
 .resumo-caixa {
   background:
     radial-gradient(ellipse 400px 160px at 100% 0%, rgba(184,158,255,.14), transparent 70%),
@@ -2055,7 +2061,7 @@ main {
 @media (min-width: 760px) {
   .link-voltar span { display: inline; }
   .checkout-grid { grid-template-columns: 1fr 360px; align-items: start; }
-  .checkout-resumo { position: sticky; top: 86px; }
+  .checkout-resumo { position: sticky; top: 86px; order: 0; }
   .checkout-titulo { font-size: 2rem; }
 }
 @media (min-width: 980px) {

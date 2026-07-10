@@ -111,7 +111,7 @@
             <div class="campo">
               <label for="p-tel">WhatsApp <span class="obrig">*</span></label>
               <input type="tel" id="p-tel" autocomplete="tel" inputmode="tel" placeholder="(83) 9 9999-8888" required />
-              <small class="campo-dica" id="p-dica-whats">Com DDD — ex.: (83) 9 9999-8888.</small>
+              <small class="campo-dica" id="p-dica-whats">Com DDD, ex.: (83) 9 9999-8888.</small>
             </div>
           </div>
           <div class="campo">
@@ -120,39 +120,68 @@
           </div>
 
           <h3 class="conta-sub">Endereço de entrega <span class="opcional">(caso a entrega seja a domicílio e não a combinar)</span></h3>
-          <div class="campo-linha">
-            <div class="campo campo-cep">
-              <label for="p-cep">CEP</label>
-              <input type="text" id="p-cep" inputmode="numeric" autocomplete="postal-code" placeholder="58000-000" />
+
+          <!-- Como informar o endereço: campos normais ou com as próprias palavras -->
+          <div class="entrega-opcoes endereco-modo" id="p-endereco-modo" role="radiogroup" aria-label="Como informar o endereço">
+            <label class="entrega-opcao selecionada" data-modo="campos">
+              <input type="radio" name="p-end-modo" value="campos" checked>
+              <span class="entrega-radio" aria-hidden="true"></span>
+              <span class="entrega-texto">
+                <span class="entrega-titulo">Preencher o endereço completo</span>
+                <span class="entrega-desc">CEP, rua, número, bairro, cidade e UF.</span>
+              </span>
+            </label>
+            <label class="entrega-opcao" data-modo="descricao">
+              <input type="radio" name="p-end-modo" value="descricao">
+              <span class="entrega-radio" aria-hidden="true"></span>
+              <span class="entrega-texto">
+                <span class="entrega-titulo">Descrever com minhas palavras</span>
+                <span class="entrega-desc">Escreva o endereço do seu jeito. Pontos de referência ajudam bastante.</span>
+              </span>
+            </label>
+          </div>
+
+          <div id="p-endereco-campos">
+            <div class="campo-linha">
+              <div class="campo campo-cep">
+                <label for="p-cep">CEP</label>
+                <input type="text" id="p-cep" inputmode="numeric" autocomplete="postal-code" placeholder="58000-000" />
+              </div>
+              <div class="campo campo-cresce">
+                <label for="p-rua">Rua / Logradouro</label>
+                <input type="text" id="p-rua" autocomplete="address-line1" />
+              </div>
             </div>
-            <div class="campo campo-cresce">
-              <label for="p-rua">Rua / Logradouro</label>
-              <input type="text" id="p-rua" autocomplete="address-line1" />
+            <div class="campo-linha">
+              <div class="campo campo-num">
+                <label for="p-numero">Número</label>
+                <input type="text" id="p-numero" inputmode="numeric" />
+              </div>
+              <div class="campo campo-cresce">
+                <label for="p-compl">Complemento <span class="opcional">(opcional)</span></label>
+                <input type="text" id="p-compl" autocomplete="address-line2" />
+              </div>
+            </div>
+            <div class="campo-linha">
+              <div class="campo campo-cresce">
+                <label for="p-bairro">Bairro</label>
+                <input type="text" id="p-bairro" />
+              </div>
+              <div class="campo campo-cresce">
+                <label for="p-cidade">Cidade</label>
+                <input type="text" id="p-cidade" autocomplete="address-level2" />
+              </div>
+              <div class="campo campo-uf">
+                <label for="p-uf">UF</label>
+                <input type="text" id="p-uf" maxlength="2" autocomplete="address-level1" placeholder="PB" />
+              </div>
             </div>
           </div>
-          <div class="campo-linha">
-            <div class="campo campo-num">
-              <label for="p-numero">Número</label>
-              <input type="text" id="p-numero" inputmode="numeric" />
-            </div>
-            <div class="campo campo-cresce">
-              <label for="p-compl">Complemento <span class="opcional">(opcional)</span></label>
-              <input type="text" id="p-compl" autocomplete="address-line2" />
-            </div>
-          </div>
-          <div class="campo-linha">
-            <div class="campo campo-cresce">
-              <label for="p-bairro">Bairro</label>
-              <input type="text" id="p-bairro" />
-            </div>
-            <div class="campo campo-cresce">
-              <label for="p-cidade">Cidade</label>
-              <input type="text" id="p-cidade" autocomplete="address-level2" />
-            </div>
-            <div class="campo campo-uf">
-              <label for="p-uf">UF</label>
-              <input type="text" id="p-uf" maxlength="2" autocomplete="address-level1" placeholder="PB" />
-            </div>
+
+          <div class="campo" id="p-endereco-descricao" hidden>
+            <label for="p-end-descricao">Endereço com suas palavras</label>
+            <textarea id="p-end-descricao" rows="3" maxlength="500" placeholder="Ex.: Sítio Malhada Comprida, casa amarela em frente à igreja, Juazeirinho/PB. Falar com dona Maria."></textarea>
+            <p class="conta-ajuda">Inclua cidade e pontos de referência para a entrega chegar certinho.</p>
           </div>
 
           <p class="pagamento-erro" id="onboarding-erro" hidden></p>
@@ -268,7 +297,7 @@
                   <option value="Novo, lacrado"></option>
                   <option value="Estado perfeito"></option>
                   <option value="Seminovo"></option>
-                  <option value="Usado — bom estado"></option>
+                  <option value="Usado, em bom estado"></option>
                 </datalist>
               </div>
             </div>

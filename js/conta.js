@@ -80,15 +80,42 @@
     if (!pTel || !pDica) return;
     const erro = pTel.value.trim().length > 0 && !whatsappValido(pTel.value);
     pDica.classList.toggle("erro", erro);
-    pDica.textContent = erro ? "Número inválido. Use DDD + número, ex.: (83) 9 9999-8888." : "Com DDD — ex.: (83) 9 9999-8888.";
+    pDica.textContent = erro ? "Número inválido. Use DDD + número, ex.: (83) 9 9999-8888." : "Com DDD, ex.: (83) 9 9999-8888.";
   }
   if (pTel) pTel.addEventListener("input", () => { marcar("p-tel", false); atualizarDicaWhats(); });
   const pNome = document.getElementById("p-nome");
   if (pNome) pNome.addEventListener("input", () => marcar("p-nome", false));
-  ["p-cep", "p-rua", "p-numero", "p-bairro", "p-cidade", "p-uf"].forEach(id => {
+  ["p-cep", "p-rua", "p-numero", "p-bairro", "p-cidade", "p-uf", "p-end-descricao"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("input", () => marcar(id, false));
   });
+
+  /* ---------- Modo do endereço: campos normais ou descrição livre ---------- */
+  function modoEndereco() {
+    const r = document.querySelector('input[name="p-end-modo"]:checked');
+    return (r && r.value) === "descricao" ? "descricao" : "campos";
+  }
+  function aplicarModoEndereco(modo) {
+    const grupo = document.getElementById("p-endereco-modo");
+    if (grupo) {
+      grupo.querySelectorAll('input[name="p-end-modo"]').forEach(r => { r.checked = r.value === modo; });
+      grupo.querySelectorAll(".entrega-opcao").forEach(l =>
+        l.classList.toggle("selecionada", l.dataset.modo === modo));
+    }
+    const campos = document.getElementById("p-endereco-campos");
+    const descricao = document.getElementById("p-endereco-descricao");
+    if (campos)    campos.hidden = modo === "descricao";
+    if (descricao) descricao.hidden = modo !== "descricao";
+  }
+  (function () {
+    const grupo = document.getElementById("p-endereco-modo");
+    if (!grupo) return;
+    grupo.querySelectorAll('input[name="p-end-modo"]').forEach(r =>
+      r.addEventListener("change", () => {
+        aplicarModoEndereco(r.value);
+        if (onbErro) onbErro.hidden = true;
+      }));
+  })();
 
   /* ---------- CEP: preenche o endereço sozinho (ViaCEP, gratuito) ---------- */
   const pCep = document.getElementById("p-cep");
@@ -120,11 +147,15 @@
 
     /* Endereço: é opcional deixar TUDO em branco (dá para completar
        depois), mas se começou a preencher tem que estar completo —
-       um endereço pela metade travaria a entrega a domicílio. */
-    const camposEnd = ["p-cep", "p-rua", "p-numero", "p-bairro", "p-cidade", "p-uf"];
-    const comecouEndereco = camposEnd.some(id => v(id)) || !!v("p-compl");
-    const endRuim = comecouEndereco && camposEnd.some(id => !v(id));
-    camposEnd.forEach(id => marcar(id, comecouEndereco && !v(id)));
+       um endereço pela metade travaria a entrega a domicílio.
+       No modo "descrever com minhas palavras" basta o texto. */
+    let endRuim = false;
+    if (modoEndereco() === "campos") {
+      const camposEnd = ["p-cep", "p-rua", "p-numero", "p-bairro", "p-cidade", "p-uf"];
+      const comecouEndereco = camposEnd.some(id => v(id)) || !!v("p-compl");
+      endRuim = comecouEndereco && camposEnd.some(id => !v(id));
+      camposEnd.forEach(id => marcar(id, comecouEndereco && !v(id)));
+    }
 
     const ok = !nomeRuim && !telRuim && !endRuim;
     if (onbErro) {
@@ -132,7 +163,7 @@
       if (nomeRuim || telRuim) {
         onbErro.textContent = "Preencha os campos obrigatórios: nome e um WhatsApp válido (com DDD).";
       } else if (endRuim) {
-        onbErro.textContent = "Endereço incompleto: preencha CEP, rua, número, bairro, cidade e UF — ou deixe todos os campos de endereço em branco para cadastrar depois.";
+        onbErro.textContent = "Endereço incompleto: preencha CEP, rua, número, bairro, cidade e UF, ou deixe todos os campos de endereço em branco para cadastrar depois.";
       }
     }
     return ok;
@@ -149,9 +180,11 @@
         telefone: v("p-tel"),
         instagram: v("p-instagram").replace(/^@+/, ""),
         endereco: {
+          modo: modoEndereco(),
           cep: v("p-cep"), rua: v("p-rua"), numero: v("p-numero"),
           complemento: v("p-compl"), bairro: v("p-bairro"),
-          cidade: v("p-cidade"), uf: v("p-uf").toUpperCase()
+          cidade: v("p-cidade"), uf: v("p-uf").toUpperCase(),
+          descricao: v("p-end-descricao")
         },
         cadastroCompleto: true
       });
@@ -268,8 +301,8 @@
 
   /* ---------- Histórico de pedidos ---------- */
   const STATUS = {
-    pago:       { texto: "Pago — preparando",      classe: "pedido-pago" },
-    aprovado:   { texto: "Aprovado — pague na entrega", classe: "pedido-pago" },
+    pago:       { texto: "Pago · preparando",      classe: "pedido-pago" },
+    aprovado:   { texto: "Aprovado · pague na entrega", classe: "pedido-pago" },
     pendente:   { texto: "Aguardando pagamento",   classe: "pedido-pendente" },
     aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" },
     entregue:   { texto: "Entregue ✓",             classe: "pedido-entregue" },
@@ -283,7 +316,7 @@
     const nivel = status === "entregue" ? 3 : (status === "pago" || status === "aprovado" ? 2 : 1);
     // "aprovado" = pedido em dinheiro: aprovado na hora, paga-se na entrega.
     const rotuloPagamento = status === "aprovado"
-      ? "Aprovado — pague na entrega"
+      ? "Aprovado, pague na entrega"
       : (nivel >= 2 ? "Pagamento confirmado" : "Pagamento");
     const passos = [
       { rotulo: "Pedido feito", feito: true },
@@ -327,10 +360,10 @@
             </div>
           </details>` : "";
       const aviso = p.status === "pago"
-        ? `<p class="pedido-contato-aviso">Pagamento confirmado — em breve entraremos em contato para combinar a entrega.</p>`
+        ? `<p class="pedido-contato-aviso">Pagamento confirmado. Em breve entraremos em contato para combinar a entrega.</p>`
         : (p.status === "aprovado"
-          ? `<p class="pedido-contato-aviso">Pedido aprovado — você paga em dinheiro em espécie na entrega. Em breve entraremos em contato.</p>`
-          : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue — boa leitura!</p>` : ""));
+          ? `<p class="pedido-contato-aviso">Pedido aprovado: você paga em dinheiro em espécie na entrega. Em breve entraremos em contato.</p>`
+          : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue. Boa leitura!</p>` : ""));
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
@@ -340,7 +373,7 @@
           ${data ? `<p class="pedido-data">${esc(data)}</p>` : ""}
           ${passosHTML(p.status)}
           <ul class="pedido-itens">${itensPedidoHTML(p)}</ul>
-          ${p.presente ? `<p class="pedido-presente">Embalado para presente${p.presenteMsg ? ` — “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
+          ${p.presente ? `<p class="pedido-presente">Embalado para presente${p.presenteMsg ? ` (cartão: “${esc(p.presenteMsg)}”)` : ""}</p>` : ""}
           <div class="pedido-rodape"><span>${esc(p.entrega || "")}</span><strong>${fmt(p.total)}</strong></div>
           ${pixBloco}
           ${aviso}
@@ -510,10 +543,10 @@
             <p class="ploja-cliente-contato">${whats}${c.instagram ? ` · ${esc(c.instagram)}` : ""}${c.email ? ` · ${esc(c.email)}` : ""}</p>
           </div>
           <ul class="pedido-itens">${itensPedidoHTML(p)}</ul>
-          ${p.presente ? `<p class="pedido-presente"><strong>Embalar para presente</strong>${p.presenteMsg ? ` — cartão: “${esc(p.presenteMsg)}”` : ""}</p>` : ""}
+          ${p.presente ? `<p class="pedido-presente"><strong>Embalar para presente</strong>${p.presenteMsg ? ` (cartão: “${esc(p.presenteMsg)}”)` : ""}</p>` : ""}
           ${p.observacoes ? `<p class="ploja-obs">Obs.: ${esc(p.observacoes)}</p>` : ""}
           <div class="pedido-rodape">
-            <span>${esc(p.entrega || "")}${p.endereco ? " — " + esc(p.endereco) : ""}</span>
+            <span>${esc(p.entrega || "")}${p.endereco ? " · " + esc(p.endereco) : ""}</span>
             <strong>${fmt(p.total)}</strong>
           </div>
           <div class="ploja-acoes">${acoes.join("")}</div>
@@ -922,7 +955,7 @@
       if (!r.ok || !d.sinopse) throw new Error((d && d.error) || "falha");
       const ta = document.getElementById("livro-sinopse");
       if (ta) ta.value = d.sinopse;
-      if (sinopseDica) { sinopseDica.hidden = false; sinopseDica.classList.remove("erro"); sinopseDica.textContent = "Sinopse gerada — você pode editá-la."; }
+      if (sinopseDica) { sinopseDica.hidden = false; sinopseDica.classList.remove("erro"); sinopseDica.textContent = "Sinopse gerada. Você pode editá-la."; }
     } catch (e) {
       if (sinopseDica) { sinopseDica.hidden = false; sinopseDica.classList.add("erro"); sinopseDica.textContent = "Não foi possível gerar agora. Escreva à mão ou tente de novo."; }
     } finally {
@@ -955,7 +988,7 @@
     if (!categoriaNovaSugerida) return;
     set("livro-genero", categoriaNovaSugerida);
     btnUsarGeneroNovo.hidden = true;
-    mostrarGeneroDica("Nova categoria “" + categoriaNovaSugerida + "” aplicada — vira uma nova seção na loja ao salvar.", "ok");
+    mostrarGeneroDica("Nova categoria “" + categoriaNovaSugerida + "” aplicada. Vira uma nova seção na loja ao salvar.", "ok");
   });
 
   if (btnClassificar) btnClassificar.addEventListener("click", async () => {
@@ -1212,6 +1245,9 @@
       set("p-cep", en.cep); set("p-rua", en.rua); set("p-numero", en.numero);
       set("p-compl", en.complemento); set("p-bairro", en.bairro);
       set("p-cidade", en.cidade); set("p-uf", en.uf);
+      set("p-end-descricao", en.descricao);
+      // Perfis antigos não têm "modo": assume descrição se só houver o texto.
+      aplicarModoEndereco(en.modo || (en.descricao && !en.rua ? "descricao" : "campos"));
     }
     atualizarDicaWhats();
 

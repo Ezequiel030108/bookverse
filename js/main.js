@@ -312,7 +312,7 @@ function criarCard(livro, indice, seloNovo) {
   card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.05) + "s");
   card.tabIndex = 0;
   card.setAttribute("role", "button");
-  card.setAttribute("aria-label", `${livro.titulo} — ${livro.autor}`);
+  card.setAttribute("aria-label", `${livro.titulo}, ${livro.autor}`);
 
   // Selo "Novo" só nos livros em destaque (os mais recentes adicionados).
   // Estoque/condição ficam no modal — marcar todo card viraria ruído.
@@ -1143,7 +1143,7 @@ function mensagemCompartilhar(livro, url) {
   const condicao = livro.condicao === "novo" ? " (novo)" : (livro.condicao === "usado" ? " (usado)" : "");
   return (
     "💜✨ Olha esse achado na BookVerse! ✨💜\n\n" +
-    "📖 " + livro.titulo + " — " + livro.autor + "\n" +
+    "📖 " + livro.titulo + ", de " + livro.autor + "\n" +
     "🤍 " + preco + condicao + "\n\n" +
     "🌟 Confira já: " + url
   );

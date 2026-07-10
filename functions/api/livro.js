@@ -60,7 +60,7 @@ module.exports = async (req, res) => {
   // Livro não achado (catálogo fora do ar ou recém-cadastrado): a prévia
   // sai genérica da loja, mas o link continua levando ao livro certo.
   const titulo = livro
-    ? `${livro.titulo || "Livro"} — ${livro.autor || "BookVerse"}`
+    ? `${livro.titulo || "Livro"}, de ${livro.autor || "BookVerse"}`
     : "BookVerse";
   const desc = (livro
     ? (livro.sinopse || `Disponível na BookVerse por ${livro.preco || "um precinho especial"}.`)
