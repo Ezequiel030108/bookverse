@@ -252,6 +252,7 @@
   /* ---------- Histórico de pedidos ---------- */
   const STATUS = {
     pago:       { texto: "Pago — preparando",      classe: "pedido-pago" },
+    aprovado:   { texto: "Aprovado — pague na entrega", classe: "pedido-pago" },
     pendente:   { texto: "Aguardando pagamento",   classe: "pedido-pendente" },
     aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" },
     entregue:   { texto: "Entregue ✓",             classe: "pedido-entregue" },
@@ -262,10 +263,14 @@
      A baixa de "entregue" é dada pelos admins em "Pedidos da loja". */
   function passosHTML(status) {
     if (status === "cancelado") return "";
-    const nivel = status === "entregue" ? 3 : (status === "pago" ? 2 : 1);
+    const nivel = status === "entregue" ? 3 : (status === "pago" || status === "aprovado" ? 2 : 1);
+    // "aprovado" = pedido em dinheiro: aprovado na hora, paga-se na entrega.
+    const rotuloPagamento = status === "aprovado"
+      ? "Aprovado — pague na entrega"
+      : (nivel >= 2 ? "Pagamento confirmado" : "Pagamento");
     const passos = [
       { rotulo: "Pedido feito", feito: true },
-      { rotulo: nivel >= 2 ? "Pagamento confirmado" : "Pagamento", feito: nivel >= 2 },
+      { rotulo: rotuloPagamento, feito: nivel >= 2 },
       { rotulo: nivel >= 3 ? "Entregue" : "Entrega", feito: nivel >= 3 }
     ];
     return `<ol class="pedido-passos" aria-label="Andamento do pedido">` + passos.map((p, i) => `
@@ -306,7 +311,9 @@
           </details>` : "";
       const aviso = p.status === "pago"
         ? `<p class="pedido-contato-aviso">Pagamento confirmado — em breve entraremos em contato para combinar a entrega.</p>`
-        : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue — boa leitura!</p>` : "");
+        : (p.status === "aprovado"
+          ? `<p class="pedido-contato-aviso">Pedido aprovado — você paga em dinheiro em espécie na entrega. Em breve entraremos em contato.</p>`
+          : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue — boa leitura!</p>` : ""));
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
@@ -355,7 +362,9 @@
     const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
     for (const p of pedidos) {
       if (!p) continue;
-      let pago = p.status === "pago";
+      // "aprovado" (dinheiro na entrega) conta como fechado para fins de
+      // aviso por e-mail — se o envio falhou no checkout, reenvia aqui.
+      let pago = p.status === "pago" || p.status === "aprovado";
       // Ainda pendente: confirma no Mercado Pago.
       if (!pago && p.pagamentoId) {
         try {
@@ -426,7 +435,9 @@
   let plojaFiltroStatus = "todos";   // todos | apagar | pago | entregue
 
   function plojaStatusGrupo(p) {
-    if (p.status === "pago") return "pago";
+    // "aprovado" (dinheiro na entrega) entra no grupo dos aprovados/pagos:
+    // o pedido já está fechado, falta só entregar (e receber o dinheiro).
+    if (p.status === "pago" || p.status === "aprovado") return "pago";
     if (p.status === "entregue") return "entregue";
     if (p.status === "cancelado") return "cancelado";
     return "apagar";   // pendente / aguardando
@@ -510,10 +521,10 @@
       plojaPedidos = await Auth.listarPedidosLoja();
       plojaCarregado = true;
 
-      // Pedidos pagos que ainda não tiveram baixa de estoque: dá baixa agora.
+      // Pedidos pagos/aprovados que ainda não tiveram baixa de estoque: dá baixa agora.
       // (O cliente comum não tem permissão para marcar "vendido"; o admin tem.)
       for (const p of plojaPedidos) {
-        if (p.status === "pago" && !p.estoqueBaixado && p._caminho) {
+        if ((p.status === "pago" || p.status === "aprovado") && !p.estoqueBaixado && p._caminho) {
           await baixarEstoquePedido(p);
           Auth.atualizarPedidoLoja(p._caminho, { estoqueBaixado: true }).catch(() => {});
           p.estoqueBaixado = true;

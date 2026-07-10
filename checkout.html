@@ -141,12 +141,30 @@
         </form>
 
         <section class="checkout-bloco" id="bloco-pagamento">
-          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento via Pix</h2>
+          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento</h2>
 
-          <p class="pagamento-intro">Pague com <strong>Pix</strong> pelo app do seu banco — cai na hora. Gere o código abaixo e escaneie o <strong>QR Code</strong> ou use o <strong>Pix Copia e Cola</strong>.</p>
+          <!-- Escolha da forma de pagamento -->
+          <div class="entrega-opcoes pagamento-metodos" id="pagamento-metodos" role="radiogroup" aria-label="Forma de pagamento">
+            <label class="entrega-opcao selecionada" data-metodo="pix">
+              <input type="radio" name="pagamento" value="pix" checked>
+              <span class="entrega-radio" aria-hidden="true"></span>
+              <span class="entrega-texto">
+                <span class="entrega-titulo">Pix</span>
+                <span class="entrega-desc">Pague agora pelo app do seu banco, com QR Code ou Pix Copia e Cola. Cai na hora.</span>
+              </span>
+            </label>
+            <label class="entrega-opcao" data-metodo="dinheiro">
+              <input type="radio" name="pagamento" value="dinheiro">
+              <span class="entrega-radio" aria-hidden="true"></span>
+              <span class="entrega-texto">
+                <span class="entrega-titulo">💵 Dinheiro em espécie</span>
+                <span class="entrega-desc">Você paga em dinheiro no momento da entrega. Seu pedido é aprovado imediatamente.</span>
+              </span>
+            </label>
+          </div>
 
           <div class="pagamento-aviso" id="aviso-form" hidden>
-            Complete seus dados na sua <a href="conta.html">conta</a> para gerar o Pix.
+            Complete seus dados na sua <a href="conta.html">conta</a> para finalizar o pedido.
           </div>
 
           <div class="pagamento-demo" id="aviso-config" hidden>
@@ -154,9 +172,23 @@
             Adicione sua chave Pix em <code>js/config.js</code> para ativar o pagamento.
           </div>
 
-          <button type="button" id="btn-gerar-pix" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
-            Gerar Pix de <span id="btn-pix-valor">R$ 0,00</span>
-          </button>
+          <!-- Pagamento via Pix -->
+          <div id="pagamento-pix">
+            <p class="pagamento-intro">Pague com <strong>Pix</strong> pelo app do seu banco — cai na hora. Gere o código abaixo e escaneie o <strong>QR Code</strong> ou use o <strong>Pix Copia e Cola</strong>.</p>
+
+            <button type="button" id="btn-gerar-pix" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
+              Gerar Pix de <span id="btn-pix-valor">R$ 0,00</span>
+            </button>
+          </div>
+
+          <!-- Pagamento em dinheiro na entrega -->
+          <div id="pagamento-dinheiro" hidden>
+            <p class="pagamento-intro">Você paga em <strong>dinheiro em espécie</strong> quando o pedido for entregue. Seu pedido é <strong>aprovado imediatamente</strong> — é só confirmar abaixo e separar o valor para o dia da entrega.</p>
+
+            <button type="button" id="btn-confirmar-dinheiro" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
+              Confirmar pedido — pagar <span id="btn-dinheiro-valor">R$ 0,00</span> na entrega
+            </button>
+          </div>
 
           <p class="pagamento-privacidade">
             Ao finalizar, você concorda com a nossa

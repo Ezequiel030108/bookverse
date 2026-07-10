@@ -1792,6 +1792,7 @@ main {
 .endereco-campos { margin-top: 14px; }
 
 /* ---------- Pagamento ---------- */
+.pagamento-metodos { margin-bottom: 14px; }
 .pagamento-intro { margin: 0 0 14px; font-size: .9rem; color: var(--texto-suave); line-height: 1.5; }
 .pagamento-aviso {
   margin-bottom: 12px;

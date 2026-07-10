@@ -1,13 +1,13 @@
 /* ============================================================
-   BOOKVERSE — CHECKOUT (pagamento via Pix)
+   BOOKVERSE — CHECKOUT (Pix ou dinheiro na entrega)
    ------------------------------------------------------------
    Monta o resumo do pedido, valida os dados do cliente, calcula
-   o frete e gera o pagamento por Pix (QR Code + "Pix Copia e
-   Cola") com o valor exato do pedido.
+   o frete e finaliza o pagamento de duas formas:
 
-   A confirmação do Pix é manual: o cliente paga pelo app do
-   banco e o lojista confere o recebimento. Os dados da conta que
-   recebe ficam em js/config.js (chave Pix, nome e cidade).
+   - Pix: gera QR Code + "Pix Copia e Cola" com o valor exato do
+     pedido (manual ou via Mercado Pago, conforme js/config.js).
+   - Dinheiro em espécie: o cliente paga na hora da entrega e o
+     pedido é APROVADO imediatamente (status "aprovado").
 
    Não precisa mexer aqui.
    ============================================================ */
@@ -34,6 +34,10 @@
   const erroPag      = document.getElementById("pagamento-erro");
   const btnGerar     = document.getElementById("btn-gerar-pix");
   const pixArea      = document.getElementById("pix-area");
+  const elMetodos    = document.getElementById("pagamento-metodos");
+  const blocoPix     = document.getElementById("pagamento-pix");
+  const blocoDinheiro= document.getElementById("pagamento-dinheiro");
+  const btnDinheiro  = document.getElementById("btn-confirmar-dinheiro");
 
   /* ---------- Estado ---------- */
   const opcoesFrete = (CFG.frete && CFG.frete.opcoes) || [];
@@ -49,6 +53,9 @@
   let contaCarregada = false; // true quando os dados da conta já chegaram
   let pixCopiaCola = "";    // código Pix gerado (guardado no pedido)
   let pixTicketUrl = "";    // link de pagamento do Mercado Pago
+
+  // Forma de pagamento escolhida: "pix" ou "dinheiro" (na entrega).
+  let metodoPagamento = "pix";
 
   // "Comprar agora" = compra direta de UM livro, sem usar o carrinho.
   let compraDireta = null;
@@ -181,6 +188,22 @@
     elEndereco.hidden = !opcaoSelecionada().pedeEndereco;
   }
 
+  /* ---------- Forma de pagamento (Pix ou dinheiro) ---------- */
+  function montarMetodosPagamento() {
+    if (!elMetodos) return;
+    elMetodos.querySelectorAll('input[name="pagamento"]').forEach(r => {
+      r.addEventListener("change", () => {
+        metodoPagamento = r.value;
+        elMetodos.querySelectorAll(".entrega-opcao").forEach(l =>
+          l.classList.toggle("selecionada", l.dataset.metodo === metodoPagamento));
+        if (blocoPix)      blocoPix.hidden = metodoPagamento !== "pix";
+        if (blocoDinheiro) blocoDinheiro.hidden = metodoPagamento !== "dinheiro";
+        resetPix();        // trocou de método: descarta o Pix em aberto
+        atualizarEstadoPagamento();
+      });
+    });
+  }
+
   /* ---------- Validação ---------- */
   function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
 
@@ -239,13 +262,18 @@
     const ok = validar(false) && !dadosPedido().vazio;
     const configurado = usaMercadoPago || pixConfigurado();
     const carregado = !exigeConta() || contaCarregada;  // espera os dados da conta
-    if (avisoConfig) avisoConfig.hidden = configurado;
-    if (avisoForm)   avisoForm.hidden = ok || !configurado || !carregado;
+    const pagaNaEntrega = metodoPagamento === "dinheiro";
+    // Dinheiro na entrega funciona mesmo sem Pix configurado.
+    if (avisoConfig) avisoConfig.hidden = configurado || pagaNaEntrega;
+    if (avisoForm)   avisoForm.hidden = ok || (!configurado && !pagaNaEntrega) || !carregado;
     if (btnGerar)    btnGerar.disabled = !(ok && configurado && carregado);
+    if (btnDinheiro) btnDinheiro.disabled = !(ok && carregado);
 
     const { total } = montarPedido();
     const bv = document.getElementById("btn-pix-valor");
     if (bv) bv.textContent = Precos.formatarBRL(total);
+    const bd = document.getElementById("btn-dinheiro-valor");
+    if (bd) bd.textContent = Precos.formatarBRL(total);
 
     if (typeof atualizarCartaoDados === "function") atualizarCartaoDados();
   }
@@ -500,6 +528,45 @@
     sucesso(true);
   }
 
+  /* ----- Dinheiro em espécie: paga na entrega, aprovado na hora ----- */
+  let confirmandoDinheiro = false;   // trava contra clique duplo
+  async function confirmarPedidoDinheiro() {
+    if (confirmandoDinheiro) return;
+    if (!validar(true)) {
+      if (avisoForm) avisoForm.hidden = false;
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    confirmandoDinheiro = true;
+    let txtBtn;
+    if (btnDinheiro) { txtBtn = btnDinheiro.innerHTML; btnDinheiro.disabled = true; btnDinheiro.textContent = "Confirmando pedido…"; }
+    try {
+      codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
+      pagamentoId = null;
+      pixCopiaCola = "";
+      pixTicketUrl = "";
+      if (erroPag) erroPag.hidden = true;
+
+      // Pagamento acontece na entrega: o pedido já nasce APROVADO.
+      try { await salvarPerfilSeLogado(); } catch (e) {}
+      try { await salvarPedidoSeLogado("aprovado"); } catch (e) {}
+      marcarVendidoSeLogado();   // segura o livro: a venda está fechada
+
+      // Avisa o lojista por e-mail imediatamente.
+      try {
+        await enviarEmailManual();
+        if (window.Auth && window.Auth.usuario && window.Auth.usuario()) {
+          window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
+        }
+      } catch (e) {}
+
+      sucesso(true);
+    } finally {
+      confirmandoDinheiro = false;
+      if (btnDinheiro) { btnDinheiro.disabled = false; if (txtBtn) btnDinheiro.innerHTML = txtBtn; }
+    }
+  }
+
   /* ----- Conta (Firebase): salvar perfil e pedido, se logado ----- */
   function salvarPerfilSeLogado() {
     if (!window.Auth || !window.Auth.usuario || !window.Auth.usuario()) return Promise.resolve();
@@ -527,6 +594,7 @@
     const pedido = {
       codigo: codigoPedido,
       status: status,
+      pagamento: metodoPagamento === "dinheiro" ? "dinheiro" : "pix",
       total: total,
       subtotal: dados.subtotal,
       frete: frete,
@@ -603,6 +671,10 @@
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
     const loja = CFG.nomeLoja || "BookVerse";
+    const emDinheiro = metodoPagamento === "dinheiro";
+    const pagamentoTxt = emDinheiro
+      ? "DINHEIRO EM ESPÉCIE na entrega — pedido APROVADO (receber o valor ao entregar)."
+      : `Pix — código ${codigoPedido}.`;
 
     const itensTxt = dados.itens
       .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}) — ${Precos.formatarBRL(i.precoLinha)}`)
@@ -633,7 +705,7 @@
       `Total: ${Precos.formatarBRL(total)}`,
       cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
       ``,
-      `Pagamento: Pix — código ${codigoPedido}.`
+      `Pagamento: ${pagamentoTxt}`
     ].join("\n");
 
     return {
@@ -649,6 +721,7 @@
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
       "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` — "${cliente.presenteMsg}"` : "")) : "Não",
+      "Forma de pagamento": emDinheiro ? "Dinheiro em espécie (na entrega)" : "Pix",
       "Total": Precos.formatarBRL(total),
       "message": mensagem
     };
@@ -697,6 +770,7 @@
     pararPolling();
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
+    const emDinheiro = metodoPagamento === "dinheiro";
 
     // Métrica de compra (GA4 "purchase" + conversão do Google Ads, com
     // conversões otimizadas a partir dos dados do cliente). Só dispara se
@@ -722,28 +796,34 @@
       <dl class="conf-totais">
         <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(dados.subtotal)}</dd></div>
         ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
-        <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
+        <div class="conf-total"><dt>${emDinheiro ? "Total a pagar na entrega" : "Total do Pix"}</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
       <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " — " + esc(cliente.endereco) : ""}</p>
       ${cliente.presente ? `<p class="conf-presente"><strong>Embalado para presente</strong>${cliente.presenteMsg ? ` — cartão: “${esc(cliente.presenteMsg)}”` : ""}</p>` : ""}
-      <p class="conf-aviso">${confirmado
-        ? "Pagamento confirmado! Em breve entraremos em contato para combinar a entrega."
-        : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante para agilizar."}</p>`;
+      <p class="conf-aviso">${emDinheiro
+        ? "Pedido aprovado! Você paga em dinheiro em espécie quando o pedido for entregue. Em breve entraremos em contato para combinar a entrega."
+        : (confirmado
+          ? "Pagamento confirmado! Em breve entraremos em contato para combinar a entrega."
+          : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante para agilizar.")}</p>`;
 
     const sub = document.getElementById("confirmacao-sub");
     sub.textContent = `Obrigado, ${cliente.nome || "leitor(a)"}! Recebemos seu pedido.`;
 
     // Botão para enviar o comprovante (WhatsApp, ou Instagram como alternativa).
+    // No pagamento em dinheiro não há comprovante: vira um botão de contato.
     const elWhats = document.getElementById("confirmacao-whats");
     if (elWhats) {
       const resumoMsg = dados.itens.map(i => `• ${i.qty}× ${i.livro.titulo}`).join("%0A");
-      const corpo = `Olá! Acabei de pagar via Pix na ${CFG.nomeLoja || "BookVerse"}.%0A%0A` +
+      const corpo = (emDinheiro
+        ? `Olá! Acabei de fazer um pedido na ${CFG.nomeLoja || "BookVerse"} — vou pagar em dinheiro na entrega.%0A%0A`
+        : `Olá! Acabei de pagar via Pix na ${CFG.nomeLoja || "BookVerse"}.%0A%0A`) +
         resumoMsg +
         `%0A%0ATotal: ${Precos.formatarBRL(total)}` +
         `%0AEntrega: ${cliente.entrega}` +
         `%0APedido: ${codigoPedido || ""}` +
         `%0ANome: ${cliente.nome}` +
-        `%0A%0A(vou anexar o comprovante)`;
+        (emDinheiro ? "" : `%0A%0A(vou anexar o comprovante)`);
+      if (emDinheiro) elWhats.textContent = "Falar com a loja no WhatsApp";
       if (CFG.whatsapp) {
         elWhats.href = `https://wa.me/${CFG.whatsapp}?text=${corpo}`;
         elWhats.hidden = false;
@@ -776,6 +856,8 @@
 
   /* ---------- Liga tudo ---------- */
   if (btnGerar) btnGerar.addEventListener("click", gerarPix);
+  if (btnDinheiro) btnDinheiro.addEventListener("click", confirmarPedidoDinheiro);
+  montarMetodosPagamento();
   const btnCopiar = document.getElementById("btn-copiar-pix");
   if (btnCopiar) btnCopiar.addEventListener("click", copiarPix);
   const btnPaguei = document.getElementById("btn-ja-paguei");
