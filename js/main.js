@@ -540,6 +540,12 @@ function renderizar(termoBusca) {
       catalogo.appendChild(sec);
     }
     semResultados.hidden = resultados.length !== 0;
+    // Quem pesquisa costuma estar no meio da estante (no celular, a busca
+    // surge justamente ao rolar). Ao trocar a estante pelos resultados a
+    // página encolhe e a vista ficaria presa lá embaixo, no rodapé — com o
+    // "Esse a gente não achou…" fora da tela. Volta ao topo para mostrar
+    // os resultados (a barra é sticky: o campo continua visível e focado).
+    if (window.scrollY > 0) window.scrollTo(0, 0);
     return;
   }
 
