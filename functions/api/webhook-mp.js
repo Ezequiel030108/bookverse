@@ -13,6 +13,12 @@
    secreto) antes de enviar qualquer e-mail. Se você configurar a
    assinatura (MP_WEBHOOK_SECRET), também validamos a origem.
 
+   Sem duplicados: o Mercado Pago pode avisar o MESMO pagamento
+   várias vezes (eventos repetidos, reenvios quando a resposta
+   demora). Antes de enviar o e-mail, gravamos no Firestore que
+   aquele pagamento já foi avisado — só o primeiro aviso passa;
+   os repetidos são ignorados em silêncio.
+
    Segredos (firebase functions:secrets:set):
      - MP_ACCESS_TOKEN    → Access Token do Mercado Pago (secreto)
      - WEB3FORMS_KEY      → sua chave do Web3Forms (envio do e-mail)
@@ -22,8 +28,36 @@
    ============================================================ */
 
 const crypto = require("crypto");
+const admin = require("firebase-admin");
 const MP_API = "https://api.mercadopago.com";
 const { aplicarHeaders } = require("./_seguranca");
+
+function firestore() {
+  if (!admin.apps.length) admin.initializeApp();
+  return admin.firestore();
+}
+
+/* Tenta "reivindicar" o envio do e-mail deste pagamento criando um
+   documento cujo ID é o ID do pagamento. O create() do Firestore é
+   atômico: só a PRIMEIRA chamada consegue criar; as repetidas falham
+   com ALREADY_EXISTS e devolvemos false (e-mail já foi enviado).
+   Se o Firestore der qualquer OUTRO erro, devolvemos true mesmo
+   assim: entre arriscar um e-mail duplicado e perder o aviso de um
+   pedido pago, o duplicado é o mal menor. */
+async function reivindicarEnvio(pagamento) {
+  try {
+    await firestore().collection("emails_enviados").doc(String(pagamento.id)).create({
+      pedido: pagamento.external_reference || "",
+      valor: pagamento.transaction_amount || null,
+      criadoEm: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return true;
+  } catch (e) {
+    const codigo = e && e.code;
+    if (codigo === 6 || codigo === "already-exists") return false;
+    return true;
+  }
+}
 
 function lerBody(req) {
   let b = req.body;
@@ -143,8 +177,17 @@ module.exports = async (req, res) => {
     const pagamento = await r.json();
     if (!r.ok) { res.status(200).json({ ok: true }); return; }
 
-    if (pagamento.status === "approved") {
-      await enviarEmail(pagamento);
+    // E-mail UMA vez por pagamento: só o aviso que conseguir "reivindicar"
+    // o envio no Firestore manda o e-mail; os repetidos são ignorados.
+    if (pagamento.status === "approved" && process.env.WEB3FORMS_KEY && await reivindicarEnvio(pagamento)) {
+      try {
+        await enviarEmail(pagamento);
+      } catch (e) {
+        // O envio falhou depois da trava: solta a trava para que um
+        // próximo aviso do Mercado Pago possa tentar de novo.
+        await firestore().collection("emails_enviados").doc(String(pagamento.id)).delete().catch(() => {});
+        throw e;
+      }
     }
 
     res.status(200).json({ ok: true });

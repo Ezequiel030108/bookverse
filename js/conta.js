@@ -432,8 +432,10 @@
           mudou = true;
         }
       }
-      // Avisa o lojista por e-mail, uma única vez por pedido.
-      if (pago && !p.emailEnviado && p.emailBody && key) {
+      // Avisa o lojista por e-mail, uma única vez por pedido. Pedidos do
+      // Mercado Pago (têm pagamentoId) ficam de fora: o webhook do servidor
+      // já envia esse e-mail, com trava contra duplicados no Firestore.
+      if (pago && !p.pagamentoId && !p.emailEnviado && p.emailBody && key) {
         try {
           await fetch("https://api.web3forms.com/submit", {
             method: "POST",

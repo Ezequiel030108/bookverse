@@ -604,13 +604,8 @@
     if (st) { st.className = "pix-status confirmado"; st.textContent = "Pagamento confirmado ✓"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
     marcarVendidoSeLogado();   // vendido: sai da loja de vez
-    // Garante o aviso ao lojista pelo próprio site (além do webhook).
-    try {
-      await enviarEmailManual();
-      if (codigoPedido && window.Auth && window.Auth.usuario && window.Auth.usuario()) {
-        window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
-      }
-    } catch (e) {}
+    // O aviso ao lojista chega pelo webhook do servidor, que envia UMA
+    // única vez por pagamento. Enviar daqui também duplicaria o e-mail.
     sucesso(true);
   }
 
