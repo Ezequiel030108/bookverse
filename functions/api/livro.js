@@ -16,36 +16,63 @@ function escHtml(t) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
+/* Robôs de prévia de link (WhatsApp, Instagram/Facebook, Telegram etc.).
+   Só eles precisam da página com capa e título; gente de verdade não. */
+const ROBO_DE_PREVIA =
+  /whatsapp|facebookexternalhit|facebot|instagram|twitterbot|telegrambot|discordbot|slackbot|linkedinbot|pinterest|skypeuripreview|snapchat|viber|googlebot|bingbot|applebot|bot\b|crawler|spider|preview/i;
+
 module.exports = async (req, res) => {
   const base = baseDoRequest(req);
   const id = String((req.query && req.query.id) || "").slice(0, 120);
+  const urlLoja = "/?livro=" + encodeURIComponent(id);
 
-  let livro = null;
-  try { livro = await acharLivro(base, id); } catch (e) {}
-
-  if (!livro) {
+  if (!id) {
     res.statusCode = 302;
     res.setHeader("Location", "/");
     res.end();
     return;
   }
 
-  const urlLoja = "/?livro=" + encodeURIComponent(id);
+  // Visitante de verdade: redireciona NA HORA para a loja com o livro
+  // aberto, sem esperar nenhuma consulta ao catálogo. A loja mesma
+  // resolve o id (inclusive de livros recém-cadastrados pelo admin).
+  const ua = String(req.headers["user-agent"] || "");
+  if (!ROBO_DE_PREVIA.test(ua)) {
+    res.statusCode = 302;
+    // "private": o CDN não pode guardar este redirecionamento, senão os
+    // robôs deixariam de receber a página de prévia com a capa.
+    res.setHeader("Cache-Control", "private, max-age=0, must-revalidate");
+    res.setHeader("Location", urlLoja);
+    res.end();
+    return;
+  }
+
+  let livro = null;
+  try { livro = await acharLivro(base, id); } catch (e) {}
 
   // Imagem da prévia: a MOLDURA da BookVerse com a foto do livro no
-  // meio (gerada por /api/capa). Sem foto, vai a logo.
-  const img = String(livro.imagem || "");
+  // meio (gerada por /api/capa). Sem foto (ou livro não achado), a logo.
+  const img = String((livro && livro.imagem) || "");
   const ogImage = img
     ? base + "/api/capa?id=" + encodeURIComponent(id)
     : base + "/img/logo.png";
 
-  const titulo = `${livro.titulo || "Livro"} — ${livro.autor || "BookVerse"}`;
-  const desc = (livro.sinopse || `Disponível na BookVerse por ${livro.preco || "um precinho especial"}.`).slice(0, 220);
+  // Livro não achado (catálogo fora do ar ou recém-cadastrado): a prévia
+  // sai genérica da loja, mas o link continua levando ao livro certo.
+  const titulo = livro
+    ? `${livro.titulo || "Livro"}, de ${livro.autor || "BookVerse"}`
+    : "BookVerse";
+  const desc = (livro
+    ? (livro.sinopse || `Disponível na BookVerse por ${livro.preco || "um precinho especial"}.`)
+    : "Livraria em Juazeirinho com entrega. Pague com Pix direto pelo site.").slice(0, 220);
 
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   // Cache no CDN: prévias de link são pedidas várias vezes seguidas.
-  res.setHeader("Cache-Control", "public, s-maxage=600, stale-while-revalidate=3600");
+  // Prévia genérica guarda pouco tempo: o livro pode aparecer já já.
+  res.setHeader("Cache-Control", livro
+    ? "public, s-maxage=600, stale-while-revalidate=3600"
+    : "public, s-maxage=60");
   res.end(`<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -57,7 +84,7 @@ module.exports = async (req, res) => {
   <meta property="og:title" content="${escHtml(titulo)}">
   <meta property="og:description" content="${escHtml(desc)}">
   <meta property="og:image" content="${escHtml(ogImage)}">
-  <meta property="og:url" content="${escHtml(base + "/livro/" + encodeURIComponent(idLivro(livro)))}">
+  <meta property="og:url" content="${escHtml(base + "/livro/" + encodeURIComponent(livro ? idLivro(livro) : id))}">
   <meta property="og:locale" content="pt_BR">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="robots" content="noindex">
@@ -65,7 +92,7 @@ module.exports = async (req, res) => {
   <script>location.replace(${JSON.stringify(urlLoja)});</script>
 </head>
 <body>
-  <p>Abrindo <strong>${escHtml(livro.titulo || "o livro")}</strong> na BookVerse…
+  <p>Abrindo <strong>${escHtml((livro && livro.titulo) || "o livro")}</strong> na BookVerse…
      <a href="${escHtml(urlLoja)}">Toque aqui se não abrir sozinho</a>.</p>
 </body>
 </html>`);

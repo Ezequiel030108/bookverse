@@ -100,6 +100,7 @@
           <div class="entrega-opcoes" id="entrega-opcoes" role="radiogroup" aria-label="Forma de entrega"></div>
 
           <div class="endereco-campos" id="endereco-campos" hidden>
+            <div class="pagamento-aviso" id="aviso-endereco" hidden></div>
             <div class="dados-conta">
               <div class="dados-conta-grid">
                 <div class="dado-item dado-item-full">
@@ -119,19 +120,21 @@
             <input type="hidden" id="end-bairro" name="bairro">
             <input type="hidden" id="end-cidade" name="cidade">
             <input type="hidden" id="end-uf" name="uf">
+            <input type="hidden" id="end-modo" name="enderecoModo">
+            <input type="hidden" id="end-descricao" name="enderecoDescricao">
           </div>
 
           <label class="presente-opcao" for="cli-presente">
             <input type="checkbox" id="cli-presente" name="presente">
             <span class="presente-check" aria-hidden="true"></span>
             <span class="presente-texto">
-              <span class="presente-titulo">🎁 Embalar para presente <span class="presente-gratis">grátis</span></span>
+              <span class="presente-titulo"><span class="titulo-com-icone"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v8h14v-8"/><path d="M12 8v12"/><path d="M12 8c-1.5-3.5-6-3.5-6-1s4 1 6 1zM12 8c1.5-3.5 6-3.5 6-1s-4 1-6 1z"/></svg>Embalar para presente</span> <span class="presente-gratis">grátis</span></span>
               <span class="presente-desc">Entregamos o pedido embrulhado, pronto para presentear.</span>
             </span>
           </label>
           <div class="campo" id="campo-presente-msg" hidden>
             <label for="cli-presente-msg">Mensagem do cartão <span class="opcional">(opcional)</span></label>
-            <input type="text" id="cli-presente-msg" name="presenteMsg" maxlength="140" placeholder="Ex.: Para Maria, com carinho — João">
+            <input type="text" id="cli-presente-msg" name="presenteMsg" maxlength="140" placeholder="Ex.: Para Maria, com carinho, João">
           </div>
 
           <div class="campo">
@@ -141,12 +144,30 @@
         </form>
 
         <section class="checkout-bloco" id="bloco-pagamento">
-          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento via Pix</h2>
+          <h2 class="checkout-subtitulo"><span class="passo-num">3</span> Pagamento</h2>
 
-          <p class="pagamento-intro">Pague com <strong>Pix</strong> pelo app do seu banco — cai na hora. Gere o código abaixo e escaneie o <strong>QR Code</strong> ou use o <strong>Pix Copia e Cola</strong>.</p>
+          <!-- Escolha da forma de pagamento -->
+          <div class="entrega-opcoes pagamento-metodos" id="pagamento-metodos" role="radiogroup" aria-label="Forma de pagamento">
+            <label class="entrega-opcao selecionada" data-metodo="pix">
+              <input type="radio" name="pagamento" value="pix" checked>
+              <span class="entrega-radio" aria-hidden="true"></span>
+              <span class="entrega-texto">
+                <span class="entrega-titulo"><span class="titulo-com-icone"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14h1M14 20h1M18 18h3v3h-3z"/></svg>Pix</span></span>
+                <span class="entrega-desc">Pague agora pelo app do seu banco, com QR Code ou Pix Copia e Cola. Cai na hora.</span>
+              </span>
+            </label>
+            <label class="entrega-opcao" data-metodo="dinheiro">
+              <input type="radio" name="pagamento" value="dinheiro">
+              <span class="entrega-radio" aria-hidden="true"></span>
+              <span class="entrega-texto">
+                <span class="entrega-titulo"><span class="titulo-com-icone"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M5.5 12h.01M18.5 12h.01"/></svg>Dinheiro em espécie</span></span>
+                <span class="entrega-desc">Você paga em dinheiro no momento da entrega. Seu pedido é aprovado imediatamente.</span>
+              </span>
+            </label>
+          </div>
 
           <div class="pagamento-aviso" id="aviso-form" hidden>
-            Complete seus dados na sua <a href="conta.html">conta</a> para gerar o Pix.
+            Complete seus dados na sua <a href="conta.html">conta</a> para finalizar o pedido.
           </div>
 
           <div class="pagamento-demo" id="aviso-config" hidden>
@@ -154,9 +175,23 @@
             Adicione sua chave Pix em <code>js/config.js</code> para ativar o pagamento.
           </div>
 
-          <button type="button" id="btn-gerar-pix" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
-            Gerar Pix de <span id="btn-pix-valor">R$ 0,00</span>
-          </button>
+          <!-- Pagamento via Pix -->
+          <div id="pagamento-pix">
+            <p class="pagamento-intro">Pague com <strong>Pix</strong> pelo app do seu banco: cai na hora. Gere o código abaixo e escaneie o <strong>QR Code</strong> ou use o <strong>Pix Copia e Cola</strong>.</p>
+
+            <button type="button" id="btn-gerar-pix" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
+              Gerar Pix de <span id="btn-pix-valor">R$ 0,00</span>
+            </button>
+          </div>
+
+          <!-- Pagamento em dinheiro na entrega -->
+          <div id="pagamento-dinheiro" hidden>
+            <p class="pagamento-intro">Você paga em <strong>dinheiro em espécie</strong> quando o pedido for entregue. Seu pedido é <strong>aprovado imediatamente</strong>: é só confirmar abaixo e separar o valor para o dia da entrega.</p>
+
+            <button type="button" id="btn-confirmar-dinheiro" class="botao-loja botao-loja-primario botao-loja-bloco" disabled>
+              Confirmar pedido de <span id="btn-dinheiro-valor">R$ 0,00</span>
+            </button>
+          </div>
 
           <p class="pagamento-privacidade">
             Ao finalizar, você concorda com a nossa

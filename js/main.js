@@ -312,7 +312,7 @@ function criarCard(livro, indice, seloNovo) {
   card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.05) + "s");
   card.tabIndex = 0;
   card.setAttribute("role", "button");
-  card.setAttribute("aria-label", `${livro.titulo} — ${livro.autor}`);
+  card.setAttribute("aria-label", `${livro.titulo}, ${livro.autor}`);
 
   // Selo "Novo" só nos livros em destaque (os mais recentes adicionados).
   // Estoque/condição ficam no modal — marcar todo card viraria ruído.
@@ -540,6 +540,12 @@ function renderizar(termoBusca) {
       catalogo.appendChild(sec);
     }
     semResultados.hidden = resultados.length !== 0;
+    // Quem pesquisa costuma estar no meio da estante (no celular, a busca
+    // surge justamente ao rolar). Ao trocar a estante pelos resultados a
+    // página encolhe e a vista ficaria presa lá embaixo, no rodapé — com o
+    // "Esse a gente não achou…" fora da tela. Volta ao topo para mostrar
+    // os resultados (a barra é sticky: o campo continua visível e focado).
+    if (window.scrollY > 0) window.scrollTo(0, 0);
     return;
   }
 
@@ -883,6 +889,7 @@ function abrirModal(livro) {
   // um listener a cada abertura do modal.
   const btnShare = document.getElementById("modal-compartilhar");
   if (btnShare) btnShare.onclick = () => compartilharLivro(livro);
+  prepararCapaShare(livro);   // já baixa a foto que vai junto no compartilhar
 
   const jaAberto = !modal.hidden;
   modal.hidden = false;
@@ -899,6 +906,10 @@ function fecharModal() {
   modal.setAttribute("aria-hidden", "true");
   travarScrollFundo(false);
   if (soltarFocoModal) { soltarFocoModal(); soltarFocoModal = null; }
+  // Desfaz qualquer resto do gesto de arrastar para baixo: na próxima
+  // abertura a caixa nasce no lugar e com a animação de entrada.
+  const caixa = modal.querySelector(".modal-caixa");
+  if (caixa) { caixa.style.transform = ""; caixa.style.transition = ""; caixa.style.animation = ""; }
 }
 
 /* ---------- Visualizador de foto em tela cheia ---------- */
@@ -928,6 +939,77 @@ document.addEventListener("keydown", (e) => {
   if (fotoViewer && !fotoViewer.hidden) { fecharFoto(); return; }   // 1º fecha a foto
   if (!modal.hidden) fecharModal();                                  // depois o modal
 });
+
+/* ---------- Arrastar o modal para baixo fecha (celular) ----------
+   No celular o modal é uma "gaveta" que sobe de baixo, com a alça
+   (.modal-puxador) sugerindo o gesto de puxar. Aqui o gesto funciona
+   de verdade: a caixa segue o dedo e, soltando longe (ou num puxão
+   rápido), fecha; soltando perto, volta ao lugar. A rolagem do
+   conteúdo continua normal — o arrasto só "pega" começando na alça,
+   fora da área rolável, ou com a rolagem já no topo. */
+(function () {
+  const caixa   = modal.querySelector(".modal-caixa");
+  const puxador = modal.querySelector(".modal-puxador");
+  const rolavel = modal.querySelector(".modal-rolavel");
+  if (!caixa || !puxador) return;
+
+  let y0 = 0, x0 = 0, dy = 0, t0 = 0;
+  let arrastando = false, decidiu = false, podePuxar = false;
+  let suprimirCliqueAte = 0;   // pós-arrasto: o toque não vira clique na alça
+
+  caixa.addEventListener("touchstart", (e) => {
+    decidiu = true; arrastando = false;
+    if (puxador.offsetParent === null) return;   // layout de tela grande: sem gesto
+    const t = e.touches[0];
+    y0 = t.clientY; x0 = t.clientX; dy = 0; t0 = Date.now();
+    decidiu = false;
+    podePuxar = puxador.contains(e.target) ||
+      !rolavel || !rolavel.contains(e.target) || rolavel.scrollTop <= 0;
+  }, { passive: true });
+
+  caixa.addEventListener("touchmove", (e) => {
+    const t = e.touches[0];
+    if (!decidiu) {
+      const my = t.clientY - y0, mx = t.clientX - x0;
+      if (Math.abs(my) < 8 && Math.abs(mx) < 8) return;   // ainda pode ser só um toque
+      decidiu = true;
+      arrastando = podePuxar && my > 0 && my > Math.abs(mx);
+    }
+    if (!arrastando) return;
+    dy = Math.max(0, t.clientY - y0);
+    e.preventDefault();   // o dedo move a caixa, não a rolagem
+    // A animação de entrada (subir, fill both) "segura" o transform e
+    // ganharia do estilo inline — sai de cena enquanto o dedo manda.
+    caixa.style.animation = "none";
+    caixa.style.transition = "none";
+    caixa.style.transform = "translateY(" + dy + "px)";
+  }, { passive: false });
+
+  function soltar() {
+    if (!arrastando) return;
+    arrastando = false;
+    suprimirCliqueAte = Date.now() + 400;
+    const puxaoRapido = dy > 45 && Date.now() - t0 < 250;
+    const foiLonge    = dy > Math.min(caixa.offsetHeight * 0.28, 170);
+    if (puxaoRapido || foiLonge) {
+      caixa.style.transition = "transform .18s ease-in";
+      caixa.style.transform = "translateY(105%)";
+      setTimeout(fecharModal, 180);   // fecharModal limpa transform/animação
+    } else {
+      caixa.style.transition = "transform .2s ease-out";
+      caixa.style.transform = "";
+      setTimeout(() => { caixa.style.transition = ""; }, 220);
+    }
+  }
+  caixa.addEventListener("touchend", soltar);
+  caixa.addEventListener("touchcancel", soltar);
+
+  // Se o arrasto terminou "voltando", o navegador ainda pode disparar um
+  // clique na alça — que fecharia o modal do mesmo jeito. Engole esse clique.
+  caixa.addEventListener("click", (e) => {
+    if (Date.now() < suprimirCliqueAte) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+})();
 
 /* ---------- Decoração da promoção (tema Copa do Mundo) ----------
    Só acontece com a promoção ativa e some sozinho quando ela acaba —
@@ -1067,20 +1149,74 @@ function mensagemCompartilhar(livro, url) {
   const condicao = livro.condicao === "novo" ? " (novo)" : (livro.condicao === "usado" ? " (usado)" : "");
   return (
     "💜✨ Olha esse achado na BookVerse! ✨💜\n\n" +
-    "📖 " + livro.titulo + " — " + livro.autor + "\n" +
+    "📖 " + livro.titulo + ", de " + livro.autor + "\n" +
     "🤍 " + preco + condicao + "\n\n" +
     "🌟 Confira já: " + url
   );
 }
 
+/* A FOTO do livro vai junto do compartilhamento como arquivo (WhatsApp,
+   Instagram etc. mostram a imagem de verdade, não só o link). Preferimos
+   a arte da prévia (/api/capa, moldura da BookVerse); se ela não estiver
+   disponível, vai a própria foto do livro. */
+let capaShare = { id: null, promessa: null };
+
+async function baixarArquivoCapa(livro) {
+  const id = idLivro(livro);
+  const fontes = [];
+  if (livro.imagem) fontes.push("/api/capa?id=" + encodeURIComponent(id));
+  const foto = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : "";
+  if (foto) fontes.push(foto);
+  for (const src of fontes) {
+    try {
+      const r = await fetch(src);
+      if (!r.ok) continue;
+      const blob = await r.blob();
+      if (!blob.size || !/^image\//.test(blob.type)) continue;
+      const ext = blob.type === "image/png" ? ".png" : (blob.type === "image/webp" ? ".webp" : ".jpg");
+      return new File([blob], (id || "livro") + ext, { type: blob.type });
+    } catch (e) { /* tenta a próxima fonte */ }
+  }
+  return null;
+}
+
+/* Começa a baixar a foto assim que o modal abre: na hora do toque em
+   "Compartilhar" ela já está pronta e o navigator.share não perde a
+   permissão do gesto esperando a rede. */
+function prepararCapaShare(livro) {
+  if (!navigator.canShare || typeof File === "undefined") return;
+  const id = idLivro(livro);
+  if (capaShare.id === id && capaShare.promessa) return;
+  capaShare = { id, promessa: baixarArquivoCapa(livro).catch(() => null) };
+}
+
 async function compartilharLivro(livro) {
   const url = urlDoLivro(livro);
   const texto = mensagemCompartilhar(livro, url);
+  const titulo = livro.titulo + " · BookVerse";
   if (navigator.share) {
     // O link já vai dentro do texto (com a mensagem bonita); mandar o
     // campo url separado duplicaria o link em alguns apps.
-    try { await navigator.share({ title: livro.titulo + " · BookVerse", text: texto }); return; }
-    catch (e) { if (e && e.name === "AbortError") return; /* cancelou */ }
+    let dados = { title: titulo, text: texto };
+    prepararCapaShare(livro);
+    // Espera a foto só por um instante: se a rede demorar, compartilha
+    // sem ela em vez de perder a janela do gesto do usuário.
+    const arquivo = (capaShare.id === idLivro(livro) && capaShare.promessa)
+      ? await Promise.race([capaShare.promessa, new Promise(r => setTimeout(r, 2500, null))])
+      : null;
+    if (arquivo && navigator.canShare({ files: [arquivo] })) {
+      dados = { title: titulo, text: texto, files: [arquivo] };
+    }
+    try { await navigator.share(dados); return; }
+    catch (e) {
+      if (e && e.name === "AbortError") return; /* cancelou */
+      // Alguns apps/navegadores recusam arquivo+texto juntos: tenta
+      // de novo só com a mensagem antes de cair no plano B.
+      if (dados.files) {
+        try { await navigator.share({ title: titulo, text: texto }); return; }
+        catch (e2) { if (e2 && e2.name === "AbortError") return; }
+      }
+    }
   }
   try {
     await navigator.clipboard.writeText(texto);

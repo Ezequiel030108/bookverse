@@ -183,13 +183,16 @@ window.LOJA_CONFIG = {
   /* ---------- ENTREGA / FRETE ----------
      Cada opção aparece como uma escolha no checkout.
      - valor: 0 significa grátis.
-     - pedeEndereco: true mostra os campos de endereço para essa opção. */
+     - pedeEndereco: true mostra os campos de endereço para essa opção.
+     - somenteCidades: (opcional) lista de cidades atendidas. Se o endereço
+       cadastrado do cliente for de outra cidade, o checkout bloqueia a
+       finalização e pede para trocar de opção ou atualizar o endereço. */
   frete: {
     opcoes: [
       {
         id: "combinar",
         titulo: "Combinar entrega",
-        descricao: "Entramos em contato pelo WhatsApp para combinar local e horário da entrega. Opção ideal para quem estuda na ECIT Deputado Genival Matias — a mesma escola de parte da nossa equipe. 💜",
+        descricao: "Entramos em contato pelo WhatsApp para combinar local e horário da entrega. Opção ideal para quem estuda na ECIT Deputado Genival Matias, a mesma escola de parte da nossa equipe.",
         valor: 0,
         pedeEndereco: false
       },
@@ -198,7 +201,8 @@ window.LOJA_CONFIG = {
         titulo: "Entrega a domicílio (somente em Juazeirinho)",
         descricao: "Levamos o pedido até você, no endereço cadastrado na sua conta (confira e edite abaixo, se precisar). Disponível apenas em Juazeirinho.",
         valor: 0,
-        pedeEndereco: true
+        pedeEndereco: true,
+        somenteCidades: ["Juazeirinho"]
       }
     ],
     // Não cobramos frete: todas as opções acima têm valor 0.

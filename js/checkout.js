@@ -1,13 +1,13 @@
 /* ============================================================
-   BOOKVERSE — CHECKOUT (pagamento via Pix)
+   BOOKVERSE — CHECKOUT (Pix ou dinheiro na entrega)
    ------------------------------------------------------------
    Monta o resumo do pedido, valida os dados do cliente, calcula
-   o frete e gera o pagamento por Pix (QR Code + "Pix Copia e
-   Cola") com o valor exato do pedido.
+   o frete e finaliza o pagamento de duas formas:
 
-   A confirmação do Pix é manual: o cliente paga pelo app do
-   banco e o lojista confere o recebimento. Os dados da conta que
-   recebe ficam em js/config.js (chave Pix, nome e cidade).
+   - Pix: gera QR Code + "Pix Copia e Cola" com o valor exato do
+     pedido (manual ou via Mercado Pago, conforme js/config.js).
+   - Dinheiro em espécie: o cliente paga na hora da entrega e o
+     pedido é APROVADO imediatamente (status "aprovado").
 
    Não precisa mexer aqui.
    ============================================================ */
@@ -34,6 +34,10 @@
   const erroPag      = document.getElementById("pagamento-erro");
   const btnGerar     = document.getElementById("btn-gerar-pix");
   const pixArea      = document.getElementById("pix-area");
+  const elMetodos    = document.getElementById("pagamento-metodos");
+  const blocoPix     = document.getElementById("pagamento-pix");
+  const blocoDinheiro= document.getElementById("pagamento-dinheiro");
+  const btnDinheiro  = document.getElementById("btn-confirmar-dinheiro");
 
   /* ---------- Estado ---------- */
   const opcoesFrete = (CFG.frete && CFG.frete.opcoes) || [];
@@ -49,6 +53,9 @@
   let contaCarregada = false; // true quando os dados da conta já chegaram
   let pixCopiaCola = "";    // código Pix gerado (guardado no pedido)
   let pixTicketUrl = "";    // link de pagamento do Mercado Pago
+
+  // Forma de pagamento escolhida: "pix" ou "dinheiro" (na entrega).
+  let metodoPagamento = "pix";
 
   // "Comprar agora" = compra direta de UM livro, sem usar o carrinho.
   let compraDireta = null;
@@ -120,7 +127,7 @@
     // Promoção
     if (Precos.promoAtiva()) {
       elPromo.hidden = false;
-      elPromo.innerHTML = `🎉 <strong>${Precos.nomePromo()}:</strong> descontos já aplicados${
+      elPromo.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><path d="M2 12V2h10l10 10-10 10L2 12z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg> <strong>${Precos.nomePromo()}:</strong> descontos já aplicados${
         Precos.dataFimPromo() ? " · válido até " + Precos.dataFimPromo() : ""}.`;
     } else {
       elPromo.hidden = true;
@@ -181,15 +188,69 @@
     elEndereco.hidden = !opcaoSelecionada().pedeEndereco;
   }
 
+  /* ---------- Forma de pagamento (Pix ou dinheiro) ---------- */
+  function montarMetodosPagamento() {
+    if (!elMetodos) return;
+    elMetodos.querySelectorAll('input[name="pagamento"]').forEach(r => {
+      r.addEventListener("change", () => {
+        metodoPagamento = r.value;
+        elMetodos.querySelectorAll(".entrega-opcao").forEach(l =>
+          l.classList.toggle("selecionada", l.dataset.metodo === metodoPagamento));
+        if (blocoPix)      blocoPix.hidden = metodoPagamento !== "pix";
+        if (blocoDinheiro) blocoDinheiro.hidden = metodoPagamento !== "dinheiro";
+        resetPix();        // trocou de método: descarta o Pix em aberto
+        atualizarEstadoPagamento();
+      });
+    });
+  }
+
   /* ---------- Validação ---------- */
   function val(id) { const e = document.getElementById(id); return e ? e.value.trim() : ""; }
+
+  const CAMPOS_ENDERECO = ["end-cep", "end-rua", "end-numero", "end-bairro", "end-cidade", "end-uf"];
+
+  /* O cliente optou por descrever o endereço com as próprias palavras. */
+  function enderecoDescrito() {
+    return val("end-modo") === "descricao";
+  }
 
   function camposObrigatorios() {
     const obrig = ["cli-nome", "cli-email", "cli-tel"];
     if (opcaoSelecionada().pedeEndereco) {
-      obrig.push("end-cep", "end-rua", "end-numero", "end-bairro", "end-cidade", "end-uf");
+      if (enderecoDescrito()) obrig.push("end-descricao");
+      else obrig.push.apply(obrig, CAMPOS_ENDERECO);
     }
     return obrig;
+  }
+
+  /* O cliente ainda não cadastrou o endereço completo na conta. */
+  function enderecoIncompleto() {
+    if (enderecoDescrito()) return !val("end-descricao");
+    return CAMPOS_ENDERECO.some(id => !val(id));
+  }
+
+  /* Compara textos ignorando maiúsculas/acentos ("Juazeirinho" = "juazeirinho"). */
+  function normalizarTexto(t) {
+    return String(t || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  /* Cidades atendidas pela opção de entrega (config "somenteCidades"). */
+  function cidadesDaOpcao() {
+    const op = opcaoSelecionada();
+    const lista = op.somenteCidades || op.somenteCidade || null;
+    if (!lista) return [];
+    return (Array.isArray(lista) ? lista : [lista]).filter(Boolean);
+  }
+
+  /* true quando a opção restringe a cidade e o endereço do cliente é de outra.
+     Endereço descrito em texto livre não tem campo de cidade para conferir —
+     nesse caso mostramos só um lembrete (não bloqueia). */
+  function cidadeForaDaArea() {
+    if (enderecoDescrito()) return false;
+    const cidades = cidadesDaOpcao();
+    const atual = normalizarTexto(val("end-cidade"));
+    if (!cidades.length || !atual) return false;   // vazio = campo faltando, tratado à parte
+    return !cidades.some(c => normalizarTexto(c) === atual);
   }
   function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
@@ -207,6 +268,7 @@
     if (!el) return false;
     if (id === "cli-email") return !el.value.trim() || !emailValido(el.value.trim());
     if (id === "cli-tel")   return !whatsappValido(el.value);
+    if (id === "end-cidade") return !el.value.trim() || cidadeForaDaArea();
     return !el.value.trim();
   }
 
@@ -218,7 +280,7 @@
     dica.classList.toggle("erro", erro);
     dica.textContent = erro
       ? "Número de WhatsApp inválido. Use DDD + número, ex.: (83) 9 9999-8888."
-      : "Com DDD — é o nosso principal contato com você.";
+      : "Com DDD. É o nosso principal contato com você.";
   }
 
   function validar(marcar) {
@@ -235,17 +297,67 @@
     return ok;
   }
 
+  /* Aviso no bloco de endereço: pede para concluir o cadastro (ou avisa
+     que o endereço está fora da área de entrega da opção escolhida). */
+  function atualizarAvisoEndereco(carregado) {
+    const el = document.getElementById("aviso-endereco");
+    if (!el) return;
+    let msg = "";
+    if (opcaoSelecionada().pedeEndereco && carregado) {
+      if (enderecoIncompleto()) {
+        msg = `Você ainda não cadastrou seu endereço de entrega. ` +
+              `<a href="conta.html#dados">Conclua seu cadastro</a> para usar esta opção, ` +
+              `ou escolha outra forma de entrega.`;
+      } else if (cidadeForaDaArea()) {
+        msg = `Esta opção de entrega está disponível apenas em <strong>${esc(cidadesDaOpcao().join(", "))}</strong>, ` +
+              `e seu endereço cadastrado fica em <strong>${esc(val("end-cidade"))}</strong>. ` +
+              `<a href="conta.html#dados">Atualize seu endereço</a> ou escolha outra forma de entrega.`;
+      } else if (enderecoDescrito() && cidadesDaOpcao().length) {
+        // Endereço em texto livre: não dá para conferir a cidade sozinho.
+        msg = `Lembrete: esta opção entrega apenas em <strong>${esc(cidadesDaOpcao().join(", "))}</strong>. ` +
+              `Confira se o endereço que você descreveu está na área.`;
+      }
+    }
+    el.hidden = !msg;
+    if (msg) el.innerHTML = msg;
+  }
+
+  /* Texto do aviso geral: diz exatamente o que falta no cadastro. */
+  function mensagemAvisoForm() {
+    const faltas = [];
+    if (campoRuim("cli-nome"))  faltas.push("seu nome");
+    if (campoRuim("cli-email")) faltas.push("um e-mail válido");
+    if (campoRuim("cli-tel"))   faltas.push("um WhatsApp válido (com DDD)");
+    if (opcaoSelecionada().pedeEndereco && enderecoIncompleto()) faltas.push("o endereço de entrega");
+    if (faltas.length) {
+      return `Para finalizar, conclua seu cadastro na sua <a href="conta.html#dados">conta</a>. Falta: ${faltas.join(", ")}.`;
+    }
+    if (opcaoSelecionada().pedeEndereco && cidadeForaDaArea()) {
+      return `Seu endereço está fora da área desta forma de entrega. Escolha outra opção ou <a href="conta.html#dados">atualize seu endereço</a>.`;
+    }
+    return `Complete seus dados na sua <a href="conta.html#dados">conta</a> para finalizar o pedido.`;
+  }
+
   function atualizarEstadoPagamento() {
     const ok = validar(false) && !dadosPedido().vazio;
     const configurado = usaMercadoPago || pixConfigurado();
     const carregado = !exigeConta() || contaCarregada;  // espera os dados da conta
-    if (avisoConfig) avisoConfig.hidden = configurado;
-    if (avisoForm)   avisoForm.hidden = ok || !configurado || !carregado;
+    const pagaNaEntrega = metodoPagamento === "dinheiro";
+    // Dinheiro na entrega funciona mesmo sem Pix configurado.
+    if (avisoConfig) avisoConfig.hidden = configurado || pagaNaEntrega;
+    if (avisoForm) {
+      avisoForm.hidden = ok || (!configurado && !pagaNaEntrega) || !carregado;
+      if (!avisoForm.hidden) avisoForm.innerHTML = mensagemAvisoForm();
+    }
+    atualizarAvisoEndereco(carregado);
     if (btnGerar)    btnGerar.disabled = !(ok && configurado && carregado);
+    if (btnDinheiro) btnDinheiro.disabled = !(ok && carregado);
 
     const { total } = montarPedido();
     const bv = document.getElementById("btn-pix-valor");
     if (bv) bv.textContent = Precos.formatarBRL(total);
+    const bd = document.getElementById("btn-dinheiro-valor");
+    if (bd) bd.textContent = Precos.formatarBRL(total);
 
     if (typeof atualizarCartaoDados === "function") atualizarCartaoDados();
   }
@@ -283,9 +395,11 @@
       presenteMsg: presenteMarcado() ? val("cli-presente-msg") : ""
     };
     if (op.pedeEndereco) {
-      c.endereco = [val("end-rua"), val("end-numero"), val("end-compl"), val("end-bairro"),
-                    val("end-cidade") + "/" + val("end-uf").toUpperCase(), "CEP " + val("end-cep")]
-                    .filter(Boolean).join(", ");
+      c.endereco = enderecoDescrito()
+        ? val("end-descricao")
+        : [val("end-rua"), val("end-numero"), val("end-compl"), val("end-bairro"),
+           val("end-cidade") + "/" + val("end-uf").toUpperCase(), "CEP " + val("end-cep")]
+           .filter(Boolean).join(", ");
     }
     return c;
   }
@@ -336,7 +450,7 @@
   async function gerarPix() {
     if (gerandoPix) return;
     if (!validar(true)) {
-      if (avisoForm) avisoForm.hidden = false;
+      if (avisoForm) { avisoForm.hidden = false; avisoForm.innerHTML = mensagemAvisoForm(); }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -396,7 +510,7 @@
         body: JSON.stringify({
           valor: total,
           codigo: codigoPedido,
-          descricao: `Pedido ${codigoPedido} — ${CFG.nomeLoja || "BookVerse"}`,
+          descricao: `Pedido ${codigoPedido} - ${CFG.nomeLoja || "BookVerse"}`,
           pagador: { email: cliente.email, nome: cliente.nome },
           emailPedido: montarEmailBody()
         })
@@ -436,7 +550,7 @@
       st.textContent = "Aguardando o pagamento… esta tela confirma sozinha quando o Pix cair.";
     }
     const btn = document.getElementById("btn-ja-paguei");
-    if (btn) btn.textContent = "Já paguei — verificar agora";
+    if (btn) btn.textContent = "Já paguei, verificar agora";
   }
 
   let pollInicio = 0;
@@ -490,14 +604,48 @@
     if (st) { st.className = "pix-status confirmado"; st.textContent = "Pagamento confirmado ✓"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
     marcarVendidoSeLogado();   // vendido: sai da loja de vez
-    // Garante o aviso ao lojista pelo próprio site (além do webhook).
-    try {
-      await enviarEmailManual();
-      if (codigoPedido && window.Auth && window.Auth.usuario && window.Auth.usuario()) {
-        window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
-      }
-    } catch (e) {}
+    // O aviso ao lojista chega pelo webhook do servidor, que envia UMA
+    // única vez por pagamento. Enviar daqui também duplicaria o e-mail.
     sucesso(true);
+  }
+
+  /* ----- Dinheiro em espécie: paga na entrega, aprovado na hora ----- */
+  let confirmandoDinheiro = false;   // trava contra clique duplo
+  async function confirmarPedidoDinheiro() {
+    if (confirmandoDinheiro) return;
+    if (!validar(true)) {
+      if (avisoForm) { avisoForm.hidden = false; avisoForm.innerHTML = mensagemAvisoForm(); }
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    confirmandoDinheiro = true;
+    let txtBtn;
+    if (btnDinheiro) { txtBtn = btnDinheiro.innerHTML; btnDinheiro.disabled = true; btnDinheiro.textContent = "Confirmando pedido…"; }
+    try {
+      codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
+      pagamentoId = null;
+      pixCopiaCola = "";
+      pixTicketUrl = "";
+      if (erroPag) erroPag.hidden = true;
+
+      // Pagamento acontece na entrega: o pedido já nasce APROVADO.
+      try { await salvarPerfilSeLogado(); } catch (e) {}
+      try { await salvarPedidoSeLogado("aprovado"); } catch (e) {}
+      marcarVendidoSeLogado();   // segura o livro: a venda está fechada
+
+      // Avisa o lojista por e-mail imediatamente.
+      try {
+        await enviarEmailManual();
+        if (window.Auth && window.Auth.usuario && window.Auth.usuario()) {
+          window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
+        }
+      } catch (e) {}
+
+      sucesso(true);
+    } finally {
+      confirmandoDinheiro = false;
+      if (btnDinheiro) { btnDinheiro.disabled = false; if (txtBtn) btnDinheiro.innerHTML = txtBtn; }
+    }
   }
 
   /* ----- Conta (Firebase): salvar perfil e pedido, se logado ----- */
@@ -511,11 +659,14 @@
       instagram: val("cli-instagram").replace(/^@+/, "")
     };
     if (op.pedeEndereco) {
-      perfil.endereco = {
-        cep: val("end-cep"), rua: val("end-rua"), numero: val("end-numero"),
-        complemento: val("end-compl"), bairro: val("end-bairro"),
-        cidade: val("end-cidade"), uf: val("end-uf").toUpperCase()
-      };
+      perfil.endereco = enderecoDescrito()
+        ? { modo: "descricao", descricao: val("end-descricao") }
+        : {
+            modo: "campos",
+            cep: val("end-cep"), rua: val("end-rua"), numero: val("end-numero"),
+            complemento: val("end-compl"), bairro: val("end-bairro"),
+            cidade: val("end-cidade"), uf: val("end-uf").toUpperCase()
+          };
     }
     return window.Auth.salvarPerfil(perfil).catch(() => {});
   }
@@ -527,6 +678,7 @@
     const pedido = {
       codigo: codigoPedido,
       status: status,
+      pagamento: metodoPagamento === "dinheiro" ? "dinheiro" : "pix",
       total: total,
       subtotal: dados.subtotal,
       frete: frete,
@@ -603,17 +755,21 @@
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
     const loja = CFG.nomeLoja || "BookVerse";
+    const emDinheiro = metodoPagamento === "dinheiro";
+    const pagamentoTxt = emDinheiro
+      ? "DINHEIRO EM ESPÉCIE na entrega. Pedido APROVADO (receber o valor ao entregar)."
+      : `Pix, código ${codigoPedido}.`;
 
     const itensTxt = dados.itens
-      .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}) — ${Precos.formatarBRL(i.precoLinha)}`)
+      .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}): ${Precos.formatarBRL(i.precoLinha)}`)
       .join("\n");
 
     const presenteTxt = cliente.presente
-      ? `🎁 EMBALAR PARA PRESENTE${cliente.presenteMsg ? ` — cartão: "${cliente.presenteMsg}"` : ""}`
+      ? `EMBALAR PARA PRESENTE${cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : ""}`
       : "";
 
     const mensagem = [
-      `NOVO PEDIDO — ${loja}`,
+      `NOVO PEDIDO - ${loja}`,
       `Código: ${codigoPedido}`,
       ``,
       `Cliente: ${cliente.nome}`,
@@ -633,12 +789,12 @@
       `Total: ${Precos.formatarBRL(total)}`,
       cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
       ``,
-      `Pagamento: Pix — código ${codigoPedido}.`
+      `Pagamento: ${pagamentoTxt}`
     ].join("\n");
 
     return {
-      subject: `Novo pedido ${codigoPedido} — ${loja}`,
-      from_name: `${loja} — Loja`,
+      subject: `Novo pedido ${codigoPedido} - ${loja}`,
+      from_name: `${loja} (Loja)`,
       replyto: cliente.email || "",
       "Código do pedido": codigoPedido,
       "Cliente": cliente.nome,
@@ -648,7 +804,8 @@
       "Instagram": cliente.instagram || "—",
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
-      "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` — "${cliente.presenteMsg}"` : "")) : "Não",
+      "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : "")) : "Não",
+      "Forma de pagamento": emDinheiro ? "Dinheiro em espécie (na entrega)" : "Pix",
       "Total": Precos.formatarBRL(total),
       "message": mensagem
     };
@@ -668,7 +825,7 @@
   /* ---------- Confirmação ---------- */
   async function finalizar() {
     if (!validar(true)) {
-      if (avisoForm) avisoForm.hidden = false;
+      if (avisoForm) { avisoForm.hidden = false; avisoForm.innerHTML = mensagemAvisoForm(); }
       form.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -697,6 +854,7 @@
     pararPolling();
     const { dados, frete, total } = montarPedido();
     const cliente = dadosCliente();
+    const emDinheiro = metodoPagamento === "dinheiro";
 
     // Métrica de compra (GA4 "purchase" + conversão do Google Ads, com
     // conversões otimizadas a partir dos dados do cliente). Só dispara se
@@ -722,28 +880,34 @@
       <dl class="conf-totais">
         <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(dados.subtotal)}</dd></div>
         ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
-        <div class="conf-total"><dt>Total do Pix</dt><dd>${Precos.formatarBRL(total)}</dd></div>
+        <div class="conf-total"><dt>${emDinheiro ? "Total a pagar na entrega" : "Total do Pix"}</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
-      <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " — " + esc(cliente.endereco) : ""}</p>
-      ${cliente.presente ? `<p class="conf-presente"><strong>Embalado para presente</strong>${cliente.presenteMsg ? ` — cartão: “${esc(cliente.presenteMsg)}”` : ""}</p>` : ""}
-      <p class="conf-aviso">${confirmado
-        ? "Pagamento confirmado! Em breve entraremos em contato para combinar a entrega."
-        : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante para agilizar."}</p>`;
+      <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " · " + esc(cliente.endereco) : ""}</p>
+      ${cliente.presente ? `<p class="conf-presente"><strong>Embalado para presente</strong>${cliente.presenteMsg ? ` (cartão: “${esc(cliente.presenteMsg)}”)` : ""}</p>` : ""}
+      <p class="conf-aviso">${emDinheiro
+        ? "Pedido aprovado! Você paga em dinheiro em espécie quando o pedido for entregue. Em breve entraremos em contato para combinar a entrega."
+        : (confirmado
+          ? "Pagamento confirmado! Em breve entraremos em contato para combinar a entrega."
+          : "Assim que confirmarmos o seu Pix, preparamos o pedido. Se puder, envie o comprovante para agilizar.")}</p>`;
 
     const sub = document.getElementById("confirmacao-sub");
     sub.textContent = `Obrigado, ${cliente.nome || "leitor(a)"}! Recebemos seu pedido.`;
 
     // Botão para enviar o comprovante (WhatsApp, ou Instagram como alternativa).
+    // No pagamento em dinheiro não há comprovante: vira um botão de contato.
     const elWhats = document.getElementById("confirmacao-whats");
     if (elWhats) {
       const resumoMsg = dados.itens.map(i => `• ${i.qty}× ${i.livro.titulo}`).join("%0A");
-      const corpo = `Olá! Acabei de pagar via Pix na ${CFG.nomeLoja || "BookVerse"}.%0A%0A` +
+      const corpo = (emDinheiro
+        ? `Olá! Acabei de fazer um pedido na ${CFG.nomeLoja || "BookVerse"} e vou pagar em dinheiro na entrega.%0A%0A`
+        : `Olá! Acabei de pagar via Pix na ${CFG.nomeLoja || "BookVerse"}.%0A%0A`) +
         resumoMsg +
         `%0A%0ATotal: ${Precos.formatarBRL(total)}` +
         `%0AEntrega: ${cliente.entrega}` +
         `%0APedido: ${codigoPedido || ""}` +
         `%0ANome: ${cliente.nome}` +
-        `%0A%0A(vou anexar o comprovante)`;
+        (emDinheiro ? "" : `%0A%0A(vou anexar o comprovante)`);
+      if (emDinheiro) elWhats.textContent = "Falar com a loja no WhatsApp";
       if (CFG.whatsapp) {
         elWhats.href = `https://wa.me/${CFG.whatsapp}?text=${corpo}`;
         elWhats.hidden = false;
@@ -776,6 +940,8 @@
 
   /* ---------- Liga tudo ---------- */
   if (btnGerar) btnGerar.addEventListener("click", gerarPix);
+  if (btnDinheiro) btnDinheiro.addEventListener("click", confirmarPedidoDinheiro);
+  montarMetodosPagamento();
   const btnCopiar = document.getElementById("btn-copiar-pix");
   if (btnCopiar) btnCopiar.addEventListener("click", copiarPix);
   const btnPaguei = document.getElementById("btn-ja-paguei");
@@ -818,12 +984,17 @@
 
     const endEl = document.getElementById("show-endereco");
     if (endEl) {
-      const cidUf = (val("end-cidade") && val("end-uf"))
-        ? val("end-cidade") + "/" + val("end-uf").toUpperCase()
-        : (val("end-cidade") || val("end-uf").toUpperCase());
-      const endereco = [val("end-rua"), val("end-numero"), val("end-compl"),
-        val("end-bairro"), cidUf, val("end-cep") ? "CEP " + val("end-cep") : ""]
-        .filter(Boolean).join(", ");
+      let endereco;
+      if (enderecoDescrito()) {
+        endereco = val("end-descricao");
+      } else {
+        const cidUf = (val("end-cidade") && val("end-uf"))
+          ? val("end-cidade") + "/" + val("end-uf").toUpperCase()
+          : (val("end-cidade") || val("end-uf").toUpperCase());
+        endereco = [val("end-rua"), val("end-numero"), val("end-compl"),
+          val("end-bairro"), cidUf, val("end-cep") ? "CEP " + val("end-cep") : ""]
+          .filter(Boolean).join(", ");
+      }
       const obrig = opcaoSelecionada().pedeEndereco;
       const tem = !!endereco;
       endEl.textContent = tem ? endereco : (obrig ? "Não informado" : "—");
@@ -849,6 +1020,9 @@
             setCampo("end-numero", en.numero); setCampo("end-compl", en.complemento);
             setCampo("end-bairro", en.bairro); setCampo("end-cidade", en.cidade);
             setCampo("end-uf", en.uf);
+            setCampo("end-descricao", en.descricao);
+            // Perfis antigos não têm "modo": assume descrição se só houver o texto.
+            setCampo("end-modo", en.modo || (en.descricao && !en.rua ? "descricao" : "campos"));
           }
         } catch (e) {}
       }
@@ -858,15 +1032,66 @@
     });
   }
 
-  function init() {
-    protegerCheckout();
+  /* ---------- Catálogo do admin (livros adicionados pelo painel) ----------
+     A vitrine junta LIVROS (js/livros.js) com o catálogo do Firestore.
+     O checkout precisa da MESMA junção: sem ela, um "Comprar agora" em um
+     livro do catálogo chegava aqui sem correspondência e a página dizia
+     que o carrinho estava vazio. */
+  function aplicarCatalogo(extras) {
+    if (!Array.isArray(extras) || !extras.length) return false;
+    if (typeof LIVROS === "undefined" || !Array.isArray(LIVROS)) return false;
+    const idDe = window.idLivro || (l => l.id);
+    const indice = new Map();
+    LIVROS.forEach((l, i) => indice.set(idDe(l), i));
+    let mudou = false;
+    extras.forEach(l => {
+      if (!l || !l.id) return;
+      if (indice.has(l.id)) {
+        const atual = LIVROS[indice.get(l.id)];
+        const novo = Object.assign({}, atual, l);
+        if (JSON.stringify(novo) !== JSON.stringify(atual)) {
+          LIVROS[indice.get(l.id)] = novo;
+          mudou = true;
+        }
+      } else {
+        LIVROS.push(l);
+        indice.set(l.id, LIVROS.length - 1);
+        mudou = true;
+      }
+    });
+    return mudou;
+  }
+
+  function carregarCatalogo() {
+    // 1) Cache local gravado pela vitrine: aplica na hora, sem esperar a rede.
+    try {
+      aplicarCatalogo(JSON.parse(localStorage.getItem("bookverse_cache_catalogo_v1") || "null"));
+    } catch (e) {}
+    // 2) Resposta fresca do Firestore: se mudar algo, refaz a página.
+    if (window.Auth && window.Auth.configurado && window.Auth.lerCatalogo) {
+      window.Auth.lerCatalogo().then(extras => {
+        if (aplicarCatalogo(extras)) initLoja();
+      }).catch(() => {});
+    }
+  }
+
+  let inicializado = false;
+  function initLoja() {
     if (dadosPedido().vazio) { render(); return; }
+    if (inicializado) { render(); atualizarEstadoPagamento(); return; }
+    inicializado = true;
     montarEntrega();
     render();
     preencherDeConta();
     atualizarEstadoPagamento();
     // Métrica de "início de checkout" (só dispara se as métricas estiverem ligadas).
     if (window.Analytics) window.Analytics.iniciarCheckout(dadosPedido());
+  }
+
+  function init() {
+    protegerCheckout();
+    carregarCatalogo();
+    initLoja();
   }
 
   init();
