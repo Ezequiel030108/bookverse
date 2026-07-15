@@ -82,12 +82,13 @@ function main() {
   });
 
   if (modoTsv) {
-    // Cabeçalhos com os nomes que o Google Ads Editor (pt-BR) reconhece
-    // sozinho na tela de mapear colunas.
-    const out = ["Palavra-chave\tTipo de correspondência\tURL final"];
-    linhas.forEach(l => {
-      out.push([textoPalavraChave(l.titulo) + " livro", "Frase", l.urlFinal].join("\t"));
-    });
+    // 2 colunas, sem cabeçalho: palavra-chave e URL final. O Ads Editor
+    // não tem coluna de "tipo de correspondência" na colagem — ele lê o
+    // tipo do próprio texto: "com aspas" = frase, [colchetes] = exata.
+    // Por isso a palavra-chave já sai entre aspas aqui.
+    const out = linhas.map(l =>
+      ['"' + textoPalavraChave(l.titulo) + ' livro"', l.urlFinal].join("\t")
+    );
     process.stdout.write(out.join("\r\n") + "\r\n");
     return;
   }
