@@ -6,6 +6,7 @@
       "**/.*",
       "**/node_modules/**",
       "functions/**",
+      "scripts/**",
       "api/**",
       "android/**",
       "Livros/**",
