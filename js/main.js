@@ -507,7 +507,9 @@ function renderizar(termoBusca) {
 
   function combina(livro) {
     if (!termo) return true;
-    return normalizar(livro.titulo + " " + livro.autor).includes(termo);
+    // Busca por título, autor OU gênero — assim "mangá", "filosofia",
+    // "clássicos" etc. encontram a seção inteira, não só títulos.
+    return normalizar(livro.titulo + " " + livro.autor + " " + (livro.genero || "")).includes(termo);
   }
 
   limparFileirasAntigas();
@@ -1270,7 +1272,15 @@ aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
 })();
 
 ativarModoPromocao();
-renderizar("");
+// Link direto de busca (?busca=mangás): abre a estante já filtrada.
+// Usado nos sitelinks dos anúncios e em links compartilháveis.
+let buscaInicial = "";
+try { buscaInicial = (new URLSearchParams(location.search).get("busca") || "").trim(); } catch (e) {}
+if (buscaInicial) {
+  if (campoBusca) campoBusca.value = buscaInicial;
+  if (campoBuscaMob) campoBuscaMob.value = buscaInicial;
+}
+renderizar(buscaInicial);
 abrirLivroDaURL();           // abre o livro do link compartilhado (?livro=...)
 carregarDisponibilidade();   // esconde reservados/vendidos quando a lista carrega
 carregarCatalogo();          // adiciona os livros cadastrados pelo admin

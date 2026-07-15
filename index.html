@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
-  <title>BookVerse</title>
+  <title>BookVerse — Livraria em Juazeirinho</title>
   <meta name="description" content="Livraria em Juazeirinho com entrega. Clássicos, mangás, filosofia e mais. Pague com Pix direto pelo site." />
   <link rel="canonical" href="https://www.bookverse.com.br/" />
   <meta property="og:type" content="website" />
@@ -25,6 +25,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Dados estruturados (Schema.org): dizem ao Google que este site é
+       uma livraria local em Juazeirinho/PB — ajuda nos resultados de
+       busca e no reconhecimento como negócio local. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BookStore",
+    "name": "BookVerse",
+    "url": "https://www.bookverse.com.br/",
+    "image": "https://www.bookverse.com.br/img/logo.png",
+    "description": "Livraria em Juazeirinho com entrega. Clássicos, mangás, filosofia e mais — pague com Pix direto pelo site.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Juazeirinho",
+      "addressRegion": "PB",
+      "addressCountry": "BR"
+    },
+    "areaServed": "Juazeirinho, Paraíba, Brasil",
+    "currenciesAccepted": "BRL",
+    "paymentAccepted": "Pix, Dinheiro",
+    "sameAs": ["https://instagram.com/mybookverse.pb"]
+  }
+  </script>
 </head>
 <body>
 

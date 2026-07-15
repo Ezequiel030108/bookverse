@@ -7,6 +7,11 @@
    Uso:
      node scripts/gerar-ads-livros.js                 -> tabela no terminal
      node scripts/gerar-ads-livros.js --csv > livros-ads.csv   -> CSV
+     node scripts/gerar-ads-livros.js --tsv > livros-ads.txt   -> TSV
+       (TSV = separado por TAB, ideal para colar direto no Google
+        Ads Editor via "Fazer várias alterações"; abra no Bloco de
+        Notas, Ctrl+A, Ctrl+C e cole lá — NÃO abra no Excel, que
+        corrompe os acentos)
 
    Rode este script sempre que adicionar, remover ou esgotar um
    livro no catálogo, e cole o resultado no Google Ads Editor
@@ -62,6 +67,7 @@ function csvEscape(v) {
 function main() {
   const livros = carregarLivros();
   const modoCsv = process.argv.includes("--csv");
+  const modoTsv = process.argv.includes("--tsv");
 
   const linhas = livros.map(l => {
     const id = idLivro(l);
@@ -74,6 +80,18 @@ function main() {
       urlFinal: DOMINIO + "?livro=" + id
     };
   });
+
+  if (modoTsv) {
+    // 2 colunas, sem cabeçalho: palavra-chave e URL final. O Ads Editor
+    // não tem coluna de "tipo de correspondência" na colagem — ele lê o
+    // tipo do próprio texto: "com aspas" = frase, [colchetes] = exata.
+    // Por isso a palavra-chave já sai entre aspas aqui.
+    const out = linhas.map(l =>
+      ['"' + textoPalavraChave(l.titulo) + ' livro"', l.urlFinal].join("\t")
+    );
+    process.stdout.write(out.join("\r\n") + "\r\n");
+    return;
+  }
 
   if (modoCsv) {
     const cab = ["Palavra-chave", "Tipo de correspondência", "URL final", "Título", "Autor", "Gênero", "Estoque"];
