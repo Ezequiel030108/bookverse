@@ -20,14 +20,14 @@
    titulo  -> Nome do livro (ex: "O Alquimista")
    autor   -> Nome do autor (ex: "Paulo Coelho")
    genero  -> Categoria onde o livro aparece no site. Use um destes:
-              "Finanças & Negócios"
-              "Autoajuda & Desenvolvimento Pessoal"
-              "Ciência & Curiosidades"
-              "Filosofia"
               "Clássicos da Literatura"
               "Romance & Literatura"
-              "Suspense & Terror"
-              "Mangás"
+              "Fantasia, Suspense & Terror"
+              "Mangás"  (quando chegarem mais mangás — a fileira
+                         reaparece sozinha no site)
+              "Finanças & Negócios"
+              "Autoajuda & Desenvolvimento Pessoal"
+              "Filosofia & Ideias"
               (Pode criar um gênero novo: basta escrever aqui e,
                se quiser controlar a ordem, adicioná-lo também na
                lista ORDEM_GENEROS dentro do arquivo js/main.js)
@@ -221,19 +221,6 @@ const LIVROS = [
     imagem: "img/quer-levanta-e-pega.jpg"
   },
 
-  /* ===================== CIÊNCIA & CURIOSIDADES ===================== */
-
-  {
-    titulo: "A História do Universo Para Quem Tem Pressa",
-    autor: "Colin Stuart",
-    genero: "Ciência & Curiosidades",
-    preco: "R$ 40,00",
-    estoque: 1,
-    estado: "Bom estado",
-    sinopse: "Um guia rápido e acessível que percorre as mais recentes descobertas da astronomia, do Big Bang aos confins do cosmos. Perfeito para quem quer entender o universo sem complicação.",
-    imagem: "img/a-historia-do-universo.jpg"
-  },
-
   /* ===================== CLÁSSICOS DA LITERATURA ===================== */
 
   {
@@ -370,13 +357,11 @@ const LIVROS = [
     dataAdicao: "2026-06-08"
   },
 
-  /* ===================== ROMANCE & LITERATURA ===================== */
-
   {
     titulo: "A Hora da Estrela",
     destaque: true,
     autor: "Clarice Lispector",
-    genero: "Romance & Literatura",
+    genero: "Clássicos da Literatura",
     preco: "R$ 40,00",
     estoque: 1,
     estado: "Estado perfeito",
@@ -384,6 +369,8 @@ const LIVROS = [
     imagem: "img/a-hora-da-estrela.jpg",
     dataAdicao: "2026-06-27"
   },
+
+  /* ===================== ROMANCE & LITERATURA ===================== */
 
   {
     titulo: "your name.",
@@ -396,32 +383,6 @@ const LIVROS = [
     sinopse: "Mitsuha, uma garota presa numa cidadezinha, e Taki, um garoto de Tóquio, começam misteriosamente a trocar de corpo enquanto dormem. Entre confusões e risadas, nasce um laço profundo entre os dois, até descobrirem um segredo que desafia o tempo e a distância. O romance escrito por Makoto Shinkai que deu origem ao aclamado filme de animação.",
     imagem: "img/your-name.jpg",
     dataAdicao: "2026-06-27"
-  },
-
-  {
-    titulo: "O Príncipe Cruel",
-    destaque: true,
-    autor: "Holly Black",
-    genero: "Romance & Literatura",
-    preco: "R$ 55,00",
-    estoque: 1,
-    estado: "Estado perfeito",
-    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal, e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
-    imagem: "img/o-principe-cruel.jpg",
-    dataAdicao: "2026-06-27"
-  },
-
-  {
-    titulo: "A Batalha do Apocalipse",
-    destaque: true,
-    autor: "Eduardo Spohr",
-    genero: "Romance & Literatura",
-    preco: "R$ 25,00",
-    estoque: 1,
-    estado: "Com marcas de uso",
-    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
-    imagem: "img/a-batalha-do-apocalipse.jpg",
-    dataAdicao: "2026-06-08"
   },
 
   {
@@ -468,13 +429,13 @@ const LIVROS = [
     imagem: "img/paredes-da-memoria.jpg"
   },
 
-  /* ========================= FILOSOFIA ========================= */
+  /* ===================== FILOSOFIA & IDEIAS ===================== */
 
   {
     titulo: "O Príncipe",
     destaque: true,
     autor: "Nicolau Maquiavel",
-    genero: "Filosofia",
+    genero: "Filosofia & Ideias",
     preco: "R$ 14,00",
     estoque: 1,
     estado: "Estado perfeito",
@@ -487,7 +448,7 @@ const LIVROS = [
     titulo: "A Política",
     destaque: true,
     autor: "Aristóteles",
-    genero: "Filosofia",
+    genero: "Filosofia & Ideias",
     preco: "R$ 25,00",
     estoque: 1,
     estado: "Ótimo estado",
@@ -499,7 +460,7 @@ const LIVROS = [
   {
     titulo: "O Anticristo",
     autor: "Friedrich Nietzsche",
-    genero: "Filosofia",
+    genero: "Filosofia & Ideias",
     preco: "R$ 20,00",
     estoque: 1,
     estado: "Bom estado, porém grifado",
@@ -508,13 +469,50 @@ const LIVROS = [
     dataAdicao: "2026-06-17"
   },
 
-  /* ===================== SUSPENSE & TERROR ===================== */
+  {
+    titulo: "A História do Universo Para Quem Tem Pressa",
+    autor: "Colin Stuart",
+    genero: "Filosofia & Ideias",
+    preco: "R$ 40,00",
+    estoque: 1,
+    estado: "Bom estado",
+    sinopse: "Um guia rápido e acessível que percorre as mais recentes descobertas da astronomia, do Big Bang aos confins do cosmos. Perfeito para quem quer entender o universo sem complicação.",
+    imagem: "img/a-historia-do-universo.jpg"
+  },
+
+  /* ===================== FANTASIA, SUSPENSE & TERROR ===================== */
+
+  {
+    titulo: "O Príncipe Cruel",
+    destaque: true,
+    autor: "Holly Black",
+    genero: "Fantasia, Suspense & Terror",
+    preco: "R$ 55,00",
+    estoque: 1,
+    estado: "Estado perfeito",
+    sinopse: "Levada ainda criança para o traiçoeiro e fascinante mundo das fadas, Jude luta para conquistar seu lugar entre a nobreza imortal, e se vê em meio à crueldade do príncipe Cardan, em uma trama de intrigas, poder e desejo. Primeiro livro da aclamada trilogia O Povo do Ar, de Holly Black.",
+    imagem: "img/o-principe-cruel.jpg",
+    dataAdicao: "2026-06-27"
+  },
+
+  {
+    titulo: "A Batalha do Apocalipse",
+    destaque: true,
+    autor: "Eduardo Spohr",
+    genero: "Fantasia, Suspense & Terror",
+    preco: "R$ 25,00",
+    estoque: 1,
+    estado: "Com marcas de uso",
+    sinopse: "Da queda dos anjos ao crepúsculo do mundo: o anjo guerreiro Ablon atravessa milênios em uma epopeia sobre amor, traição e redenção. Um dos maiores sucessos da fantasia brasileira, escrito por Eduardo Spohr.",
+    imagem: "img/a-batalha-do-apocalipse.jpg",
+    dataAdicao: "2026-06-08"
+  },
 
   {
     titulo: "O Chamado de Cthulhu e Outros Contos",
     destaque: true,
     autor: "H. P. Lovecraft",
-    genero: "Suspense & Terror",
+    genero: "Fantasia, Suspense & Terror",
     preco: "R$ 20,00",
     estoque: 1,
     estado: "Estado perfeito",
@@ -527,7 +525,7 @@ const LIVROS = [
     titulo: "Saboroso Cadáver",
     destaque: true,
     autor: "Agustina Bazterrica",
-    genero: "Suspense & Terror",
+    genero: "Fantasia, Suspense & Terror",
     preco: "R$ 45,00",
     estoque: 1,
     estado: "Estado perfeito",
@@ -536,13 +534,14 @@ const LIVROS = [
     dataAdicao: "2026-06-27"
   },
 
-  /* ========================== MANGÁS ========================== */
-
+  /* Mangá único no estoque: por enquanto fica na fileira de Fantasia
+     para a seção não parecer vazia. Quando chegarem mais mangás, volte
+     o genero deste (e dos novos) para "Mangás" — a fileira reaparece. */
   {
     titulo: "Berserk – Vol. 1",
     destaque: true,
     autor: "Kentaro Miura",
-    genero: "Mangás",
+    genero: "Fantasia, Suspense & Terror",
     preco: "R$ 45,00",
     estoque: 1,
     estado: "Estado perfeito",
