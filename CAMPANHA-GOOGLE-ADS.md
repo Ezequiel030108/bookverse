@@ -390,14 +390,16 @@ sem impressões (normal no 1º dia numa cidade pequena).
 
 ### Ajustes feitos na conta em 16/07 🔧
 
-1. **13 palavras-chave pausadas** no grupo *Livros do Catálogo* — elas
-   anunciavam livros que **não estão no site publicado** (o clique pago
-   cairia na vitrine sem o livro prometido): O Conde de Monte Cristo,
-   Vidas Secas, Crime e Castigo, Noites Brancas, A Garota do Lago,
-   Boruto vol. 1 e 2, De Quanta Terra Precisa um Homem, Lucky, Mushishi,
-   Os Dias Comuns de Yano-kun, Princesas Mortas Não Se Apaixonam e
-   Loveless. **Quando publicar esses livros no site, é só reativá-las**
-   (Campanha → Palavras-chave → filtrar "pausadas").
+1. **13 palavras-chave do grupo *Livros do Catálogo*** (Crime e Castigo,
+   O Conde de Monte Cristo, Boruto vol. 1 e 2, Mushishi, Loveless,
+   Noites Brancas, Vidas Secas, A Garota do Lago, Lucky, Princesas
+   Mortas Não Se Apaixonam, Yano-kun e De Quanta Terra Precisa um
+   Homem) chegaram a ser **pausadas durante a auditoria**, porque esses
+   títulos não constam no `js/livros.js` do repositório. O dono
+   confirmou que **os livros estão no site publicado** e elas foram
+   **reativadas no mesmo dia**. O que isso revelou: **o `js/livros.js`
+   do GitHub está desatualizado** em relação ao site no ar (veja o
+   checklist abaixo).
 2. **Adicionada** a palavra `"livraria em juazeirinho"` (frase) no grupo
    *Livraria Local* — estava no plano (seção 3) mas não tinha entrado na
    conta.
@@ -409,12 +411,15 @@ sem impressões (normal no 1º dia numa cidade pequena).
 
 ### Fica com você (não dá para fazer por API) 📋
 
-- [ ] **Publicar os livros novos no site** (`js/livros.js`) — 13 palavras
-      pausadas esperam por isso. Depois rode
+- [ ] ⚠️ **Subir para o GitHub a versão atual do `js/livros.js`** — o
+      repositório tem 36 títulos e o site no ar tem mais (os 13 acima
+      não estão no arquivo do GitHub). Como o site se atualiza sozinho
+      a partir do GitHub, **um push com o arquivo antigo pode apagar os
+      livros novos da vitrine**. Depois de subir, rode
       `node scripts/gerar-ads-livros.js --tsv` para conferir os links.
-- [ ] `"demon slayer mangá"` e `"the promised neverland mangá"` seguem
-      **ativas**, mas esses títulos não estão no site — se também não
-      estiverem na loja física, pause-as.
+- [ ] Confirmar que **Demon Slayer** e **The Promised Neverland** também
+      estão no site — as palavras deles estão ativas no grupo *Mangás*,
+      mas esses títulos também não constam no `js/livros.js` do GitHub.
 - [ ] O painel está sugerindo **"ativar parceiros de pesquisa"** →
       **recusar** (seção 2.2 do plano).
 - [ ] Conferir que a **aplicação automática de recomendações** está
