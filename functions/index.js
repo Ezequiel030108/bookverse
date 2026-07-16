@@ -37,7 +37,13 @@ const rotas = {
   "gerar-sinopse": require("./api/gerar-sinopse"),
   "classificar-livro": require("./api/classificar-livro"),
   "capa": require("./api/capa"),
-  "livro": require("./api/livro")
+  "livro": require("./api/livro"),
+  // Instagram: conexão da conta e publicação de stories dos livros.
+  // Não usam segredo do Secret Manager: o token fica no Firestore
+  // (doc "instagram/conta"), que só o servidor lê.
+  "instagram": require("./api/instagram"),
+  "postar-story": require("./api/postar-story"),
+  "story-img": require("./api/story-img")
 };
 
 /* Define req.query de forma confiável. (No Express, req.query é um

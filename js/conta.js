@@ -791,6 +791,8 @@
 
       // Qualquer livro pode ser editado.
       acoes.appendChild(botao("editar", "Editar", "admin-btn-editar"));
+      // Story do livro no Instagram (abre a prévia; publica na conta conectada).
+      if (window.StoryIG) acoes.appendChild(botao("story", "Story", "admin-btn-story"));
       // Livro criado pelo admin: pode ser removido de vez.
       // Livro da loja editado: pode ter a edição revertida (volta ao original).
       if (novoMeu) acoes.appendChild(botao("remover", "Remover", "admin-btn-remover"));
@@ -825,6 +827,7 @@
   async function carregarAdmin() {
     const carregando = document.getElementById("admin-carregando");
     preencherGeneros();
+    carregarInsta();   // estado da conexão com o Instagram (uma vez)
     if (!adminCarregado) {
       if (carregando) { carregando.hidden = false; carregando.textContent = "Carregando catálogo…"; }
       try { dispMapaAdmin = await Auth.lerDisponibilidade(); } catch (e) { dispMapaAdmin = {}; }
@@ -835,6 +838,92 @@
     if (carregando) carregando.hidden = true;
     renderAdmin();
   }
+
+  /* ================================================================
+     INSTAGRAM (admin): conexão da conta usada nos stories dos livros.
+     O token é validado e guardado no servidor (/api/instagram) — o
+     painel só mostra o estado e envia/apaga o token.
+     ================================================================ */
+  let instaCarregado = false;
+
+  async function apiInstagram(metodo, corpo) {
+    const token = await Auth.idToken().catch(() => null);
+    const r = await fetch("/api/instagram", {
+      method: metodo,
+      headers: Object.assign(
+        corpo ? { "Content-Type": "application/json" } : {},
+        token ? { "Authorization": "Bearer " + token } : {}),
+      body: corpo ? JSON.stringify(corpo) : undefined
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((d && d.error) || "falha");
+    return d;
+  }
+
+  function mostrarEstadoInsta(conectado, username) {
+    const st = document.getElementById("insta-status");
+    const form = document.getElementById("insta-form");
+    const btnDesc = document.getElementById("btn-insta-desconectar");
+    if (st) {
+      st.classList.toggle("insta-ok", !!conectado);
+      st.textContent = conectado
+        ? "Conectado como @" + (username || "?") + ". O acesso se renova sozinho a cada story publicado."
+        : "Ainda não conectado.";
+    }
+    if (form) form.hidden = !!conectado;
+    if (btnDesc) btnDesc.hidden = !conectado;
+  }
+
+  async function carregarInsta() {
+    if (instaCarregado || !document.getElementById("admin-insta")) return;
+    instaCarregado = true;
+    try {
+      const d = await apiInstagram("GET");
+      mostrarEstadoInsta(!!d.conectado, d.username);
+    } catch (e) {
+      const st = document.getElementById("insta-status");
+      if (st) st.textContent = "Não foi possível verificar a conexão agora. Recarregue a página para tentar de novo.";
+      instaCarregado = false;   // deixa tentar de novo na próxima abertura
+    }
+  }
+
+  const btnInstaConectar = document.getElementById("btn-insta-conectar");
+  if (btnInstaConectar) btnInstaConectar.addEventListener("click", async () => {
+    const inp = document.getElementById("insta-token");
+    const erroEl = document.getElementById("insta-erro");
+    const tokenIG = inp ? inp.value.trim() : "";
+    if (erroEl) erroEl.hidden = true;
+    if (!tokenIG) {
+      if (erroEl) { erroEl.hidden = false; erroEl.textContent = "Cole o token de acesso primeiro."; }
+      return;
+    }
+    btnInstaConectar.disabled = true; btnInstaConectar.textContent = "Conectando…";
+    try {
+      const d = await apiInstagram("POST", { token: tokenIG });
+      if (inp) inp.value = "";
+      mostrarEstadoInsta(true, d.username);
+    } catch (e) {
+      if (erroEl) { erroEl.hidden = false; erroEl.textContent = (e && e.message) || "Não foi possível conectar agora. Tente novamente."; }
+    } finally {
+      btnInstaConectar.disabled = false; btnInstaConectar.textContent = "Conectar Instagram";
+    }
+  });
+
+  const btnInstaDesconectar = document.getElementById("btn-insta-desconectar");
+  if (btnInstaDesconectar) btnInstaDesconectar.addEventListener("click", async () => {
+    if (!window.confirm("Desconectar o Instagram? Os stories deixam de funcionar até conectar de novo.")) return;
+    const erroEl = document.getElementById("insta-erro");
+    if (erroEl) erroEl.hidden = true;
+    btnInstaDesconectar.disabled = true;
+    try {
+      await apiInstagram("DELETE");
+      mostrarEstadoInsta(false, "");
+    } catch (e) {
+      if (erroEl) { erroEl.hidden = false; erroEl.textContent = "Não foi possível desconectar agora. Tente novamente."; }
+    } finally {
+      btnInstaDesconectar.disabled = false;
+    }
+  });
 
   // Busca no admin
   const adminBusca = document.getElementById("admin-busca");
@@ -860,6 +949,13 @@
     if (!id || !acao) return;
     // Editar abre o formulário preenchido — não é uma ação "salvando" inline.
     if (acao === "editar") { entrarModoEdicao(id); return; }
+    // Story: abre a prévia da arte (capa + nome + preço) para publicar.
+    if (acao === "story") {
+      const idDe = window.idLivro || (l => l.id);
+      const livro = listaLivrosAdmin().find(x => idDe(x) === id);
+      if (livro && window.StoryIG) window.StoryIG.abrir(livro);
+      return;
+    }
     if (acao === "remover") {
       if (!window.confirm("Remover este livro da loja permanentemente?")) return;
     } else if (acao === "reverter") {

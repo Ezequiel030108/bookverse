@@ -238,6 +238,24 @@
         <!-- Resumo rápido (total / disponíveis / vendidos) -->
         <div id="admin-resumo" class="admin-resumo" hidden></div>
 
+        <!-- Instagram: conexão da conta para publicar stories dos livros -->
+        <details id="admin-insta" class="admin-add">
+          <summary><span>Instagram — story dos livros</span></summary>
+          <div class="admin-insta-corpo">
+            <p class="conta-ajuda">Conecte a conta <strong>profissional</strong> do Instagram da loja para publicar um story de qualquer livro com um toque (botão <strong>Story</strong> na lista abaixo): a arte sai pronta, com a capa, o nome e o preço. O passo a passo para gerar o token está no <strong>README</strong>, seção “Stories dos livros no Instagram”.</p>
+            <p id="insta-status" class="conta-ajuda insta-status">Verificando conexão…</p>
+            <div id="insta-form" hidden>
+              <div class="campo">
+                <label for="insta-token">Token de acesso (longa duração)</label>
+                <input type="password" id="insta-token" autocomplete="off" placeholder="Cole aqui o token gerado no painel da Meta" />
+              </div>
+              <button type="button" id="btn-insta-conectar" class="botao-loja botao-loja-primario">Conectar Instagram</button>
+            </div>
+            <button type="button" id="btn-insta-desconectar" class="botao-loja botao-loja-secundario" hidden>Desconectar</button>
+            <p id="insta-erro" class="pagamento-erro" hidden></p>
+          </div>
+        </details>
+
         <!-- Adicionar / editar livro -->
         <details id="admin-add" class="admin-add">
           <summary id="admin-add-summary"><span id="admin-add-titulo">Adicionar um novo livro</span></summary>
@@ -367,6 +385,23 @@
     </div>
   </div>
 
+  <!-- Modal: prévia e publicação do story no Instagram (admin) -->
+  <div id="modal-story" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="modal-story-titulo">
+    <div class="modal-caixa modal-caixa-story">
+      <h2 id="modal-story-titulo" class="modal-titulo">Story do livro</h2>
+      <p class="modal-desc">Confira a prévia. Ao publicar, o story vai direto para o Instagram da loja.</p>
+      <div class="story-preview">
+        <canvas id="story-canvas" width="1080" height="1920" aria-label="Prévia do story"></canvas>
+      </div>
+      <p id="story-status" class="story-status" hidden></p>
+      <p id="story-erro" class="pagamento-erro" hidden></p>
+      <div class="modal-acoes">
+        <button type="button" id="btn-story-fechar" class="botao-loja botao-loja-secundario">Fechar</button>
+        <button type="button" id="btn-story-publicar" class="botao-loja botao-loja-primario">Publicar story</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== RODAPÉ ===== -->
   <footer class="rodape-site">
     <p class="rodape-links">
@@ -386,6 +421,7 @@
   <script src="js/auth.js"></script>
   <script src="js/precos.js"></script>
   <script src="js/cart.js"></script>
+  <script src="js/story.js"></script>
   <script src="js/conta.js"></script>
 </body>
 </html>
