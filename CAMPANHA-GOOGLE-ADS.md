@@ -417,9 +417,10 @@ sem impressões (normal no 1º dia numa cidade pequena).
       a partir do GitHub, **um push com o arquivo antigo pode apagar os
       livros novos da vitrine**. Depois de subir, rode
       `node scripts/gerar-ads-livros.js --tsv` para conferir os links.
-- [ ] Confirmar que **Demon Slayer** e **The Promised Neverland** também
-      estão no site — as palavras deles estão ativas no grupo *Mangás*,
-      mas esses títulos também não constam no `js/livros.js` do GitHub.
+- [x] ~~Confirmar que **Demon Slayer** e **The Promised Neverland**
+      também estão no site~~ — o dono confirmou que **não estão**; as
+      duas palavras foram **pausadas em 16/07**. Reative-as se esses
+      mangás entrarem no catálogo.
 - [ ] O painel está sugerindo **"ativar parceiros de pesquisa"** →
       **recusar** (seção 2.2 do plano).
 - [ ] Conferir que a **aplicação automática de recomendações** está
