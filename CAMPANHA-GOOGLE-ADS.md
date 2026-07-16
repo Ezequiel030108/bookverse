@@ -363,3 +363,63 @@ como escrever
 - [ ] Cartão/boleto de faturamento configurado
 
 *Plano criado em 09/07/2026. Revisar com os dados reais após 30 dias.*
+
+---
+
+## 11. Revisão da campanha no ar (auditoria de 16/07/2026) 🔍
+
+A campanha foi criada em **15/07/2026** e auditada por completo via API no
+dia seguinte. Estado: **ativa e elegível**, em fase de aprendizado, ainda
+sem impressões (normal no 1º dia numa cidade pequena).
+
+### O que foi conferido e está correto ✅
+
+| Item do plano | Estado na conta |
+|---|---|
+| Rede: só Pesquisa Google (sem Display/parceiros) | ✅ |
+| Local: raio de 15 km de Juazeirinho, opção "Presença" | ✅ |
+| Idiomas: português + inglês | ✅ |
+| Lance: Maximizar cliques com CPC máx. R$ 0,80 | ✅ |
+| Orçamento: R$ 1,65/dia (entrega padrão) | ✅ |
+| Meta da campanha: só "Compra BookVerse" conta como conversão | ✅ |
+| 4 grupos de anúncios (Livraria Local, Mangás, Catálogo, Marca) | ✅ |
+| 27 palavras negativas do plano coladas na campanha | ✅ |
+| Anúncio: 15 títulos + 4 descrições, **aprovado**, em todos os grupos | ✅ |
+| Callouts (6), snippet "Tipos" e logo | ✅ |
+| Palavras do catálogo com link direto para o livro (`?livro=...`) | ✅ |
+
+### Ajustes feitos na conta em 16/07 🔧
+
+1. **13 palavras-chave pausadas** no grupo *Livros do Catálogo* — elas
+   anunciavam livros que **não estão no site publicado** (o clique pago
+   cairia na vitrine sem o livro prometido): O Conde de Monte Cristo,
+   Vidas Secas, Crime e Castigo, Noites Brancas, A Garota do Lago,
+   Boruto vol. 1 e 2, De Quanta Terra Precisa um Homem, Lucky, Mushishi,
+   Os Dias Comuns de Yano-kun, Princesas Mortas Não Se Apaixonam e
+   Loveless. **Quando publicar esses livros no site, é só reativá-las**
+   (Campanha → Palavras-chave → filtrar "pausadas").
+2. **Adicionada** a palavra `"livraria em juazeirinho"` (frase) no grupo
+   *Livraria Local* — estava no plano (seção 3) mas não tinha entrado na
+   conta.
+3. **3 negativas novas** que faltavam em português: `audiolivro`, `ouvir`
+   e `estante virtual` (o plano só tinha "audiobook", em inglês).
+4. **Sitelink "Minha Conta" trocado por "Romance e Literatura"**
+   (`?busca=romance`) — quem ainda não é cliente não tem conta; um
+   gênero com 8 livros na estante aproveita melhor o espaço do anúncio.
+
+### Fica com você (não dá para fazer por API) 📋
+
+- [ ] **Publicar os livros novos no site** (`js/livros.js`) — 13 palavras
+      pausadas esperam por isso. Depois rode
+      `node scripts/gerar-ads-livros.js --tsv` para conferir os links.
+- [ ] `"demon slayer mangá"` e `"the promised neverland mangá"` seguem
+      **ativas**, mas esses títulos não estão no site — se também não
+      estiverem na loja física, pause-as.
+- [ ] O painel está sugerindo **"ativar parceiros de pesquisa"** →
+      **recusar** (seção 2.2 do plano).
+- [ ] Conferir que a **aplicação automática de recomendações** está
+      desativada (seção 1.2) — isso não aparece pela API.
+- [ ] Se em ~2 semanas continuar com **0 impressões**, subir o CPC máx.
+      para **R$ 1,20** (seção 6).
+
+*Auditoria e ajustes feitos em 16/07/2026 via API oficial do Google Ads.*
