@@ -3043,3 +3043,50 @@ main {
 .story-preview canvas { width: 100%; height: 100%; display: block; }
 .story-status { margin: 0 0 14px; font-size: .88rem; color: var(--lavanda-clara); text-align: center; }
 .story-status.ok { color: #8be79a; font-weight: 700; }
+
+/* ============================================================
+   SOBRE O APP — bloco que explica a finalidade da BookVerse.
+   Exigido pela verificação de branding do Google (a página
+   inicial precisa deixar claro o que o app faz).
+   ============================================================ */
+.sobre-app {
+  padding: 22px 16px 6px;
+}
+.sobre-app-conteudo {
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  border-radius: 16px;
+  padding: 20px 20px 22px;
+  backdrop-filter: blur(6px);
+}
+.sobre-eyebrow {
+  display: inline-block;
+  font-size: .72rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--lavanda);
+  margin-bottom: 8px;
+}
+.sobre-titulo {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.35rem, 5vw, 1.9rem);
+  line-height: 1.2;
+  margin: 0 0 12px;
+  color: var(--texto-claro);
+}
+.sobre-texto {
+  font-size: .95rem;
+  line-height: 1.6;
+  color: var(--texto-suave);
+  margin: 0 0 12px;
+}
+.sobre-texto:last-child { margin-bottom: 0; }
+.sobre-texto strong { color: var(--texto-claro); font-weight: 600; }
+.sobre-texto a { color: var(--lavanda-clara); text-decoration: underline; }
+
+@media (min-width: 720px) {
+  .sobre-app { padding: 30px 16px 8px; }
+  .sobre-app-conteudo { padding: 26px 30px 28px; }
+}
