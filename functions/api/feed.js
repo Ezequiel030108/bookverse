@@ -30,6 +30,29 @@ function escXml(t) {
     .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
+/* O Google limita o atributo "id" do produto a 50 caracteres. O id do
+   site (titulo-autor) às vezes passa disso. Esta função encurta APENAS
+   o id que vai no feed, de forma:
+     • estável  -> o mesmo livro gera sempre o mesmo id (o Google não
+                   trata como "produto novo" a cada busca);
+     • única    -> ids longos diferentes não colidem (guardamos um
+                   "resumo"/hash curto do id completo no fim).
+   O LINK do livro continua usando o id COMPLETO, então o clique abre o
+   livro certo na loja. */
+const LIMITE_ID_GOOGLE = 50;
+
+function hashCurto(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h.toString(36);   // ~6-7 caracteres [0-9a-z]
+}
+
+function idParaFeed(id) {
+  if (id.length <= LIMITE_ID_GOOGLE) return id;   // curto: mantém como está
+  const sufixo = "-" + hashCurto(id);
+  return id.slice(0, LIMITE_ID_GOOGLE - sufixo.length) + sufixo;
+}
+
 /* "R$ 45,00" -> 45 (número). Retorna null se não der para ler. */
 function precoNumerico(precoTexto) {
   const n = parseFloat(String(precoTexto).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", "."));
@@ -100,14 +123,15 @@ module.exports = async (req, res) => {
     if (!imagem) return;
 
     const id = idLivro(livro);
-    const link = base + "/?livro=" + encodeURIComponent(id);
+    const idFeed = idParaFeed(id);   // <= 50 caracteres, exigência do Google
+    const link = base + "/?livro=" + encodeURIComponent(id);   // link usa o id COMPLETO
     const titulo = livro.autor ? `${livro.titulo}, de ${livro.autor}` : livro.titulo;
     const descricao = (livro.sinopse || `${livro.titulo}${livro.autor ? " — " + livro.autor : ""}. Disponível na BookVerse.`).slice(0, 4900);
     const promocional = precoPromocional(livro, preco, promo);
 
     let item =
       "  <item>\n" +
-      `    <g:id>${escXml(id)}</g:id>\n` +
+      `    <g:id>${escXml(idFeed)}</g:id>\n` +
       `    <g:title>${escXml(titulo)}</g:title>\n` +
       `    <g:description>${escXml(descricao)}</g:description>\n` +
       `    <g:link>${escXml(link)}</g:link>\n` +
