@@ -109,7 +109,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado, porém grifado",
     sinopse: "Baseado no estudo de centenas de pessoas bem-sucedidas, Napoleon Hill revela os 13 princípios que conduzem à riqueza e à realização pessoal. Um dos maiores clássicos do desenvolvimento financeiro de todos os tempos.",
-    imagem: "img/quem-pensa-enriquece.jpg"
+    imagem: "img/quem-pensa-enriquece.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -121,7 +122,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado, porém muito grifado",
     sinopse: "Através de parábolas ambientadas na antiga Babilônia, o autor ensina princípios atemporais sobre como economizar, investir e construir riqueza de forma simples e duradoura.",
-    imagem: "img/o-homem-mais-rico-da-babilonia.jpg"
+    imagem: "img/o-homem-mais-rico-da-babilonia.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -145,7 +147,8 @@ const LIVROS = [
     estoque: 3,
     estado: "Ótimo estado",
     sinopse: "T. Harv Eker mostra como o 'modelo de dinheiro' que carregamos desde a infância determina nossa vida financeira, e ensina a reprogramar a mente para a prosperidade e a riqueza.",
-    imagem: "img/os-segredos-da-mente-milionaria.jpg"
+    imagem: "img/os-segredos-da-mente-milionaria.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -156,19 +159,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Ótimo estado, porém grifado",
     sinopse: "Philip Kotler, o pai do marketing moderno, apresenta a transição do marketing tradicional para o digital, mostrando como conquistar clientes na era da conectividade integrando o online e o offline.",
-    imagem: "img/marketing-4-0.jpg"
-  },
-
-  {
-    titulo: "A Estrada do Futuro",
-    autor: "Bill Gates",
-    genero: "Finanças & Negócios",
-    preco: "R$ 30,00",
-    estoque: 1,
-    estado: "Quase novo",
-    sinopse: "Escrito pelo fundador da Microsoft, este clássico apresenta a visão de Bill Gates sobre a revolução digital e o impacto da internet e dos computadores no futuro do trabalho, da educação e do nosso dia a dia.",
-    imagem: "img/a-estrada-do-futuro.jpg",
-    dataAdicao: "2026-06-09"
+    imagem: "img/marketing-4-0.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   /* ============= AUTOAJUDA & DESENVOLVIMENTO PESSOAL ============= */
@@ -182,7 +174,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado, porém grifado",
     sinopse: "O clássico definitivo sobre relações humanas. Dale Carnegie ensina princípios práticos para se comunicar melhor, conquistar a confiança das pessoas e influenciar positivamente quem está ao seu redor.",
-    imagem: "img/como-fazer-amigos.jpg"
+    imagem: "img/como-fazer-amigos.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -194,12 +187,12 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado, porém grifado",
     sinopse: "Joseph Murphy revela como a mente subconsciente pode ser programada para transformar pensamentos em realidade, alcançando saúde, prosperidade e felicidade através de técnicas práticas.",
-    imagem: "img/o-poder-do-subconsciente.jpg"
+    imagem: "img/o-poder-do-subconsciente.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
     titulo: "Como Evitar Preocupações e Começar a Viver",
-    destaque: true,
     autor: "Dale Carnegie",
     genero: "Autoajuda & Desenvolvimento Pessoal",
     preco: "R$ 30,00",
@@ -218,7 +211,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado",
     sinopse: "Uma mensagem motivacional direta sobre atitude, foco e ação. Um chamado para sair da zona de conforto e correr atrás dos seus objetivos e sonhos.",
-    imagem: "img/quer-levanta-e-pega.jpg"
+    imagem: "img/quer-levanta-e-pega.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   /* ===================== CIÊNCIA & CURIOSIDADES ===================== */
@@ -231,7 +225,20 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado",
     sinopse: "Um guia rápido e acessível que percorre as mais recentes descobertas da astronomia, do Big Bang aos confins do cosmos. Perfeito para quem quer entender o universo sem complicação.",
-    imagem: "img/a-historia-do-universo.jpg"
+    imagem: "img/a-historia-do-universo.jpg",
+    dataAdicao: "2026-06-01"
+  },
+
+  {
+    titulo: "A Estrada do Futuro",
+    autor: "Bill Gates",
+    genero: "Ciência & Curiosidades",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Quase novo",
+    sinopse: "Escrito pelo fundador da Microsoft, este clássico apresenta a visão de Bill Gates sobre a revolução digital e o impacto da internet e dos computadores no futuro do trabalho, da educação e do nosso dia a dia.",
+    imagem: "img/a-estrada-do-futuro.jpg",
+    dataAdicao: "2026-06-09"
   },
 
   /* ===================== CLÁSSICOS DA LITERATURA ===================== */
@@ -245,7 +252,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Quase novo",
     sinopse: "Em uma sociedade dominada por um Estado totalitário e vigiada pelo onipresente Grande Irmão, Winston Smith tenta resistir ao controle absoluto do pensamento. Uma das distopias mais influentes de todos os tempos, sobre liberdade, verdade e manipulação.",
-    imagem: "img/1984.jpg"
+    imagem: "img/1984.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -263,14 +271,14 @@ const LIVROS = [
 
   {
     titulo: "Oliver Twist",
-    destaque: true,
     autor: "Charles Dickens",
     genero: "Clássicos da Literatura",
     preco: "R$ 30,00",
     estoque: 1,
     estado: "Seminovo",
     sinopse: "Um órfão enfrenta a miséria e a exploração na Londres do século XIX, passando por orfanatos, gangues de batedores de carteira e muitas reviravoltas, em um dos romances mais célebres de Charles Dickens.",
-    imagem: "img/oliver-twist.jpg"
+    imagem: "img/oliver-twist.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -282,36 +290,36 @@ const LIVROS = [
     estoque: 1,
     estado: "Novo, lacrado",
     sinopse: "Nas charnecas sombrias da Inglaterra, o amor intenso e destrutivo entre Catherine e Heathcliff atravessa gerações, misturando paixão, vingança e obsessão. O único romance de Emily Brontë é um dos maiores clássicos de todos os tempos.",
-    imagem: "img/o-morro-dos-ventos-uivantes.jpg"
+    imagem: "img/o-morro-dos-ventos-uivantes.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
     titulo: "Fahrenheit 451",
-    destaque: true,
     autor: "Ray Bradbury",
     genero: "Clássicos da Literatura",
     preco: "R$ 35,00",
     estoque: 1,
     estado: "Com marcas de uso",
     sinopse: "Em uma sociedade onde os livros são proibidos e queimados por bombeiros, o bombeiro Guy Montag começa a questionar seu papel. Um clássico distópico sobre censura, conhecimento e liberdade de pensamento.",
-    imagem: "img/fahrenheit-451.jpg"
+    imagem: "img/fahrenheit-451.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
     titulo: "A Volta ao Mundo em 80 Dias",
-    destaque: true,
     autor: "Júlio Verne",
     genero: "Clássicos da Literatura",
     preco: "R$ 40,00",
     estoque: 1,
     estado: "Estado perfeito",
     sinopse: "O excêntrico inglês Phileas Fogg aposta que consegue dar a volta ao mundo em apenas 80 dias. Ao lado de seu criado Passepartout, embarca em uma aventura cheia de imprevistos pelos quatro cantos do planeta.",
-    imagem: "img/a-volta-ao-mundo-em-80-dias.jpg"
+    imagem: "img/a-volta-ao-mundo-em-80-dias.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
     titulo: "Memórias do Subsolo",
-    destaque: true,
     autor: "Fiódor Dostoiévski",
     genero: "Clássicos da Literatura",
     preco: "R$ 30,00",
@@ -344,6 +352,18 @@ const LIVROS = [
     sinopse: "O terceiro volume das aventuras de Sherlock Holmes reúne mais casos memoráveis do detetive mais célebre da literatura. Dedução, suspense e a inconfundível parceria com o Dr. Watson em narrativas que atravessam gerações.",
     imagem: "img/sherlock-holmes-vol-3.jpg",
     dataAdicao: "2026-06-07"
+  },
+
+  {
+    titulo: "O Xangô de Baker Street",
+    autor: "Jô Soares",
+    genero: "Clássicos da Literatura",
+    preco: "R$ 30,00",
+    estoque: 1,
+    estado: "Bom estado",
+    sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
+    imagem: "img/o-xango-de-baker-street.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -413,7 +433,6 @@ const LIVROS = [
 
   {
     titulo: "A Batalha do Apocalipse",
-    destaque: true,
     autor: "Eduardo Spohr",
     genero: "Romance & Literatura",
     preco: "R$ 25,00",
@@ -425,17 +444,6 @@ const LIVROS = [
   },
 
   {
-    titulo: "O Xangô de Baker Street",
-    autor: "Jô Soares",
-    genero: "Romance & Literatura",
-    preco: "R$ 30,00",
-    estoque: 1,
-    estado: "Bom estado",
-    sinopse: "No Rio de Janeiro do final do século XIX, Sherlock Holmes é convocado para resolver um misterioso caso de assassinatos. Jô Soares mistura humor, história e suspense neste best-seller.",
-    imagem: "img/o-xango-de-baker-street.jpg"
-  },
-
-  {
     titulo: "O Guardião do Tempo",
     autor: "Mitch Albom",
     genero: "Romance & Literatura",
@@ -443,7 +451,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Bom estado",
     sinopse: "Pai Tempo, o homem que inventou a medição das horas, é condenado a viver isolado por milênios. Para se redimir, precisa ensinar o verdadeiro significado do tempo a duas pessoas na Terra.",
-    imagem: "img/o-guardiao-do-tempo.jpg"
+    imagem: "img/o-guardiao-do-tempo.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -454,7 +463,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Estado perfeito",
     sinopse: "Uma recriação literária inspirada no universo de Machado de Assis e seu célebre Brás Cubas, revisitando com bom humor a obra do maior escritor brasileiro.",
-    imagem: "img/memorias-quase-postumas-machado.jpg"
+    imagem: "img/memorias-quase-postumas-machado.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   {
@@ -465,7 +475,8 @@ const LIVROS = [
     estoque: 1,
     estado: "Ótimo estado",
     sinopse: "Um romance sensível sobre memória, afeto e as histórias guardadas ao longo do tempo, explorando como as lembranças moldam quem somos.",
-    imagem: "img/paredes-da-memoria.jpg"
+    imagem: "img/paredes-da-memoria.jpg",
+    dataAdicao: "2026-06-01"
   },
 
   /* ========================= FILOSOFIA ========================= */
@@ -525,7 +536,6 @@ const LIVROS = [
 
   {
     titulo: "Saboroso Cadáver",
-    destaque: true,
     autor: "Agustina Bazterrica",
     genero: "Suspense & Terror",
     preco: "R$ 45,00",

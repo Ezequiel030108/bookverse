@@ -32,12 +32,12 @@ window.LOJA_CONFIG = {
     ordemGeneros: [
       "Clássicos da Literatura",
       "Romance & Literatura",
-      "Mangás",
       "Finanças & Negócios",
       "Autoajuda & Desenvolvimento Pessoal",
-      "Ciência & Curiosidades",
       "Filosofia",
-      "Suspense & Terror"
+      "Suspense & Terror",
+      "Ciência & Curiosidades",
+      "Mangás"
     ],
     fixarUltimoDestaque: "O Anticristo"
   },

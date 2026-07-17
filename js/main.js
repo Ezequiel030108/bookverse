@@ -11,12 +11,12 @@ const INSTAGRAM_USUARIO = (window.LOJA_CONFIG && window.LOJA_CONFIG.instagram) |
 const ORDEM_GENEROS = CFG_VITRINE.ordemGeneros || [
   "Clássicos da Literatura",
   "Romance & Literatura",
-  "Mangás",
   "Finanças & Negócios",
   "Autoajuda & Desenvolvimento Pessoal",
-  "Ciência & Curiosidades",
   "Filosofia",
-  "Suspense & Terror"
+  "Suspense & Terror",
+  "Ciência & Curiosidades",
+  "Mangás"
 ];
 
 /* Novidades = livros adicionados nos últimos DIAS_NOVIDADE dias (o código
