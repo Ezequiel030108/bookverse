@@ -39,6 +39,7 @@ const rotas = {
   "capa": require("./api/capa"),
   "livro": require("./api/livro"),
   "feed": require("./api/feed"),
+  "img-livro": require("./api/img-livro"),
   // Instagram: conexão da conta e publicação de stories dos livros.
   // Não usam segredo do Secret Manager: o token fica no Firestore
   // (doc "instagram/conta"), que só o servidor lê.

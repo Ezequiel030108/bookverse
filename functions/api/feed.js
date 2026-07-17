@@ -81,13 +81,18 @@ function precoPromocional(livro, base, promo) {
   return comDesconto < base ? comDesconto : null;
 }
 
-/* Monta a URL absoluta da imagem do livro.
-   - "img/x.jpg"        -> https://site/img/x.jpg
-   - "https://.../x.jpg" -> usada como está
-   - vazia / data:...    -> null (Google exige uma URL de imagem real) */
-function imagemAbsoluta(imagem, base) {
-  const src = String(imagem || "").trim();
-  if (!src || /^data:/i.test(src)) return null;
+/* Monta a URL da imagem do livro para o Google (que exige um ENDEREÇO de
+   imagem, não a imagem embutida).
+   - "img/x.jpg"          -> https://site/img/x.jpg
+   - "https://.../x.jpg"  -> usada como está
+   - "data:image/...base64" (livro cadastrado pelo painel admin, com a foto
+     embutida) -> https://site/api/img-livro?id=<id>, um endereço que devolve
+     essa mesma foto como arquivo de imagem (o Google não aceita data URL).
+   - vazia                -> null (livro sem foto não entra no feed). */
+function linkImagem(livro, id, base) {
+  const src = String(livro.imagem || "").trim();
+  if (!src) return null;
+  if (/^data:image\//i.test(src)) return base + "/api/img-livro?id=" + encodeURIComponent(id);
   if (/^https?:\/\//i.test(src)) return src;
   return base + "/" + src.replace(/^\/+/, "");
 }
@@ -118,13 +123,13 @@ module.exports = async (req, res) => {
     const preco = precoNumerico(livro.preco);
     if (preco === null || preco <= 0) return;
 
-    // Google exige uma imagem de verdade; sem ela, o livro não vai.
-    const imagem = imagemAbsoluta(livro.imagem, base);
-    if (!imagem) return;
-
     const id = idLivro(livro);
     const idFeed = idParaFeed(id);   // <= 50 caracteres, exigência do Google
     const link = base + "/?livro=" + encodeURIComponent(id);   // link usa o id COMPLETO
+
+    // Google exige um endereço de imagem; sem foto nenhuma, o livro não vai.
+    const imagem = linkImagem(livro, id, base);
+    if (!imagem) return;
     const titulo = livro.autor ? `${livro.titulo}, de ${livro.autor}` : livro.titulo;
     const descricao = (livro.sinopse || `${livro.titulo}${livro.autor ? " — " + livro.autor : ""}. Disponível na BookVerse.`).slice(0, 4900);
     const promocional = precoPromocional(livro, preco, promo);
