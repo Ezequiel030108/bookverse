@@ -289,12 +289,48 @@
       entrarComGoogle: async function () {
         const provider = new fb.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
+
+        // Rede de segurança contra a "tela travada": em navegadores com a
+        // política COOP (Cross-Origin-Opener-Policy), o Firebase às vezes NÃO
+        // percebe que o usuário fechou a janela do Google, e a Promise do
+        // signInWithPopup fica pendente para sempre — deixando o modal aberto e
+        // o scroll bloqueado. Este watchdog observa a volta do foco à página:
+        // se, pouco depois, o login não tiver concluído, cancelamos com um erro
+        // tratável para que a interface se recupere. (Se o login concluir mesmo
+        // assim, o onAuthStateChanged conclui a sessão normalmente.)
+        let timer = null, rejeitarCancelado;
+        const canceladoPromise = new Promise((_, rej) => { rejeitarCancelado = rej; });
+        function aoVoltarFoco() {
+          if (timer) return;   // já armado nesta volta de foco
+          timer = setTimeout(() => {
+            if (!auth.currentUser) {
+              const err = new Error("Login cancelado pelo usuário.");
+              err.code = "auth/popup-closed-by-user";
+              rejeitarCancelado(err);
+            }
+          }, 2500);
+        }
+        function limparWatchdog() {
+          window.removeEventListener("focus", aoVoltarFoco);
+          if (timer) { clearTimeout(timer); timer = null; }
+        }
+        // Só liga o vigia depois de o popup roubar o foco, evitando disparo
+        // no mesmo instante do clique.
+        setTimeout(() => { window.addEventListener("focus", aoVoltarFoco); }, 400);
+
         try {
-          const cred = await auth.signInWithPopup(provider);
+          const cred = await Promise.race([auth.signInWithPopup(provider), canceladoPromise]);
+          limparWatchdog();
           const u = cred && cred.user;
           if (u) usuarioAtual = { uid: u.uid, nome: u.displayName || "", email: u.email || "", foto: u.photoURL || "" };
           return usuarioAtual;
         } catch (e) {
+          limparWatchdog();
+          // Cancelamento do próprio usuário (fechou a janela / desistiu): não é
+          // um erro de verdade, apenas devolve "sem login" sem travar a tela.
+          if (e && (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request")) {
+            return null;
+          }
           // Domínio do site não autorizado no Firebase — é a causa nº 1 quando o
           // login "para de funcionar" depois de trocar o domínio da loja.
           if (e && e.code === "auth/unauthorized-domain") {
