@@ -34,6 +34,13 @@
           "functionId": "api",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/feed.xml",
+        "function": {
+          "functionId": "api",
+          "region": "us-central1"
+        }
       }
     ]
   },

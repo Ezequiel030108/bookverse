@@ -38,6 +38,7 @@ const rotas = {
   "classificar-livro": require("./api/classificar-livro"),
   "capa": require("./api/capa"),
   "livro": require("./api/livro"),
+  "feed": require("./api/feed"),
   // Instagram: conexão da conta e publicação de stories dos livros.
   // Não usam segredo do Secret Manager: o token fica no Firestore
   // (doc "instagram/conta"), que só o servidor lê.
@@ -66,6 +67,11 @@ exports.api = onRequest(
   },
   async (req, res) => {
     const caminho = String(req.path || "/");
+
+    // Feed do Google Shopping: /feed.xml → handler "feed".
+    if (/^\/feed\.xml\/?$/.test(caminho)) {
+      return rotas["feed"](req, res);
+    }
 
     // Link compartilhado: /livro/<id> → handler "livro" (o id vira ?id=,
     // igual ao rewrite que existia no vercel.json).

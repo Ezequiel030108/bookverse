@@ -33,7 +33,8 @@ projeto livros/
 │   └── api/
 │       ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
 │       ├── status-pix.js  ← o checkout pergunta "já caiu?"
-│       └── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
+│       ├── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
+│       └── feed.js        ← gera /feed.xml para o Google Shopping (automático)
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
@@ -406,6 +407,61 @@ livro é salvo.
 > `ANTHROPIC_API_KEY`). Não precisa configurar nada além do que você já fez na
 > seção anterior. Enquanto não houver chave, o botão apenas avisa que a
 > classificação está indisponível — você escolhe o gênero à mão normalmente.
+
+---
+
+## 🛒 Aparecer no Google Shopping (automático)
+
+O **Google Shopping** é aquela vitrine de produtos com foto e preço que aparece
+na aba **"Shopping"** do Google (e às vezes no topo da busca normal). Colocar os
+seus livros lá é **de graça** e ajuda quem procura o título no Google a cair
+direto na sua loja.
+
+### Como já funciona no site
+
+O site gera **sozinho** uma lista de todos os livros à venda, no formato que o
+Google entende, num endereço fixo:
+
+```
+https://www.bookverse.com.br/feed.xml
+```
+
+Essa lista (chamada de **"feed"**) é montada na hora, a partir do **mesmo
+catálogo** da loja. Ou seja: **todo livro novo que você cadastrar** (no
+`js/livros.js` ou pelo painel de Administração) **entra no feed sozinho** — e o
+Google, na próxima vez que ler o feed (uma vez por dia), coloca o livro no
+Shopping. **Você não precisa mexer em nada disso.**
+
+> Os livros **esgotados** (estoque 0) saem do feed automaticamente, igual saem
+> da loja. Se houver promoção ligada, o feed já manda o **preço com desconto**.
+
+### O que você faz UMA vez (criar a conta)
+
+1. Acesse **[merchants.google.com](https://merchants.google.com)** e entre com a
+   sua conta do Google (a mesma que administra o site, de preferência).
+2. Preencha os dados da loja: **nome** (BookVerse), **país** (Brasil), **site**
+   (`https://www.bookverse.com.br`) e a forma de **entrega/frete**.
+3. **Verifique o site**: o Merchant Center pede para você provar que o site é
+   seu. Se você já usa o **Google Search Console**, dá para reaproveitar a
+   verificação com um clique. (É o mesmo tipo de verificação da seção de
+   publicação.)
+4. No menu, vá em **Produtos → Feeds → +** (adicionar feed).
+   - Método: **"Busca programada"** (o Google busca o arquivo sozinho).
+   - Cole o endereço do feed: `https://www.bookverse.com.br/feed.xml`
+   - Frequência: **diária** (assim livros novos aparecem em até 1 dia).
+5. Salve. O Google vai ler o feed e, depois de uma **revisão** (costuma levar de
+   algumas horas a alguns dias na primeira vez), os livros começam a aparecer no
+   Shopping.
+
+Pronto! Depois disso é **100% automático**: cadastrou livro na loja → ele entra
+no feed → o Google atualiza o Shopping. Você **nunca mais precisa mexer aqui**.
+
+> 💡 **Quer conferir se está tudo certo?** Abra
+> `https://www.bookverse.com.br/feed.xml` no navegador: deve aparecer uma
+> "lista" (XML) com todos os livros à venda. Se aparecer, o Google consegue ler.
+
+> ℹ️ Livros **usados** normalmente não têm código de barras (ISBN). O feed já
+> avisa isso ao Google (`identifier_exists: no`), então não é problema.
 
 ---
 

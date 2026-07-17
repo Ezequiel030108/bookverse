@@ -38,22 +38,35 @@ function converterDoc(doc) {
 }
 
 let cache = { t: 0, lista: [] };
+let promoEstatica = null;   // a constante PROMOCAO lida do js/livros.js
 
 const TEMPO_CACHE = 5 * 60 * 1000;   // idade máxima do cache em memória
 const TEMPO_LIMITE_MS = 4000;        // espera máxima por CADA busca externa
 
 /* 1) js/livros.js do site publicado. Devolve null se a busca falhar
-   (null ≠ lista vazia: falha permite cair no cache antigo). */
+   (null ≠ lista vazia: falha permite cair no cache antigo).
+   De quebra, guarda a constante PROMOCAO (para o feed do Google Shopping
+   refletir o preço promocional, igual ao que o cliente vê no site). */
 async function livrosEstaticos(base) {
   try {
     const r = await fetch(base + "/js/livros.js", { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
     if (!r.ok) return null;
     const codigo = await r.text();
-    const fn = new Function("window", codigo + "\n;return (typeof LIVROS !== 'undefined') ? LIVROS : [];");
-    const arr = fn({});
-    return Array.isArray(arr) ? arr.slice() : null;
+    const fn = new Function("window", codigo +
+      "\n;return {" +
+      "  livros: (typeof LIVROS !== 'undefined') ? LIVROS : []," +
+      "  promocao: (typeof PROMOCAO !== 'undefined') ? PROMOCAO : null" +
+      "};");
+    const out = fn({}) || {};
+    promoEstatica = out.promocao || null;
+    return Array.isArray(out.livros) ? out.livros.slice() : null;
   } catch (e) { return null; }
 }
+
+/* A promoção declarada no js/livros.js (ou null). Só fica disponível
+   depois de uma carga do catálogo — quem precisar dela deve chamar
+   carregarLivros() antes. */
+function promocaoAtual() { return promoEstatica; }
 
 /* 2) livros/edições do admin (Firestore, leitura pública). */
 async function livrosDoAdmin() {
@@ -110,4 +123,4 @@ function baseDoRequest(req) {
   return proto + "://" + host;
 }
 
-module.exports = { slug, idLivro, carregarLivros, acharLivro, baseDoRequest };
+module.exports = { slug, idLivro, carregarLivros, acharLivro, baseDoRequest, promocaoAtual };
