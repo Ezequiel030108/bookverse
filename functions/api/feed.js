@@ -167,8 +167,9 @@ module.exports = async (req, res) => {
 
   res.statusCode = 200;
   res.setHeader("Content-Type", "application/xml; charset=utf-8");
-  // O Google busca o feed poucas vezes por dia; guardar 1h no CDN
-  // alivia o servidor sem atrasar a chegada de livros novos.
-  res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+  // Cache curto (5 min): o Google busca o feed poucas vezes por dia, mas um
+  // cache curto faz um livro recém-cadastrado aparecer quase na hora (e evita
+  // aquela confusão de "publiquei mas ainda mostra o antigo").
+  res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=3600");
   res.end(xml);
 };
