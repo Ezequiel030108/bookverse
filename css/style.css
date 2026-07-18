@@ -848,6 +848,36 @@ main {
 .card-livro:nth-child(3n)   .selo.novo,
 .card-livro:nth-child(3n)   .selo.ultimo { transform: rotate(-2deg); }
 
+/* ----- Alerta de livro USADO com trechos grifados -----
+   Selo vermelho no canto superior direito (o esquerdo tem o "Novo") com
+   um ícone de atenção, e um aro vermelho na capa para reforçar. */
+.selo-grifado {
+  display: inline-flex;
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 3;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 6px;
+  border-radius: 999px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .5px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, #f0555a, #c31f36);
+  border: 1px solid rgba(255, 255, 255, .3);
+  box-shadow: 0 3px 10px rgba(195, 31, 54, .5);
+}
+.selo-grifado svg { flex: none; display: block; }
+
+/* Aro vermelho na capa do livro grifado (respeita o arredondamento). */
+.card-grifado .capa {
+  box-shadow: 0 0 0 2px #e5484d, 0 8px 20px rgba(195, 31, 54, .3), var(--brilho-livro);
+}
+
 /* Texto do card */
 .info-livro { padding: 11px 2px 2px; text-align: center; }
 .info-titulo {

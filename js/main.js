@@ -306,18 +306,46 @@ function precoHeroHTML(livro) {
 
 /* ---------- Cards das fileiras ---------- */
 
+/* ----- Livro usado com trechos grifados -----
+   Destaca no card (alerta vermelho) os livros USADOS cujo estado menciona
+   "grifado". Essa informação já vem escrita no campo "estado" de cada livro,
+   então a checagem é direta — não precisa de IA para reconhecê-la. */
+function ehLivroNovo(livro) {
+  if (livro.condicao === "novo") return true;
+  if (livro.condicao === "usado") return false;
+  return /\b(novo|lacrad)/i.test(String(livro.estado || ""));
+}
+function ehGrifado(livro) {
+  return /grif/i.test(String(livro.estado || ""));
+}
+function usadoEGrifado(livro) {
+  return ehGrifado(livro) && !ehLivroNovo(livro);
+}
+
 function criarCard(livro, indice, seloNovo) {
   const card = document.createElement("article");
   card.className = "card-livro";
   card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.05) + "s");
   card.tabIndex = 0;
   card.setAttribute("role", "button");
-  card.setAttribute("aria-label", `${livro.titulo}, ${livro.autor}`);
 
   // Selo "Novo" só nos livros em destaque (os mais recentes adicionados).
   // Estoque/condição ficam no modal — marcar todo card viraria ruído.
   const eNovo = seloNovo || LIVROS_DESTAQUE.has(livro);
   const seloHTML = eNovo ? `<span class="selo novo">Novo</span>` : "";
+
+  // Livro usado com trechos grifados: alerta vermelho no card (canto
+  // superior direito) + aro vermelho na capa, para o cliente já saber.
+  const grifado = usadoEGrifado(livro);
+  if (grifado) card.classList.add("card-grifado");
+  card.setAttribute("aria-label",
+    `${livro.titulo}, ${livro.autor}` + (grifado ? " — usado, com trechos grifados" : ""));
+  const grifadoHTML = grifado
+    ? `<span class="selo-grifado" title="Livro usado com trechos grifados">
+         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 2.4 20.4h19.2L12 3.6z"/><line x1="12" y1="9.8" x2="12" y2="14"/><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"/></svg>
+         <span>Grifado</span>
+       </span>`
+    : "";
 
   // Existe outra versão deste livro (ex.: novo + usado)? Mostra no card.
   const variantes = variantesDe(livro);
@@ -333,6 +361,7 @@ function criarCard(livro, indice, seloNovo) {
   card.innerHTML = `
     <div class="capa">
       ${seloHTML}
+      ${grifadoHTML}
       ${capaHTML(livro)}
       <div class="capa-overlay" aria-hidden="true">
         <span class="overlay-ver">Ver detalhes</span>
@@ -569,12 +598,15 @@ function renderizar(termoBusca) {
   vitrine.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
 
   generos.forEach(genero => {
-    // Livros em destaque (principais/mais famosos) primeiro na fileira.
-    // sort estável: os demais mantêm a ordem do arquivo livros.js.
-    const lista = vitrine.filter(l => (l.genero || "Outros") === genero)
-      .sort((a, b) => (b.destaque ? 1 : 0) - (a.destaque ? 1 : 0));
-    if (lista.length === 0) return;
-    catalogo.appendChild(criarFileira(genero, lista));
+    // Fileira estilo Netflix: ordem SEMPRE embaralhada (nova a cada
+    // carregamento), mas com os livros em destaque (os mais famosos)
+    // aparecendo primeiro. Embaralhamos os dois grupos separadamente e
+    // juntamos: famosos embaralhados na frente, o resto embaralhado atrás.
+    const doGenero = vitrine.filter(l => (l.genero || "Outros") === genero);
+    if (doGenero.length === 0) return;
+    const famosos = embaralhar(doGenero.filter(l => l.destaque));
+    const resto = embaralhar(doGenero.filter(l => !l.destaque));
+    catalogo.appendChild(criarFileira(genero, famosos.concat(resto)));
   });
 }
 
