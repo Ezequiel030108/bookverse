@@ -234,59 +234,33 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 .marca-logo.logo-erro { display: none; }
 /* (emoji de fantasma removido — aparecia deslocado atrás da logo) */
 .marca-textos { display: flex; flex-direction: column; min-width: 0; }
-.marca-nome {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-family: 'Dancing Script', 'Playfair Display', cursive, serif;
-  font-weight: 700;
-  font-size: 2.35rem;
-  line-height: 1;
-  letter-spacing: .2px;
-  white-space: nowrap;
-  /* Brilho: preenchimento em gradiente estelar */
-  background: linear-gradient(96deg,
-      var(--lavanda-clara) 0%,
-      var(--aurora-ciano) 28%,
-      #ffffff 50%,
-      var(--aurora-rosa) 74%,
-      var(--estrela-clara) 100%);
-  background-size: 220% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  /* Halo luminoso ao redor do título */
+/* Título "BookVerse" — wordmark cursivo (PNG) ao lado da logo */
+.marca-titulo {
+  height: 40px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  /* Halo luminoso para destacar o título sobre o fundo do espaço */
   filter:
+    brightness(1.12)
     drop-shadow(0 0 10px rgba(184, 158, 255, .55))
-    drop-shadow(0 0 22px rgba(255, 122, 217, .35));
+    drop-shadow(0 0 20px rgba(255, 122, 217, .3));
   animation: marca-brilho 7s ease-in-out infinite;
 }
 @keyframes marca-brilho {
-  0%, 100% { background-position: 0% center; }
-  50%      { background-position: 100% center; }
+  0%, 100% {
+    filter: brightness(1.12)
+      drop-shadow(0 0 10px rgba(184, 158, 255, .55))
+      drop-shadow(0 0 20px rgba(255, 122, 217, .3));
+  }
+  50% {
+    filter: brightness(1.22)
+      drop-shadow(0 0 15px rgba(184, 158, 255, .8))
+      drop-shadow(0 0 30px rgba(255, 122, 217, .5));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .marca-nome { animation: none; }
-}
-/* Saturno decorativo ao lado do título */
-.marca-saturno {
-  width: .92em;
-  height: .92em;
-  flex-shrink: 0;
-  margin-left: 1px;
-  transform: translateY(-.06em);
-  overflow: visible;
-}
-.marca-saturno .saturno-planeta {
-  fill: var(--estrela-clara);
-  filter: drop-shadow(0 0 5px rgba(255, 217, 102, .8));
-}
-.marca-saturno .saturno-anel {
-  stroke: var(--aurora-ciano);
-  stroke-width: 2.6;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(122, 223, 255, .7));
+  .marca-titulo { animation: none; }
 }
 /* Localização — discreta, logo abaixo do nome, visível ao abrir o site */
 .marca-local {
@@ -1185,7 +1159,7 @@ main {
    ============================================================ */
 @media (min-width: 480px) {
   :root { --card-largura: clamp(140px, 30vw, 156px); }
-  .marca-nome { font-size: 2.6rem; }
+  .marca-titulo { height: 46px; }
 }
 
 @media (min-width: 720px) {
@@ -2176,7 +2150,7 @@ main {
 /* Telas muito pequenas: compacta ainda mais a marca */
 @media (max-width: 360px) {
   .marca-logo-wrap { width: 32px; height: 32px; }
-  .marca-nome { font-size: 1.85rem; }
+  .marca-titulo { height: 32px; }
   .marca-local { display: none; }
   .topbar-acoes { gap: 4px; }
   .topbar-linha { padding: 6px 10px; gap: 6px; }
