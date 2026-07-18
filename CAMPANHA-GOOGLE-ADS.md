@@ -363,3 +363,44 @@ como escrever
 - [ ] Cartão/boleto de faturamento configurado
 
 *Plano criado em 09/07/2026. Revisar com os dados reais após 30 dias.*
+
+---
+
+## 11. Atualização — Otimização de 18/07/2026 ✅
+
+Diagnóstico feito direto na conta via API do Google Ads.
+
+### O que foi encontrado
+- Campanha `Pesquisa | BookVerse | Juazeirinho` montada exatamente como o
+  plano (grupos, palavras, negativas, anúncio — tudo **aprovado**), mas com
+  **apenas 1 impressão em 30 dias**: raio de 15 km + CPC máx. de R$ 0,80 +
+  pouquíssima busca local seguravam a veiculação (cenário previsto na
+  seção 9, linha "Pouquíssimas impressões").
+- **Merchant Center 5826156652 vinculado** ao Google Ads com o catálogo
+  carregado, porém **sem nenhuma campanha usando os produtos**. Produtos em
+  *revisão inicial* do Google (até 3 dias úteis) — normal, sem reprovações.
+
+### O que foi alterado
+| Item | Antes | Depois |
+|---|---|---|
+| CPC máximo (Pesquisa) | R$ 0,80 | **R$ 2,00** |
+| Raio de segmentação | 15 km | **20 km** (pega Tenório/Assunção e corrige imprecisão de GPS; continua fora de Soledade e Campina Grande) |
+| Orçamento | R$ 1,65/dia na campanha | **Orçamento compartilhado de R$ 1,65/dia** entre as duas campanhas (total segue ≈ R$ 50/mês) |
+| Shopping | — | **Nova campanha `Shopping | BookVerse | Juazeirinho`** com o Merchant vinculado |
+
+### A nova campanha Shopping
+- Tipo: **Shopping padrão** (não é Performance Max — coerente com a
+  filosofia deste plano: controle total, sem IA sem dados).
+- Lance: **CPC manual de R$ 0,75**, um único grupo "Todos os Produtos".
+- Mesmo raio de 20 km com "Presença", mesmas palavras negativas.
+- Mostra **foto + preço + nome da loja** para buscas como "berserk mangá"
+  — para produto físico, converte melhor que anúncio de texto.
+- Começa a veicular sozinha quando a revisão dos produtos terminar
+  (até ~3 dias úteis).
+
+### O que observar nas próximas 2 semanas
+1. Impressões da Pesquisa devem sair de ~0 com o novo teto de R$ 2,00.
+2. Conferir no Merchant Center se algum produto foi **reprovado** após a
+   revisão inicial (Produtos → Diagnóstico).
+3. O aviso "limitada pelo orçamento" pode aparecer — ignorar (seção 9).
+4. Rotina semanal da seção 7 continua valendo para as duas campanhas.
