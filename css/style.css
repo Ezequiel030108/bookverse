@@ -235,22 +235,58 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 /* (emoji de fantasma removido — aparecia deslocado atrás da logo) */
 .marca-textos { display: flex; flex-direction: column; min-width: 0; }
 .marca-nome {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 800;
-  font-size: 1.45rem;
-  line-height: 1.05;
-  letter-spacing: .3px;
-  color: var(--texto-claro);
-  text-shadow: 0 0 16px rgba(184, 158, 255, .5);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: 'Dancing Script', 'Playfair Display', cursive, serif;
+  font-weight: 700;
+  font-size: 2.35rem;
+  line-height: 1;
+  letter-spacing: .2px;
   white-space: nowrap;
+  /* Brilho: preenchimento em gradiente estelar */
+  background: linear-gradient(96deg,
+      var(--lavanda-clara) 0%,
+      var(--aurora-ciano) 28%,
+      #ffffff 50%,
+      var(--aurora-rosa) 74%,
+      var(--estrela-clara) 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* Halo luminoso ao redor do título */
+  filter:
+    drop-shadow(0 0 10px rgba(184, 158, 255, .55))
+    drop-shadow(0 0 22px rgba(255, 122, 217, .35));
+  animation: marca-brilho 7s ease-in-out infinite;
 }
-.marca-nome::after {
-  content: "✦";
-  margin-left: 5px;
-  font-size: .58em;
-  color: var(--estrela);
-  vertical-align: super;
-  text-shadow: 0 0 10px rgba(255, 217, 102, .6);
+@keyframes marca-brilho {
+  0%, 100% { background-position: 0% center; }
+  50%      { background-position: 100% center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marca-nome { animation: none; }
+}
+/* Saturno decorativo ao lado do título */
+.marca-saturno {
+  width: .92em;
+  height: .92em;
+  flex-shrink: 0;
+  margin-left: 1px;
+  transform: translateY(-.06em);
+  overflow: visible;
+}
+.marca-saturno .saturno-planeta {
+  fill: var(--estrela-clara);
+  filter: drop-shadow(0 0 5px rgba(255, 217, 102, .8));
+}
+.marca-saturno .saturno-anel {
+  stroke: var(--aurora-ciano);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(122, 223, 255, .7));
 }
 /* Localização — discreta, logo abaixo do nome, visível ao abrir o site */
 .marca-local {
@@ -1149,7 +1185,7 @@ main {
    ============================================================ */
 @media (min-width: 480px) {
   :root { --card-largura: clamp(140px, 30vw, 156px); }
-  .marca-nome { font-size: 1.6rem; }
+  .marca-nome { font-size: 2.6rem; }
 }
 
 @media (min-width: 720px) {
@@ -2140,7 +2176,7 @@ main {
 /* Telas muito pequenas: compacta ainda mais a marca */
 @media (max-width: 360px) {
   .marca-logo-wrap { width: 32px; height: 32px; }
-  .marca-nome { font-size: 1.2rem; }
+  .marca-nome { font-size: 1.85rem; }
   .marca-local { display: none; }
   .topbar-acoes { gap: 4px; }
   .topbar-linha { padding: 6px 10px; gap: 6px; }
