@@ -391,12 +391,14 @@ Diagnóstico feito direto na conta via API do Google Ads.
 ### A nova campanha Shopping
 - Tipo: **Shopping padrão** (não é Performance Max — coerente com a
   filosofia deste plano: controle total, sem IA sem dados).
-- Lance: **CPC manual de R$ 0,75**, um único grupo "Todos os Produtos".
+- Lance: **CPC manual de R$ 0,75** → **R$ 5,00** (18/07, a pedido do dono),
+  um único grupo "Todos os Produtos".
 - Mesmo raio de 20 km com "Presença", mesmas palavras negativas.
 - Mostra **foto + preço + nome da loja** para buscas como "berserk mangá"
   — para produto físico, converte melhor que anúncio de texto.
 - Começa a veicular sozinha quando a revisão dos produtos terminar
-  (até ~3 dias úteis).
+  (até ~3 dias úteis). *Atualização 18/07: 50 dos 59 produtos aprovados;
+  os 9 restantes aguardam só o rastreamento das imagens pelo Google.*
 
 ### O que observar nas próximas 2 semanas
 1. Impressões da Pesquisa devem sair de ~0 com o novo teto de R$ 2,00.
