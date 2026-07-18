@@ -383,7 +383,7 @@ Diagnóstico feito direto na conta via API do Google Ads.
 ### O que foi alterado
 | Item | Antes | Depois |
 |---|---|---|
-| CPC máximo (Pesquisa) | R$ 0,80 | **R$ 2,00** |
+| CPC máximo (Pesquisa) | R$ 0,80 | **R$ 2,00** → **R$ 5,00** (18/07, a pedido do dono) |
 | Raio de segmentação | 15 km | **20 km** (pega Tenório/Assunção e corrige imprecisão de GPS; continua fora de Soledade e Campina Grande) |
 | Orçamento | R$ 1,65/dia na campanha | **Orçamento compartilhado de R$ 1,65/dia** entre as duas campanhas (total segue ≈ R$ 50/mês) |
 | Shopping | — | **Nova campanha `Shopping | BookVerse | Juazeirinho`** com o Merchant vinculado |
