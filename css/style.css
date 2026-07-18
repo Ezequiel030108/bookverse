@@ -1081,10 +1081,17 @@ main {
 /* Estado do livro em vermelho quando é usado com trechos grifados:
    alerta claro dentro do modal, junto do campo "Estado". */
 .badge-destaque.estado-grifado {
+  display: block;            /* ícone flui junto do texto e não se descola ao quebrar linha no mobile */
+  text-align: right;
   color: #ff8a8f;
   font-weight: 700;
 }
-.badge-destaque.estado-grifado svg { flex: none; color: #ff6b70; }
+.badge-destaque.estado-grifado svg {
+  display: inline;
+  vertical-align: -2px;
+  margin-right: 3px;
+  color: #ff6b70;
+}
 .modal-rodape {
   position: relative;
   padding: 12px 16px calc(12px + var(--safe-bottom));
