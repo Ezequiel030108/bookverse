@@ -1,0 +1,36 @@
+# Publica o BACKEND (Firebase Functions) sozinho quando a main muda.
+# Complementa o deploy do site (firebase-hosting-merge.yml), que só cuida
+# das páginas. Assim, mexer em functions/ não exige mais rodar
+# "firebase deploy --only functions" à mão.
+name: Deploy Functions to Firebase on merge
+
+on:
+  push:
+    branches:
+      - main
+    # Só roda quando o backend (ou este workflow) muda — evita redeploy
+    # desnecessário das funções a cada ajuste de página.
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - ".github/workflows/firebase-functions-merge.yml"
+
+jobs:
+  deploy_functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Autentica no Google usando a MESMA conta de serviço que o deploy
+      # do site já usa (segredo FIREBASE_SERVICE_ACCOUNT_BOOKVERSE_69878).
+      - name: Autenticar no Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BOOKVERSE_69878 }}"
+
+      - name: Publicar as Cloud Functions
+        run: npx --yes firebase-tools deploy --only functions --project bookverse-69878 --non-interactive --force
