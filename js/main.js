@@ -337,24 +337,12 @@ function criarCard(livro, indice, seloNovo) {
   card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.05) + "s");
   card.tabIndex = 0;
   card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `${livro.titulo}, ${livro.autor}`);
 
   // Selo "Novo" só nos livros em destaque (os mais recentes adicionados).
   // Estoque/condição ficam no modal — marcar todo card viraria ruído.
   const eNovo = seloNovo || LIVROS_DESTAQUE.has(livro);
   const seloHTML = eNovo ? `<span class="selo novo">Novo</span>` : "";
-
-  // Livro usado com trechos grifados: alerta vermelho no card (canto
-  // superior direito) + aro vermelho na capa, para o cliente já saber.
-  const grifado = usadoEGrifado(livro);
-  if (grifado) card.classList.add("card-grifado");
-  card.setAttribute("aria-label",
-    `${livro.titulo}, ${livro.autor}` + (grifado ? " — usado, com trechos grifados" : ""));
-  const grifadoHTML = grifado
-    ? `<span class="selo-grifado" title="Livro usado com trechos grifados">
-         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 2.4 20.4h19.2L12 3.6z"/><line x1="12" y1="9.8" x2="12" y2="14"/><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"/></svg>
-         <span>Grifado</span>
-       </span>`
-    : "";
 
   // Existe outra versão deste livro (ex.: novo + usado)? Mostra no card.
   const variantes = variantesDe(livro);
@@ -370,7 +358,6 @@ function criarCard(livro, indice, seloNovo) {
   card.innerHTML = `
     <div class="capa">
       ${seloHTML}
-      ${grifadoHTML}
       ${capaHTML(livro)}
       <div class="capa-overlay" aria-hidden="true">
         <span class="overlay-ver">Ver detalhes</span>
@@ -854,7 +841,18 @@ function abrirModal(livro) {
   modal.querySelector("#modal-titulo").textContent    = livro.titulo;
   modal.querySelector(".modal-autor").textContent     = livro.autor;
   modal.querySelector(".modal-sinopse").textContent   = livro.sinopse || "";
-  modal.querySelector("[data-estado]").textContent    = livro.estado;
+  // Estado do livro. Se for usado com trechos grifados, destaca em
+  // vermelho, com ícone de alerta, para o cliente ver antes de comprar.
+  const elEstado = modal.querySelector("[data-estado]");
+  if (usadoEGrifado(livro)) {
+    elEstado.classList.add("estado-grifado");
+    elEstado.innerHTML =
+      `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 2.4 20.4h19.2L12 3.6z"/><line x1="12" y1="9.8" x2="12" y2="14"/><circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"/></svg> ` +
+      esc(livro.estado);
+  } else {
+    elEstado.classList.remove("estado-grifado");
+    elEstado.textContent = livro.estado;
+  }
   const restante = estoqueDisponivel(livro);
   modal.querySelector("[data-estoque]").textContent   =
     restante > 0 ? `${restante} unidade${restante > 1 ? "s" : ""}` : "Esgotado";
