@@ -90,6 +90,15 @@ function embaralhar(arr) {
   return a;
 }
 
+/* Um livro é "famoso" (vai na FRENTE da fileira, estilo Netflix) quando a
+   IA lhe deu uma nota de fama alta. Livros sem nota (os cadastrados no
+   arquivo livros.js) usam o campo "destaque", curado à mão. */
+const LIMIAR_FAMA = 60;
+function ehFamoso(livro) {
+  if (typeof livro.fama === "number") return livro.fama >= LIMIAR_FAMA;
+  return livro.destaque === true;
+}
+
 /* Monta a lista do carrossel:
    1) novidades da semana (mais recentes primeiro);
    2) se forem poucas, completa com os adicionados mais recentemente;
@@ -604,8 +613,8 @@ function renderizar(termoBusca) {
     // juntamos: famosos embaralhados na frente, o resto embaralhado atrás.
     const doGenero = vitrine.filter(l => (l.genero || "Outros") === genero);
     if (doGenero.length === 0) return;
-    const famosos = embaralhar(doGenero.filter(l => l.destaque));
-    const resto = embaralhar(doGenero.filter(l => !l.destaque));
+    const famosos = embaralhar(doGenero.filter(ehFamoso));
+    const resto = embaralhar(doGenero.filter(l => !ehFamoso(l)));
     catalogo.appendChild(criarFileira(genero, famosos.concat(resto)));
   });
 }

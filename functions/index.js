@@ -36,6 +36,7 @@ const rotas = {
   "webhook-mp": require("./api/webhook-mp"),
   "gerar-sinopse": require("./api/gerar-sinopse"),
   "classificar-livro": require("./api/classificar-livro"),
+  "classificar-fama": require("./api/classificar-fama"),
   "capa": require("./api/capa"),
   "livro": require("./api/livro"),
   "feed": require("./api/feed"),

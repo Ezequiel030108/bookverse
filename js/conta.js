@@ -1260,6 +1260,30 @@
       dataAdicao: (existente && existente.dataAdicao) ? existente.dataAdicao : new Date().toISOString().slice(0, 10)
     };
     if (btnSalvarLivro) { btnSalvarLivro.disabled = true; btnSalvarLivro.textContent = editando ? "Salvando…" : "Adicionando…"; }
+
+    // Estima a "fama" do livro com IA — a loja usa essa nota para a ordem
+    // estilo Netflix (mais famosos primeiro). NÃO trava o salvamento: se a
+    // IA falhar/demorar, o livro é salvo sem a nota (a ordem cai no destaque).
+    try {
+      const token = await Auth.idToken().catch(() => null);
+      const rf = await fetch("/api/classificar-fama", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" },
+          token ? { "Authorization": "Bearer " + token } : {}),
+        body: JSON.stringify({ titulo: titulo, autor: autor, sinopse: livro.sinopse, genero: livro.genero })
+      });
+      if (rf.ok) {
+        const df = await rf.json();
+        if (typeof df.fama === "number" && isFinite(df.fama)) {
+          livro.fama = Math.max(0, Math.min(100, Math.round(df.fama)));
+        }
+      }
+    } catch (e) { /* segue sem a nota de fama */ }
+    // Ao editar, se a IA falhou agora, preserva a nota anterior do livro.
+    if (typeof livro.fama !== "number" && existente && typeof existente.fama === "number") {
+      livro.fama = existente.fama;
+    }
+
     try {
       await Auth.adicionarLivro(livro);
       // Atualiza a lista local do admin
