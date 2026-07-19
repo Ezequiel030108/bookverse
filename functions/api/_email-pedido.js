@@ -105,9 +105,18 @@ async function enviarEmail(pagamento) {
     ? `⚠️ VALOR DIVERGENTE — ${base}`
     : `✅ PAGO — ${base}`;
 
+  /* User-Agent de navegador: o Web3Forms fica atrás do Cloudflare, que
+     bloqueia com 403 (sem corpo) as requisições de servidor cujo
+     User-Agent parece automatizado (o padrão do Node é "node"/"undici").
+     O envio pelo navegador do cliente passa por já ter um UA de navegador;
+     aqui, no backend, precisamos declarar um explicitamente. */
   const r = await fetch("https://api.web3forms.com/submit", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+    },
     body: JSON.stringify(pedido)
   });
 
