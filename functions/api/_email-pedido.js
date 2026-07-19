@@ -113,12 +113,15 @@ async function enviarEmail(pagamento) {
 
   /* O Web3Forms responde 200 com {success:true} quando aceita. Qualquer
      outra coisa (limite do plano, chave inválida, payload recusado) é
-     FALHA de verdade — sinalizamos para soltar a trava e tentar de novo. */
+     FALHA de verdade — sinalizamos para soltar a trava e tentar de novo.
+     Lemos o corpo como TEXTO primeiro para não perder a explicação quando
+     a resposta não é JSON (ex.: página de bloqueio do Cloudflare). */
+  const texto = await r.text().catch(() => "");
   let corpo = null;
-  try { corpo = await r.json(); } catch (e) { /* resposta sem JSON */ }
+  try { corpo = JSON.parse(texto); } catch (e) { /* resposta sem JSON */ }
   if (!r.ok || !corpo || corpo.success !== true) {
-    const motivo = (corpo && corpo.message) || `HTTP ${r.status}`;
-    throw new Error(`Web3Forms recusou o e-mail do pedido: ${motivo}`);
+    const detalhe = (corpo && corpo.message) || texto.replace(/\s+/g, " ").trim().slice(0, 300) || "(sem corpo)";
+    throw new Error(`Web3Forms recusou o e-mail do pedido (HTTP ${r.status}): ${detalhe}`);
   }
 }
 
