@@ -604,8 +604,20 @@
     if (st) { st.className = "pix-status confirmado"; st.textContent = "Pagamento confirmado ✓"; }
     try { await salvarPedidoSeLogado("pago"); } catch (e) {}
     marcarVendidoSeLogado();   // vendido: sai da loja de vez
-    // O aviso ao lojista chega pelo webhook do servidor, que envia UMA
-    // única vez por pagamento. Enviar daqui também duplicaria o e-mail.
+
+    // Aviso ao lojista pelo NAVEGADOR. O envio pelo servidor (webhook /
+    // status-pix) é barrado pelo desafio anti-bot do Cloudflare que
+    // protege o Web3Forms — só o navegador do cliente passa. Enviamos
+    // aqui, no momento em que o Pix confirma, e marcamos o pedido para a
+    // página "Minha conta" não reenviar. (Se o cliente fechar antes de
+    // confirmar, a reconciliação de "Minha conta" reenvia depois.)
+    try {
+      await enviarEmailManual();
+      if (window.Auth && window.Auth.usuario && window.Auth.usuario()) {
+        window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
+      }
+    } catch (e) { /* não bloqueia a confirmação; "Minha conta" reenvia */ }
+
     sucesso(true);
   }
 

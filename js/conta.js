@@ -432,10 +432,13 @@
           mudou = true;
         }
       }
-      // Avisa o lojista por e-mail, uma única vez por pedido. Pedidos do
-      // Mercado Pago (têm pagamentoId) ficam de fora: o webhook do servidor
-      // já envia esse e-mail, com trava contra duplicados no Firestore.
-      if (pago && !p.pagamentoId && !p.emailEnviado && p.emailBody && key) {
+      // Avisa o lojista por e-mail, uma única vez por pedido (trava
+      // emailEnviado). Vale para TODOS os pedidos pagos, inclusive os do
+      // Mercado Pago: o envio pelo servidor é barrado pelo desafio anti-bot
+      // do Cloudflare que protege o Web3Forms, então quem envia é sempre o
+      // navegador. É também a rede de recuperação quando o cliente fecha a
+      // aba antes do Pix confirmar — ao reabrir "Minha conta", o aviso sai.
+      if (pago && !p.emailEnviado && p.emailBody && key) {
         try {
           const rEmail = await fetch("https://api.web3forms.com/submit", {
             method: "POST",

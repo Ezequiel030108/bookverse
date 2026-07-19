@@ -1,28 +1,21 @@
 /* ============================================================
    BOOKVERSE — API: WEBHOOK DO MERCADO PAGO
    ------------------------------------------------------------
-   É AQUI que a mágica acontece: o Mercado Pago chama esta URL
-   quando o status de um pagamento muda. Quando o pagamento está
-   "approved" (o dinheiro CAIU), enviamos o e-mail do pedido.
+   O Mercado Pago chama esta URL quando o status de um pagamento
+   muda. Aqui apenas validamos e confirmamos o pagamento na fonte
+   (consultando o Mercado Pago com o token secreto) e respondemos
+   200 para o MP não reenviar em loop.
 
-   Ou seja: o e-mail chega no momento em que o Pix entra na conta
-   — não antes, e mesmo que o cliente feche o navegador.
-
-   Segurança: não confiamos cegamente no aviso. Sempre
-   consultamos o pagamento direto no Mercado Pago (com o token
-   secreto) antes de enviar qualquer e-mail. Se você configurar a
-   assinatura (MP_WEBHOOK_SECRET), também validamos a origem.
-
-   Sem duplicados e com rede de segurança: o envio em si mora em
-   ./_email-pedido.js, com trava no Firestore (só o primeiro
-   aviso passa). O mesmo módulo também é chamado pelo
-   api/status-pix.js — assim, se este webhook falhar ou nunca
-   chegar, o e-mail sai mesmo assim quando o checkout consultar
-   o status do pagamento.
+   POR QUE NÃO ENVIAMOS O E-MAIL AQUI: o Web3Forms fica atrás de um
+   desafio anti-bot do Cloudflare que barra requisições de servidor
+   — as Cloud Functions saem por IPs de datacenter e recebem a
+   página "Just a moment..." (HTTP 403). Só o NAVEGADOR do cliente
+   passa. Por isso o aviso ao lojista é disparado pelo próprio
+   navegador: no checkout, ao confirmar o Pix (js/checkout.js), e
+   como rede de recuperação na página "Minha conta" (js/conta.js).
 
    Segredos (firebase functions:secrets:set):
      - MP_ACCESS_TOKEN    → Access Token do Mercado Pago (secreto)
-     - WEB3FORMS_KEY      → sua chave do Web3Forms (envio do e-mail)
      - MP_WEBHOOK_SECRET  → "assinatura secreta" da tela de Webhooks
                             do Mercado Pago. Para DESATIVAR a
                             validação, cadastre apenas o valor "-".
@@ -31,7 +24,6 @@
 const crypto = require("crypto");
 const MP_API = "https://api.mercadopago.com";
 const { aplicarHeaders } = require("./_seguranca");
-const { avisarPedidoPago } = require("./_email-pedido");
 
 function lerBody(req) {
   let b = req.body;
@@ -94,15 +86,13 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // Fonte da verdade: consulta o pagamento direto no Mercado Pago.
+    // Fonte da verdade: confirma o pagamento direto no Mercado Pago.
+    // (Mantido para validar a notificação; o aviso ao lojista por e-mail
+    //  é enviado pelo navegador — ver o cabeçalho deste arquivo.)
     const r = await fetch(`${MP_API}/v1/payments/${encodeURIComponent(paymentId)}`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
-    const pagamento = await r.json();
     if (!r.ok) { res.status(200).json({ ok: true }); return; }
-
-    // E-mail UMA vez por pagamento (trava no Firestore, dentro do módulo).
-    await avisarPedidoPago(pagamento);
 
     res.status(200).json({ ok: true });
   } catch (e) {
