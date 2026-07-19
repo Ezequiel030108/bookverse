@@ -14,6 +14,10 @@ on:
       - "functions/**"
       - "firebase.json"
       - ".github/workflows/firebase-functions-merge.yml"
+  # Disparo manual: aba Actions → este workflow → "Run workflow".
+  # Útil para tentar o deploy de novo sem precisar de um novo commit
+  # (ex.: depois de corrigir uma permissão no Google Cloud).
+  workflow_dispatch:
 
 jobs:
   deploy_functions:
