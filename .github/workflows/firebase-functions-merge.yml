@@ -36,5 +36,12 @@ jobs:
         with:
           credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BOOKVERSE_69878 }}"
 
+      # O firebase-tools carrega o código das functions para descobrir o
+      # que publicar — sem as dependências instaladas, o deploy falha com
+      # "Couldn't find firebase-functions package in your source code".
+      - name: Instalar dependências das Functions
+        working-directory: functions
+        run: npm ci
+
       - name: Publicar as Cloud Functions
         run: npx --yes firebase-tools deploy --only functions --project bookverse-69878 --non-interactive --force
