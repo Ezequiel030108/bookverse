@@ -99,7 +99,7 @@ window.LOJA_CONFIG = {
      Enquanto a chave ficar vazia, o envio por e-mail fica desligado
      (o checkout continua funcionando normalmente). */
   pedidos: {
-    web3formsKey: "995c5c23-d908-487e-8c04-197d96effa9b",
+    web3formsKey: "4730db44-4009-4a91-9a2b-b136898bb604",
 
     /* Exigir que o cliente esteja logado (conta Google) para finalizar
        o pedido. Só vale quando o login está configurado (bloco firebase
