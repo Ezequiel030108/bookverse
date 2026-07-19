@@ -13,11 +13,12 @@
    secreto) antes de enviar qualquer e-mail. Se você configurar a
    assinatura (MP_WEBHOOK_SECRET), também validamos a origem.
 
-   Sem duplicados: o Mercado Pago pode avisar o MESMO pagamento
-   várias vezes (eventos repetidos, reenvios quando a resposta
-   demora). Antes de enviar o e-mail, gravamos no Firestore que
-   aquele pagamento já foi avisado — só o primeiro aviso passa;
-   os repetidos são ignorados em silêncio.
+   Sem duplicados e com rede de segurança: o envio em si mora em
+   ./_email-pedido.js, com trava no Firestore (só o primeiro
+   aviso passa). O mesmo módulo também é chamado pelo
+   api/status-pix.js — assim, se este webhook falhar ou nunca
+   chegar, o e-mail sai mesmo assim quando o checkout consultar
+   o status do pagamento.
 
    Segredos (firebase functions:secrets:set):
      - MP_ACCESS_TOKEN    → Access Token do Mercado Pago (secreto)
@@ -28,36 +29,9 @@
    ============================================================ */
 
 const crypto = require("crypto");
-const admin = require("firebase-admin");
 const MP_API = "https://api.mercadopago.com";
 const { aplicarHeaders } = require("./_seguranca");
-
-function firestore() {
-  if (!admin.apps.length) admin.initializeApp();
-  return admin.firestore();
-}
-
-/* Tenta "reivindicar" o envio do e-mail deste pagamento criando um
-   documento cujo ID é o ID do pagamento. O create() do Firestore é
-   atômico: só a PRIMEIRA chamada consegue criar; as repetidas falham
-   com ALREADY_EXISTS e devolvemos false (e-mail já foi enviado).
-   Se o Firestore der qualquer OUTRO erro, devolvemos true mesmo
-   assim: entre arriscar um e-mail duplicado e perder o aviso de um
-   pedido pago, o duplicado é o mal menor. */
-async function reivindicarEnvio(pagamento) {
-  try {
-    await firestore().collection("emails_enviados").doc(String(pagamento.id)).create({
-      pedido: pagamento.external_reference || "",
-      valor: pagamento.transaction_amount || null,
-      criadoEm: admin.firestore.FieldValue.serverTimestamp()
-    });
-    return true;
-  } catch (e) {
-    const codigo = e && e.code;
-    if (codigo === 6 || codigo === "already-exists") return false;
-    return true;
-  }
-}
+const { avisarPedidoPago } = require("./_email-pedido");
 
 function lerBody(req) {
   let b = req.body;
@@ -90,57 +64,6 @@ function assinaturaValida(req, secret, dataId) {
   }
 }
 
-async function enviarEmail(pagamento) {
-  const key = process.env.WEB3FORMS_KEY;
-  if (!key) return; // e-mail desligado
-
-  const meta = pagamento.metadata || {};
-  let pedido = null;
-  if (meta.pedido_json) {
-    try { pedido = JSON.parse(meta.pedido_json); } catch (e) { pedido = null; }
-  }
-  if (!pedido) {
-    // Fallback mínimo caso o pedido não tenha vindo na cobrança.
-    const ref = pagamento.external_reference || pagamento.id;
-    pedido = {
-      subject: `Pagamento confirmado — pedido ${ref}`,
-      message:
-        `Pagamento Pix APROVADO.\n` +
-        `Código: ${pagamento.external_reference || ""}\n` +
-        `Valor: R$ ${pagamento.transaction_amount}\n` +
-        `ID Mercado Pago: ${pagamento.id}`
-    };
-  }
-
-  /* Conferência de valor: o total do pedido é calculado no navegador do
-     cliente, então NUNCA confiamos só nele. Comparamos com o valor que o
-     Mercado Pago diz ter recebido de verdade e avisamos se for diferente. */
-  const recebido = Number(pagamento.transaction_amount);
-  const esperado = Number(meta.total_esperado);
-  const divergente = isFinite(recebido) && isFinite(esperado) &&
-    Math.abs(recebido - esperado) > 0.01;
-
-  pedido["Valor recebido (Mercado Pago)"] = "R$ " + (isFinite(recebido) ? recebido.toFixed(2).replace(".", ",") : "?");
-  if (pedido.message) {
-    pedido.message += `\n\n💰 Valor RECEBIDO no Mercado Pago: R$ ${isFinite(recebido) ? recebido.toFixed(2).replace(".", ",") : "?"}`;
-    if (divergente) {
-      pedido.message += `\n⚠️ ATENÇÃO: o valor recebido é DIFERENTE do total do pedido (esperado: R$ ${esperado.toFixed(2).replace(".", ",")}). Confira antes de entregar!`;
-    }
-  }
-
-  pedido.access_key = key;
-  const base = pedido.subject || ("pedido " + (pagamento.external_reference || pagamento.id));
-  pedido.subject = divergente
-    ? `⚠️ VALOR DIVERGENTE — ${base}`
-    : `✅ PAGO — ${base}`;
-
-  await fetch("https://api.web3forms.com/submit", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(pedido)
-  });
-}
-
 module.exports = async (req, res) => {
   aplicarHeaders(res);
   // O Mercado Pago às vezes faz um GET de teste.
@@ -166,6 +89,7 @@ module.exports = async (req, res) => {
     //  significa "validação desligada".)
     const secret = String(process.env.MP_WEBHOOK_SECRET || "").trim();
     if (secret && secret !== "-" && !assinaturaValida(req, secret, paymentId)) {
+      console.error(`[webhook-mp] Assinatura inválida na notificação do pagamento ${paymentId}. Confira o MP_WEBHOOK_SECRET (ou cadastre "-" para desativar a validação).`);
       res.status(401).json({ error: "Assinatura inválida." });
       return;
     }
@@ -177,22 +101,13 @@ module.exports = async (req, res) => {
     const pagamento = await r.json();
     if (!r.ok) { res.status(200).json({ ok: true }); return; }
 
-    // E-mail UMA vez por pagamento: só o aviso que conseguir "reivindicar"
-    // o envio no Firestore manda o e-mail; os repetidos são ignorados.
-    if (pagamento.status === "approved" && process.env.WEB3FORMS_KEY && await reivindicarEnvio(pagamento)) {
-      try {
-        await enviarEmail(pagamento);
-      } catch (e) {
-        // O envio falhou depois da trava: solta a trava para que um
-        // próximo aviso do Mercado Pago possa tentar de novo.
-        await firestore().collection("emails_enviados").doc(String(pagamento.id)).delete().catch(() => {});
-        throw e;
-      }
-    }
+    // E-mail UMA vez por pagamento (trava no Firestore, dentro do módulo).
+    await avisarPedidoPago(pagamento);
 
     res.status(200).json({ ok: true });
   } catch (e) {
     // Loga no Cloud Logging, mas responde 200 para evitar reenvios em loop.
+    console.error("[webhook-mp] Erro ao processar a notificação:", e);
     res.status(200).json({ ok: true });
   }
 };

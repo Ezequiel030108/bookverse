@@ -437,13 +437,20 @@
       // já envia esse e-mail, com trava contra duplicados no Firestore.
       if (pago && !p.pagamentoId && !p.emailEnviado && p.emailBody && key) {
         try {
-          await fetch("https://api.web3forms.com/submit", {
+          const rEmail = await fetch("https://api.web3forms.com/submit", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json" },
             body: JSON.stringify(Object.assign({ access_key: key }, p.emailBody))
           });
-          await Auth.atualizarPedido(p.codigo, { emailEnviado: true });
-          mudou = true;
+          // Só marca como enviado se o Web3Forms ACEITOU ({success:true}).
+          // Se recusou, o pedido continua sem a marca e tentamos de novo
+          // na próxima abertura da página.
+          let dEmail = null;
+          try { dEmail = await rEmail.json(); } catch (e) {}
+          if (rEmail.ok && dEmail && dEmail.success === true) {
+            await Auth.atualizarPedido(p.codigo, { emailEnviado: true });
+            mudou = true;
+          }
         } catch (e) {}
       }
     }

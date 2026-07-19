@@ -811,15 +811,23 @@
     };
   }
 
-  function enviarEmailManual() {
+  async function enviarEmailManual() {
     const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
-    if (!key) return Promise.resolve();          // e-mail desligado
+    if (!key) return;                            // e-mail desligado
     const body = Object.assign({ access_key: key }, montarEmailBody());
-    return fetch("https://api.web3forms.com/submit", {
+    const resp = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify(body)
     });
+    // O Web3Forms responde {success:true} quando aceita. Qualquer outra
+    // coisa é falha de verdade: lançamos o erro para o pedido NÃO ficar
+    // marcado como "e-mail enviado" — a página "Minha conta" reenvia depois.
+    let dados = null;
+    try { dados = await resp.json(); } catch (e) { /* resposta sem JSON */ }
+    if (!resp.ok || !dados || dados.success !== true) {
+      throw new Error("Web3Forms recusou o envio do pedido.");
+    }
   }
 
   /* ---------- Confirmação ---------- */
