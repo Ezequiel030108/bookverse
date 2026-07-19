@@ -542,6 +542,11 @@
         acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn ploja-btn-cancelar" data-acao="cancelado" data-caminho="${esc(p._caminho)}">Cancelar pedido</button>`);
       if (grupo === "cancelado" || grupo === "entregue")
         acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Reabrir como pago</button>`);
+      // Reenvio manual do e-mail do pedido (para pedidos pagos/aprovados
+      // que têm o corpo salvo). O envio pelo servidor é barrado pelo
+      // Cloudflare do Web3Forms, então quem manda é o navegador do admin.
+      if ((grupo === "pago") && p.emailBody)
+        acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-email-btn" data-caminho="${esc(p._caminho)}">${p.emailEnviado ? "Reenviar e-mail do pedido" : "Enviar e-mail do pedido"}</button>`);
 
       return `
         <article class="pedido-card ploja-card">
@@ -618,6 +623,40 @@
   // Ações (confirmar pagamento / entregar / cancelar) — delegação
   const plojaListaEl = document.getElementById("ploja-lista");
   if (plojaListaEl) plojaListaEl.addEventListener("click", async (e) => {
+    // Reenviar o e-mail do pedido (pelo navegador do admin, que passa no
+    // desafio anti-bot do Cloudflare que barra o servidor).
+    const emailBtn = e.target.closest(".ploja-email-btn");
+    if (emailBtn) {
+      const caminhoEmail = emailBtn.dataset.caminho;
+      const pedidoEmail = plojaPedidos.find(x => x._caminho === caminhoEmail);
+      const keyEmail = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
+      if (!pedidoEmail || !pedidoEmail.emailBody) return;
+      if (!keyEmail) { window.alert("O envio por e-mail está desligado (sem chave do Web3Forms em js/config.js)."); return; }
+      const origEmail = emailBtn.textContent;
+      emailBtn.disabled = true; emailBtn.textContent = "Enviando…";
+      try {
+        const rEmail = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(Object.assign({ access_key: keyEmail }, pedidoEmail.emailBody))
+        });
+        let dEmail = null;
+        try { dEmail = await rEmail.json(); } catch (err) {}
+        if (rEmail.ok && dEmail && dEmail.success === true) {
+          Auth.atualizarPedidoLoja(caminhoEmail, { emailEnviado: true }).catch(() => {});
+          pedidoEmail.emailEnviado = true;
+          emailBtn.textContent = "E-mail enviado ✓";
+        } else {
+          emailBtn.disabled = false; emailBtn.textContent = origEmail;
+          window.alert("O Web3Forms recusou o envio. Confira a chave em js/config.js e o limite mensal do plano.");
+        }
+      } catch (err) {
+        emailBtn.disabled = false; emailBtn.textContent = origEmail;
+        window.alert("Não foi possível enviar agora. Verifique a conexão e tente novamente.");
+      }
+      return;
+    }
+
     const btn = e.target.closest(".ploja-btn");
     if (!btn) return;
     const caminho = btn.dataset.caminho;
