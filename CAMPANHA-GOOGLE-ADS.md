@@ -363,3 +363,71 @@ como escrever
 - [ ] Cartão/boleto de faturamento configurado
 
 *Plano criado em 09/07/2026. Revisar com os dados reais após 30 dias.*
+
+---
+
+## 11. Revisão com dados reais — 20/07/2026 ✅
+
+### O que os números mostraram (últimos 30 dias)
+
+| Métrica | Valor |
+|---|---|
+| Impressões | **1** (termo: "bookverse") |
+| Cliques / Gasto | 0 / R$ 0,00 |
+| Parcela de impressões | 100% (nenhuma perda por orçamento ou lance) |
+
+A execução estava correta: anúncios **aprovados**, callouts + snippet +
+sitelinks aplicados, negativas coladas, conversões configuradas (Compra
+como primária). O problema não era lance nem orçamento: **quase não
+existem leilões** dentro de um raio de 20 km com presença estrita numa
+cidade de ~17 mil habitantes. Detalhe descoberto na API: **Juazeirinho não
+existe como local segmentável no Google Ads** — por isso a campanha usa
+raio, e a detecção de localização por raio em área rural é imprecisa, o
+que derruba ainda mais a veiculação.
+
+### Mudanças aplicadas hoje (via API)
+
+1. **Raio: 20 km → 40 km.** Passa a incluir Soledade, Cubati, São Vicente
+   do Seridó, Junco do Seridó, Tenório, Assunção e Olivedos — todas
+   atendíveis pela opção "Combinar entrega pelo WhatsApp" do site.
+2. **Alvo de local: "Presença" → "Presença ou interesse".** Antes, um
+   parente em Campina Grande buscando "livraria em juazeirinho" para
+   mandar um presente **nunca** via o anúncio. Agora vê. Também compensa a
+   detecção imprecisa de localização na região.
+3. **9 palavras-chave novas** (frase), para capturar o volume que existe:
+   - Livraria local: `"livraria"`, `"sebo"`, `"livros usados"`,
+     `"livros seminovos"`, `"onde comprar livros"`,
+     `"presente dia dos pais"` *(Dia dos Pais é 09/08 — livro embrulhado
+     de graça é o nosso anúncio perfeito)*
+   - Mangás: `"mangá"`, `"quadrinhos"`, `"gibi"`
+4. **2 negativas novas:** `receita`, `fruta` — para `"mangá"` não casar
+   com busca da fruta manga.
+5. **Sitelink "Romance e Literatura"** ganhou as 2 descrições que
+   faltavam (era o único sem).
+
+### O que NÃO mudou (de propósito)
+
+- **Orçamento: R$ 1,65/dia** — continua sendo o teto de ~R$ 50/mês.
+- Estratégia **Maximizar cliques**, redes (só Pesquisa), anúncios e
+  grupos: intactos.
+- **Teto de CPC está em R$ 5,00** (o plano pedia R$ 0,80–1,20). Com zero
+  leilões perdidos, não é o gargalo — mas quando os cliques começarem,
+  **se o CPC médio passar de ~R$ 2, abaixe o teto para R$ 2,00** (um
+  clique de R$ 5 come 3 dias de orçamento).
+
+### Como reverter (se quiser voltar ao 100% local)
+
+- Locais → raio de volta para **20 km** → Opções de local → Alvo →
+  **"Presença"**.
+- Pausar as 9 palavras-chave novas.
+
+### Próxima revisão
+
+- Rotina semanal da seção 7 continua valendo — com as palavras mais
+  abertas, o relatório de **termos de pesquisa** fica mais importante:
+  termo de cidade longe ou intenção ruim → negativar.
+- **Meta até 03/08:** primeiras dezenas de impressões e primeiros
+  cliques. Se continuar zerado, os próximos passos são reforçar o
+  orçamento na semana do Dia dos Pais e criar o **Perfil da Empresa no
+  Google** (seção 1.3 — segue sendo o item grátis mais importante e não
+  dá para conferir pela API se já foi feito).
