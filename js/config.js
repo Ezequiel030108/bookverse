@@ -107,6 +107,13 @@ window.LOJA_CONFIG = {
     exigirConta: true
   },
 
+  /* ---------- EMBALAR PARA PRESENTE ----------
+     Valor cobrado a mais quando o cliente marca "Embalar para presente"
+     no checkout. Use 0 para deixar a opção gratuita. */
+  presente: {
+    valor: 1.5
+  },
+
   /* ---------- ADMINISTRADORES ----------
      E-mails (de contas Google) que enxergam o painel de Administração
      dentro de "Minha conta": ali dá para repor um livro na loja ou

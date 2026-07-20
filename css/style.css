@@ -2821,14 +2821,14 @@ main {
 }
 .presente-texto { display: flex; flex-direction: column; gap: 2px; }
 .presente-titulo { font-weight: 700; font-size: .92rem; }
-.presente-gratis {
+.presente-preco {
   margin-left: 6px;
   padding: 1px 8px;
   border-radius: 999px;
   font-size: .68rem;
   font-weight: 700;
-  background: rgba(122, 223, 130, .16);
-  color: #b6f0bd;
+  background: rgba(255, 255, 255, .08);
+  color: var(--texto-suave);
 }
 .presente-desc { font-size: .8rem; color: var(--texto-suave); }
 .conf-presente {

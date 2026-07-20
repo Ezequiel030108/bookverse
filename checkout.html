@@ -129,7 +129,7 @@
             <input type="checkbox" id="cli-presente" name="presente">
             <span class="presente-check" aria-hidden="true"></span>
             <span class="presente-texto">
-              <span class="presente-titulo"><span class="titulo-com-icone"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v8h14v-8"/><path d="M12 8v12"/><path d="M12 8c-1.5-3.5-6-3.5-6-1s4 1 6 1zM12 8c1.5-3.5 6-3.5 6-1s-4 1-6 1z"/></svg>Embalar para presente</span> <span class="presente-gratis">grátis</span></span>
+              <span class="presente-titulo"><span class="titulo-com-icone"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v8h14v-8"/><path d="M12 8v12"/><path d="M12 8c-1.5-3.5-6-3.5-6-1s4 1 6 1zM12 8c1.5-3.5 6-3.5 6-1s-4 1-6 1z"/></svg>Embalar para presente</span> <span class="presente-preco" id="presente-preco">+ R$ 0,00</span></span>
               <span class="presente-desc">Entregamos o pedido embrulhado, pronto para presentear.</span>
             </span>
           </label>
@@ -235,6 +235,7 @@
           <dl class="resumo-totais">
             <div class="resumo-linha"><dt>Subtotal</dt><dd id="resumo-subtotal">R$ 0,00</dd></div>
             <div class="resumo-linha" id="resumo-linha-frete"><dt>Frete</dt><dd id="resumo-frete">—</dd></div>
+            <div class="resumo-linha" id="resumo-linha-presente" hidden><dt>Embalar para presente</dt><dd id="resumo-presente">R$ 0,00</dd></div>
             <div class="resumo-linha resumo-total"><dt>Total</dt><dd id="resumo-total">R$ 0,00</dd></div>
           </dl>
 

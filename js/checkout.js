@@ -78,6 +78,11 @@
     return op.valor || 0;
   }
 
+  /* Taxa de "Embalar para presente" (js/config.js → presente.valor). */
+  function valorPresente() {
+    return (CFG.presente && CFG.presente.valor) || 0;
+  }
+
   function pixConfigurado() {
     return !!(CFG.pix && String(CFG.pix.chave || "").trim());
   }
@@ -147,7 +152,15 @@
     // Sem nenhuma opção paga: escondemos a linha "Frete" (não cobramos frete).
     const elLinhaFrete = document.getElementById("resumo-linha-frete");
     if (elLinhaFrete) elLinhaFrete.hidden = !opcoesFrete.some(o => o.valor > 0);
-    elTotal.textContent = Precos.formatarBRL(dados.subtotal + frete);
+
+    // Taxa de embalagem para presente.
+    const presente = presenteMarcado() ? valorPresente() : 0;
+    const elLinhaPresente = document.getElementById("resumo-linha-presente");
+    const elPresente = document.getElementById("resumo-presente");
+    if (elLinhaPresente) elLinhaPresente.hidden = !presente;
+    if (elPresente) elPresente.textContent = Precos.formatarBRL(presente);
+
+    elTotal.textContent = Precos.formatarBRL(dados.subtotal + frete + presente);
   }
 
   /* ---------- Opções de entrega ---------- */
@@ -373,8 +386,9 @@
   function montarPedido() {
     const dados = dadosPedido();
     const frete = valorFrete(dados.subtotal);
-    const total = dados.subtotal + frete;
-    return { dados, frete, total };
+    const presente = presenteMarcado() ? valorPresente() : 0;
+    const total = dados.subtotal + frete + presente;
+    return { dados, frete, presente, total };
   }
 
   function presenteMarcado() {
@@ -685,7 +699,7 @@
 
   function salvarPedidoSeLogado(status) {
     if (!window.Auth || !window.Auth.usuario || !window.Auth.usuario()) return Promise.resolve();
-    const { dados, frete, total } = montarPedido();
+    const { dados, frete, presente, total } = montarPedido();
     const cliente = dadosCliente();
     const pedido = {
       codigo: codigoPedido,
@@ -694,6 +708,7 @@
       total: total,
       subtotal: dados.subtotal,
       frete: frete,
+      presenteValor: presente,
       entrega: cliente.entrega,
       endereco: cliente.endereco || "",
       // Dados de contato: o painel "Pedidos da loja" (admin) usa isto
@@ -764,7 +779,7 @@
        - Modo Mercado Pago: enviado para o backend, que o guarda na
          cobrança e dispara o e-mail só quando o Pix é confirmado. */
   function montarEmailBody() {
-    const { dados, frete, total } = montarPedido();
+    const { dados, frete, presente, total } = montarPedido();
     const cliente = dadosCliente();
     const loja = CFG.nomeLoja || "BookVerse";
     const emDinheiro = metodoPagamento === "dinheiro";
@@ -777,7 +792,7 @@
       .join("\n");
 
     const presenteTxt = cliente.presente
-      ? `EMBALAR PARA PRESENTE${cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : ""}`
+      ? `EMBALAR PARA PRESENTE (+ ${Precos.formatarBRL(presente)})${cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : ""}`
       : "";
 
     const mensagem = [
@@ -798,6 +813,7 @@
       ``,
       `Subtotal: ${Precos.formatarBRL(dados.subtotal)}`,
       `Frete: ${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}`,
+      presente ? `Embalar para presente: ${Precos.formatarBRL(presente)}` : "",
       `Total: ${Precos.formatarBRL(total)}`,
       cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
       ``,
@@ -816,7 +832,7 @@
       "Instagram": cliente.instagram || "—",
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
-      "Embalar para presente": cliente.presente ? ("SIM" + (cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : "")) : "Não",
+      "Embalar para presente": cliente.presente ? (`SIM (+ ${Precos.formatarBRL(presente)})` + (cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : "")) : "Não",
       "Forma de pagamento": emDinheiro ? "Dinheiro em espécie (na entrega)" : "Pix",
       "Total": Precos.formatarBRL(total),
       "message": mensagem
@@ -872,7 +888,7 @@
 
   function sucesso(confirmado) {
     pararPolling();
-    const { dados, frete, total } = montarPedido();
+    const { dados, frete, presente, total } = montarPedido();
     const cliente = dadosCliente();
     const emDinheiro = metodoPagamento === "dinheiro";
 
@@ -900,6 +916,7 @@
       <dl class="conf-totais">
         <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(dados.subtotal)}</dd></div>
         ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
+        ${presente ? `<div><dt>Embalar para presente</dt><dd>${Precos.formatarBRL(presente)}</dd></div>` : ""}
         <div class="conf-total"><dt>${emDinheiro ? "Total a pagar na entrega" : "Total do Pix"}</dt><dd>${Precos.formatarBRL(total)}</dd></div>
       </dl>
       <p class="conf-entrega"><strong>Entrega:</strong> ${esc(cliente.entrega)}${cliente.endereco ? " · " + esc(cliente.endereco) : ""}</p>
@@ -954,8 +971,12 @@
   /* ---------- Embalar para presente ---------- */
   const chkPresente = document.getElementById("cli-presente");
   const campoPresenteMsg = document.getElementById("campo-presente-msg");
+  const elPresentePreco = document.getElementById("presente-preco");
+  if (elPresentePreco) elPresentePreco.textContent = "+ " + Precos.formatarBRL(valorPresente());
   if (chkPresente) chkPresente.addEventListener("change", () => {
     if (campoPresenteMsg) campoPresenteMsg.hidden = !chkPresente.checked;
+    render();
+    atualizarEstadoPagamento();
   });
 
   /* ---------- Liga tudo ---------- */
