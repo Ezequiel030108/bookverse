@@ -193,7 +193,7 @@ window.LOJA_CONFIG = {
     //   fica DESLIGADO (nada do Meta é carregado). Ligado, ele mede visitas,
     //   produtos vistos e compras, e monta o público de remarketing do
     //   Instagram/Facebook. Passo a passo no arquivo META-ADS.md.
-    metaPixelId: ""
+    metaPixelId: "4214444458808951"
   },
 
   /* ---------- ENTREGA / FRETE ----------
