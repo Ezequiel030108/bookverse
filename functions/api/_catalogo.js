@@ -115,6 +115,34 @@ async function acharLivro(base, id) {
   return lista.find(l => idLivro(l) === id) || null;
 }
 
+/* Disponibilidade (reservados/vendidos) — coleção "disponibilidade", a MESMA
+   que a loja usa para esconder o que já saiu (leitura pública). O catálogo
+   guarda só o estoque de casa; QUEM foi vendido/reservado vive aqui, por id
+   do livro. Devolve um mapa id -> unidades bloqueadas (Infinity = doc antigo,
+   sem "qtd", que bloqueia o livro inteiro). Mesma regra do site (main.js).
+   Em caso de falha devolve mapa vazio: o feed apenas volta ao comportamento
+   antigo (filtra só por estoque), nunca quebra. */
+async function carregarDisponibilidade() {
+  const bloq = new Map();
+  try {
+    const r = await fetch(
+      "https://firestore.googleapis.com/v1/projects/" + PROJETO +
+      "/databases/(default)/documents/disponibilidade?pageSize=300",
+      { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
+    if (!r.ok) return bloq;
+    const data = await r.json();
+    const agora = Date.now();
+    (data.documents || []).forEach(doc => {
+      const d = converterDoc(doc);
+      let q = 0;
+      if (d.estado === "vendido") q = (d.qtd > 0) ? Number(d.qtd) : Infinity;
+      else if (d.estado === "reservado" && (!d.ate || d.ate > agora)) q = (d.qtd > 0) ? Number(d.qtd) : Infinity;
+      if (q > 0) bloq.set(d.id, q);
+    });
+  } catch (e) { /* falha: mapa vazio; o feed cai no filtro por estoque. */ }
+  return bloq;
+}
+
 function baseDoRequest(req) {
   const host = req.headers["x-forwarded-host"] || req.headers.host || "";
   // Atrás do Firebase Hosting o protocolo vem em x-forwarded-proto
@@ -123,4 +151,4 @@ function baseDoRequest(req) {
   return proto + "://" + host;
 }
 
-module.exports = { slug, idLivro, carregarLivros, acharLivro, baseDoRequest, promocaoAtual };
+module.exports = { slug, idLivro, carregarLivros, carregarDisponibilidade, acharLivro, baseDoRequest, promocaoAtual };

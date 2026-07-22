@@ -21,7 +21,7 @@
    navegador — deve aparecer o XML com todos os livros à venda.
    ============================================================ */
 
-const { carregarLivros, idLivro, baseDoRequest, promocaoAtual } = require("./_catalogo");
+const { carregarLivros, carregarDisponibilidade, idLivro, baseDoRequest, promocaoAtual } = require("./_catalogo");
 
 /* Escapa os caracteres que quebram um XML (&, <, >, aspas). */
 function escXml(t) {
@@ -111,19 +111,26 @@ module.exports = async (req, res) => {
 
   let lista = [];
   try { lista = await carregarLivros(base); } catch (e) { lista = []; }
+  // Quem já foi vendido/reservado (mesma fonte que a loja usa para esconder).
+  let bloqueados = new Map();
+  try { bloqueados = await carregarDisponibilidade(); } catch (e) { bloqueados = new Map(); }
   const promo = promocaoAtual();
 
   const itens = [];
   (lista || []).forEach(livro => {
     if (!livro || !livro.titulo) return;
 
-    // Fora do feed: sem estoque (o site também some com ele) e sem preço.
-    const estoque = Number(livro.estoque);
+    const id = idLivro(livro);
+
+    // Fora do feed: sem estoque disponível (o site também some com ele) e sem
+    // preço. Estoque DISPONÍVEL = estoque de casa - unidades já vendidas/
+    // reservadas (a mesma conta do site em main.js). Sem descontar isso, um
+    // livro vendido continuava no feed marcado como "in_stock".
+    const estoque = Number(livro.estoque) - (bloqueados.get(id) || 0);
     if (!(estoque > 0)) return;
     const preco = precoNumerico(livro.preco);
     if (preco === null || preco <= 0) return;
 
-    const id = idLivro(livro);
     const idFeed = idParaFeed(id);   // <= 50 caracteres, exigência do Google
     const link = base + "/?livro=" + encodeURIComponent(id);   // link usa o id COMPLETO
 
