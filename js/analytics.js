@@ -92,8 +92,25 @@ window.Analytics = (function () {
   }
 
   // Transforma um livro em um item no formato de e-commerce do GA4.
+  // Encurta o id para <=50 chars EXATAMENTE como o feed do catálogo
+  // (functions/api/feed.js: idParaFeed), para o content_id do Pixel/GA4 casar
+  // 100% com o g:id do produto (taxa de correspondência do catálogo do Meta e
+  // remarketing dinâmico do Google).
+  function hashCurtoId(s) {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function idParaCatalogo(id) {
+    id = String(id || "");
+    if (id.length <= 50) return id;
+    const sufixo = "-" + hashCurtoId(id);
+    return id.slice(0, 50 - sufixo.length) + sufixo;
+  }
+
   function itemDeLivro(livro, qty, preco) {
-    const id = (window.idLivro ? window.idLivro(livro) : "") || livro.id || livro.titulo || "";
+    const idBruto = (window.idLivro ? window.idLivro(livro) : "") || livro.id || livro.titulo || "";
+    const id = idParaCatalogo(idBruto);
     return {
       item_id: String(id),
       item_name: livro.titulo || "",
