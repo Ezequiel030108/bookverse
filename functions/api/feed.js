@@ -130,12 +130,14 @@ module.exports = async (req, res) => {
     if (preco === null || preco <= 0) return;
 
     // Estoque DISPONÍVEL = estoque de casa - unidades já vendidas/reservadas
-    // (a mesma conta do site em main.js). O livro vendido CONTINUA no feed,
-    // mas marcado "out_of_stock": assim o Google para de anunciá-lo já no
-    // próximo processamento, em vez de esperar a expiração (~30 dias) que
-    // aconteceria se ele apenas sumisse do feed.
+    // (a mesma conta do site em main.js). Como a loja é de USADOS, com cópias
+    // geralmente ÚNICAS, o que foi vendido não volta ao estoque: então sai
+    // DE VEZ do feed, em vez de ficar como "out_of_stock" acumulando para
+    // sempre no catálogo do Google/Meta. Assim o catálogo (e o Instagram
+    // Shopping / catálogo do WhatsApp) mostra só o que dá pra comprar de fato.
     const disponivel = estoqueBase - (bloqueados.get(id) || 0);
-    const availability = disponivel > 0 ? "in_stock" : "out_of_stock";
+    if (!(disponivel > 0)) return;      // vendido/reservado -> fora do feed
+    const availability = "in_stock";
 
     const idFeed = idParaFeed(id);   // <= 50 caracteres, exigência do Google
     const link = base + "/?livro=" + encodeURIComponent(id);   // link usa o id COMPLETO
