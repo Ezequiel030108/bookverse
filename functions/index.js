@@ -36,17 +36,12 @@ const rotas = {
   "webhook-mp": require("./api/webhook-mp"),
   "gerar-sinopse": require("./api/gerar-sinopse"),
   "classificar-livro": require("./api/classificar-livro"),
+  "identificar-livro": require("./api/identificar-livro"),
   "classificar-fama": require("./api/classificar-fama"),
   "capa": require("./api/capa"),
   "livro": require("./api/livro"),
   "feed": require("./api/feed"),
-  "img-livro": require("./api/img-livro"),
-  // Instagram: conexão da conta e publicação de stories dos livros.
-  // Não usam segredo do Secret Manager: o token fica no Firestore
-  // (doc "instagram/conta"), que só o servidor lê.
-  "instagram": require("./api/instagram"),
-  "postar-story": require("./api/postar-story"),
-  "story-img": require("./api/story-img")
+  "img-livro": require("./api/img-livro")
 };
 
 /* Define req.query de forma confiável. (No Express, req.query é um

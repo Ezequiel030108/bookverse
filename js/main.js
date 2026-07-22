@@ -11,10 +11,10 @@ const INSTAGRAM_USUARIO = (window.LOJA_CONFIG && window.LOJA_CONFIG.instagram) |
 const ORDEM_GENEROS = CFG_VITRINE.ordemGeneros || [
   "Clássicos da Literatura",
   "Romance & Literatura",
-  "Finanças & Negócios",
   "Autoajuda & Desenvolvimento Pessoal",
-  "Filosofia",
+  "Finanças & Negócios",
   "Suspense & Terror",
+  "Filosofia",
   "Ciência & Curiosidades",
   "Mangás"
 ];

@@ -840,8 +840,8 @@
 
       // Qualquer livro pode ser editado.
       acoes.appendChild(botao("editar", "Editar", "admin-btn-editar"));
-      // Story do livro no Instagram (abre a prévia; publica na conta conectada).
-      if (window.StoryIG) acoes.appendChild(botao("story", "Story", "admin-btn-story"));
+      // Copiar o link público do livro para a área de transferência.
+      acoes.appendChild(botao("copiar-link", "Copiar link", "admin-btn-link"));
       // Livro criado pelo admin: pode ser removido de vez.
       // Livro da loja editado: pode ter a edição revertida (volta ao original).
       if (novoMeu) acoes.appendChild(botao("remover", "Remover", "admin-btn-remover"));
@@ -876,7 +876,6 @@
   async function carregarAdmin() {
     const carregando = document.getElementById("admin-carregando");
     preencherGeneros();
-    carregarInsta();   // estado da conexão com o Instagram (uma vez)
     if (!adminCarregado) {
       if (carregando) { carregando.hidden = false; carregando.textContent = "Carregando catálogo…"; }
       try { dispMapaAdmin = await Auth.lerDisponibilidade(); } catch (e) { dispMapaAdmin = {}; }
@@ -888,91 +887,29 @@
     renderAdmin();
   }
 
-  /* ================================================================
-     INSTAGRAM (admin): conexão da conta usada nos stories dos livros.
-     O token é validado e guardado no servidor (/api/instagram) — o
-     painel só mostra o estado e envia/apaga o token.
-     ================================================================ */
-  let instaCarregado = false;
-
-  async function apiInstagram(metodo, corpo) {
-    const token = await Auth.idToken().catch(() => null);
-    const r = await fetch("/api/instagram", {
-      method: metodo,
-      headers: Object.assign(
-        corpo ? { "Content-Type": "application/json" } : {},
-        token ? { "Authorization": "Bearer " + token } : {}),
-      body: corpo ? JSON.stringify(corpo) : undefined
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((d && d.error) || "falha");
-    return d;
+  /* Copiar o link público do livro (/livro/<id>) para a área de
+     transferência — o mesmo endereço usado ao compartilhar na loja. */
+  function copiarLinkLivro(id, btn) {
+    const url = location.origin + "/livro/" + encodeURIComponent(id);
+    const ok = () => {
+      const o = btn.dataset.rotulo || btn.textContent;
+      btn.dataset.rotulo = o;
+      btn.textContent = "Link copiado!";
+      btn.classList.add("admin-btn-ok");
+      setTimeout(() => { btn.textContent = o; btn.classList.remove("admin-btn-ok"); }, 1600);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = url; ta.setAttribute("readonly", "");
+      ta.style.position = "absolute"; ta.style.left = "-9999px";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (e) { /* sem suporte */ }
+      document.body.removeChild(ta); ok();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(ok).catch(fallback);
+    } else { fallback(); }
   }
-
-  function mostrarEstadoInsta(conectado, username) {
-    const st = document.getElementById("insta-status");
-    const form = document.getElementById("insta-form");
-    const btnDesc = document.getElementById("btn-insta-desconectar");
-    if (st) {
-      st.classList.toggle("insta-ok", !!conectado);
-      st.textContent = conectado
-        ? "Conectado como @" + (username || "?") + ". O acesso se renova sozinho a cada story publicado."
-        : "Ainda não conectado.";
-    }
-    if (form) form.hidden = !!conectado;
-    if (btnDesc) btnDesc.hidden = !conectado;
-  }
-
-  async function carregarInsta() {
-    if (instaCarregado || !document.getElementById("admin-insta")) return;
-    instaCarregado = true;
-    try {
-      const d = await apiInstagram("GET");
-      mostrarEstadoInsta(!!d.conectado, d.username);
-    } catch (e) {
-      const st = document.getElementById("insta-status");
-      if (st) st.textContent = "Não foi possível verificar a conexão agora. Recarregue a página para tentar de novo.";
-      instaCarregado = false;   // deixa tentar de novo na próxima abertura
-    }
-  }
-
-  const btnInstaConectar = document.getElementById("btn-insta-conectar");
-  if (btnInstaConectar) btnInstaConectar.addEventListener("click", async () => {
-    const inp = document.getElementById("insta-token");
-    const erroEl = document.getElementById("insta-erro");
-    const tokenIG = inp ? inp.value.trim() : "";
-    if (erroEl) erroEl.hidden = true;
-    if (!tokenIG) {
-      if (erroEl) { erroEl.hidden = false; erroEl.textContent = "Cole o token de acesso primeiro."; }
-      return;
-    }
-    btnInstaConectar.disabled = true; btnInstaConectar.textContent = "Conectando…";
-    try {
-      const d = await apiInstagram("POST", { token: tokenIG });
-      if (inp) inp.value = "";
-      mostrarEstadoInsta(true, d.username);
-    } catch (e) {
-      if (erroEl) { erroEl.hidden = false; erroEl.textContent = (e && e.message) || "Não foi possível conectar agora. Tente novamente."; }
-    } finally {
-      btnInstaConectar.disabled = false; btnInstaConectar.textContent = "Conectar Instagram";
-    }
-  });
-
-  const btnInstaDesconectar = document.getElementById("btn-insta-desconectar");
-  if (btnInstaDesconectar) btnInstaDesconectar.addEventListener("click", async () => {
-    if (!window.confirm("Desconectar o Instagram? Os stories deixam de funcionar até conectar de novo.")) return;
-    const erroEl = document.getElementById("insta-erro");
-    if (erroEl) erroEl.hidden = true;
-    btnInstaDesconectar.disabled = true;
-    try {
-      await apiInstagram("DELETE");
-      mostrarEstadoInsta(false, "");
-    } catch (e) {
-      if (erroEl) { erroEl.hidden = false; erroEl.textContent = "Não foi possível desconectar agora. Tente novamente."; }
-    } finally {
-      btnInstaDesconectar.disabled = false;
-    }
-  });
 
   // Busca no admin
   const adminBusca = document.getElementById("admin-busca");
@@ -998,13 +935,8 @@
     if (!id || !acao) return;
     // Editar abre o formulário preenchido — não é uma ação "salvando" inline.
     if (acao === "editar") { entrarModoEdicao(id); return; }
-    // Story: abre a prévia da arte (capa + nome + preço) para publicar.
-    if (acao === "story") {
-      const idDe = window.idLivro || (l => l.id);
-      const livro = listaLivrosAdmin().find(x => idDe(x) === id);
-      if (livro && window.StoryIG) window.StoryIG.abrir(livro);
-      return;
-    }
+    // Copiar link: coloca o endereço público do livro na área de transferência.
+    if (acao === "copiar-link") { copiarLinkLivro(id, btn); return; }
     if (acao === "remover") {
       if (!window.confirm("Remover este livro da loja permanentemente?")) return;
     } else if (acao === "reverter") {
@@ -1068,14 +1000,70 @@
 
   const inpFoto = document.getElementById("livro-foto");
   const fotoPreview = document.getElementById("livro-foto-preview");
+  const fotoIaDica = document.getElementById("foto-ia-dica");
+  const btnIdentificar = document.getElementById("btn-identificar-capa");
+
+  function mostrarFotoDica(texto, tipo) {
+    if (!fotoIaDica) return;
+    fotoIaDica.hidden = !texto;
+    fotoIaDica.classList.toggle("erro", tipo === "erro");
+    fotoIaDica.classList.toggle("ok", tipo === "ok");
+    fotoIaDica.textContent = texto || "";
+  }
+
+  // Identifica TÍTULO e AUTOR a partir da FOTO da capa (Gemini vision).
+  // forcar=true sobrescreve os campos; senão, só preenche os que estiverem
+  // vazios (não apaga o que o admin já digitou nem clobbera uma edição).
+  async function identificarPelaCapa(forcar) {
+    if (!fotoBase64) { mostrarFotoDica("Escolha a foto da capa primeiro.", "erro"); return; }
+    const campoTitulo = document.getElementById("livro-titulo");
+    const campoAutor = document.getElementById("livro-autor");
+    const tinhaTitulo = !!(campoTitulo && campoTitulo.value.trim());
+    const tinhaAutor = !!(campoAutor && campoAutor.value.trim());
+    // Sem forçar e ambos já preenchidos: não gasta a cota da IA à toa.
+    if (!forcar && tinhaTitulo && tinhaAutor) return;
+    if (btnIdentificar) btnIdentificar.disabled = true;
+    mostrarFotoDica("Lendo a capa com IA…", "");
+    try {
+      const token = await Auth.idToken().catch(() => null);
+      const r = await fetch("/api/identificar-livro", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" },
+          token ? { "Authorization": "Bearer " + token } : {}),
+        body: JSON.stringify({ imagem: fotoBase64 })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error((d && d.error) || "falha");
+      const preencheu = [];
+      if (d.titulo && (forcar || !tinhaTitulo)) { set("livro-titulo", d.titulo); preencheu.push("título"); }
+      if (d.autor && (forcar || !tinhaAutor)) { set("livro-autor", d.autor); preencheu.push("autor"); }
+      if (preencheu.length) {
+        mostrarFotoDica("IA preencheu " + preencheu.join(" e ") + " pela capa. Confira e ajuste se precisar.", "ok");
+      } else {
+        mostrarFotoDica("A capa foi lida, mas os campos já estavam preenchidos.", "ok");
+      }
+    } catch (e) {
+      mostrarFotoDica((e && e.message) || "Não consegui ler a capa. Preencha à mão ou tente outra foto.", "erro");
+    } finally {
+      if (btnIdentificar) btnIdentificar.disabled = false;
+    }
+  }
+
+  if (btnIdentificar) btnIdentificar.addEventListener("click", () => identificarPelaCapa(true));
+
   if (inpFoto) inpFoto.addEventListener("change", async () => {
     const file = inpFoto.files && inpFoto.files[0];
     if (!file) return;
+    mostrarFotoDica("", "");
     try {
       fotoBase64 = await comprimirImagem(file);
       if (fotoPreview) { fotoPreview.innerHTML = ""; const im = document.createElement("img"); im.src = fotoBase64; im.alt = ""; fotoPreview.appendChild(im); }
+      // Automação: assim que a capa é escolhida, a IA já identifica
+      // título e autor (preenche só os campos vazios).
+      identificarPelaCapa(false);
     } catch (e) {
       fotoBase64 = "";
+      mostrarFotoDica("Não consegui ler a imagem. Tente outra foto.", "erro");
     }
   });
 
@@ -1216,6 +1204,7 @@
         fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
       }
     }
+    mostrarFotoDica("", "");
   }
 
 
@@ -1248,6 +1237,7 @@
     limparGeneroDica();
     fotoBase64 = "";
     if (fotoPreview) fotoPreview.innerHTML = '<span class="admin-foto-vazio">Foto da capa</span>';
+    mostrarFotoDica("", "");
     const titEl = document.getElementById("admin-add-titulo");
     if (titEl) titEl.textContent = "Adicionar um novo livro";
     if (btnSalvarLivro) btnSalvarLivro.textContent = "Adicionar livro à loja";

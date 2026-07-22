@@ -32,10 +32,10 @@ window.LOJA_CONFIG = {
     ordemGeneros: [
       "Clássicos da Literatura",
       "Romance & Literatura",
-      "Finanças & Negócios",
       "Autoajuda & Desenvolvimento Pessoal",
-      "Filosofia",
+      "Finanças & Negócios",
       "Suspense & Terror",
+      "Filosofia",
       "Ciência & Curiosidades",
       "Mangás"
     ],

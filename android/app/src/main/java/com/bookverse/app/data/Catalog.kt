@@ -433,12 +433,12 @@ object Catalog {
     val ordemGeneros = listOf(
         "Clássicos da Literatura",
         "Romance & Literatura",
-        "Mangás",
-        "Finanças & Negócios",
         "Autoajuda & Desenvolvimento Pessoal",
-        "Ciência & Curiosidades",
-        "Filosofia",
+        "Finanças & Negócios",
         "Suspense & Terror",
+        "Filosofia",
+        "Ciência & Curiosidades",
+        "Mangás",
     )
 
     val byId: Map<String, Book> by lazy { livros.associateBy { it.id } }

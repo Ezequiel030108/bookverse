@@ -2502,6 +2502,10 @@ main {
 .admin-btn-editar:hover { background: rgba(157,124,255,.22); }
 .admin-btn-remover { border-color: rgba(255,150,90,.45); color: #ffb27a; background: rgba(255,150,90,.1); }
 .admin-btn-remover:hover { background: rgba(255,150,90,.22); }
+.admin-btn-link { border-color: rgba(96,205,255,.5); color: #8fd6ff; background: rgba(96,205,255,.1); }
+.admin-btn-link:hover { background: rgba(96,205,255,.22); }
+/* Confirmação visual após copiar o link (verde, herda a cor no texto). */
+.admin-btn-ok { border-color: rgba(122,223,130,.6); color: #8be79a; background: rgba(122,223,130,.18); }
 @media (max-width: 520px) {
   .admin-acoes { flex-direction: row; flex-wrap: wrap; width: 100%; }
   .admin-btn { flex: 1 1 auto; }
@@ -3038,38 +3042,3 @@ main {
   font-size: .88rem;
   color: var(--texto-suave);
 }
-
-/* ============================================================
-   STORY DO INSTAGRAM (painel de administração)
-   ============================================================ */
-
-/* Botão "Story" nos cards de livro do admin (rosa aurora) */
-.admin-btn-story { border-color: rgba(255,122,217,.5); color: #ff9fe3; background: rgba(255,122,217,.1); }
-.admin-btn-story:hover { background: rgba(255,122,217,.22); }
-
-/* Bloco de conexão com o Instagram (dentro de Administração) */
-.admin-insta-corpo { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.insta-status { font-weight: 600; }
-.insta-status.insta-ok { color: #8be79a; }
-#insta-form { display: flex; flex-direction: column; gap: 12px; }
-
-/* Modal de prévia/publicação do story */
-.modal-overlay .modal-caixa-story {
-  border-color: var(--vidro-borda);
-  max-width: 420px;
-  max-height: 92vh;
-  overflow-y: auto;
-}
-.story-preview {
-  width: min(240px, 52vw);
-  margin: 0 auto 16px;
-  aspect-ratio: 9 / 16;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid var(--vidro-borda);
-  box-shadow: var(--brilho-livro);
-  background: var(--noite);
-}
-.story-preview canvas { width: 100%; height: 100%; display: block; }
-.story-status { margin: 0 0 14px; font-size: .88rem; color: var(--lavanda-clara); text-align: center; }
-.story-status.ok { color: #8be79a; font-weight: 700; }

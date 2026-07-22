@@ -48,7 +48,6 @@ projeto livros/
 │   ├── main.js        ← lógica da vitrine (não precisa mexer)
 │   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
 │   ├── checkout.js    ← lógica do pagamento (não precisa mexer)
-│   ├── story.js       ← desenha e publica o story do Instagram (não precisa mexer)
 │   └── vendor/
 │       └── qrcode.js  ← biblioteca que desenha o QR Code (não precisa mexer)
 ├── img/               ← coloque aqui as fotos das capas
@@ -618,68 +617,28 @@ que você ajusta o **nome da livraria** e a **cidade** (procure por
 
 ---
 
-## 📲 Stories dos livros no Instagram (com um toque)
+## 🤖 Cadastro automático de livros com IA (foto da capa)
 
-No painel de **Administração**, cada livro tem um botão **Story**. Ele monta
-a arte do story **sozinho** — o molde da BookVerse (céu roxo e estrelas) com a
-**capa**, o **nome** e o **preço** do livro — mostra a prévia e, com um toque
-em **Publicar story**, posta direto no Instagram da loja. Sem sair do site.
+No painel de **Administração → Adicionar um novo livro**, o cadastro ficou
+**mais automático**: basta **escolher a foto da capa** e a IA lê a imagem e
+**preenche sozinha o título e o autor** do livro. Se quiser, dá para clicar em
+**"Identificar título e autor da capa (IA)"** para rodar de novo (ou
+sobrescrever o que estiver nos campos).
 
-Para funcionar, é preciso conectar a conta **uma vez**. É de graça, mas exige
-alguns passos no site da Meta (a dona do Instagram):
+- A IA só **completa os campos vazios** quando roda sozinha ao escolher a foto,
+  então ela nunca apaga o que você já digitou. O botão manual, esse sim,
+  sobrescreve.
+- Os campos vêm como **sugestão**: confira e ajuste antes de salvar.
+- Junto com os botões que já existiam (**Gerar sinopse com IA** e **Classificar
+  categoria com IA**), o fluxo fica: tira a foto → título, autor, sinopse e
+  categoria quase prontos.
 
-### 1) Deixe a conta do Instagram "profissional"
+Usa a **mesma chave do Gemini** (`GEMINI_API_KEY`) que a geração de sinopse e a
+classificação já usam — é **gratuita**. Se ela não estiver configurada, o
+cadastro continua funcionando normalmente (é só preencher à mão).
 
-No app do Instagram: **Configurações → Central de contas → tipo de conta**
-(ou **Configurações → Tipo de conta**) → **Mudar para conta profissional** →
-escolha **Empresa**. É gratuito e não muda nada para os seguidores.
-
-### 2) Crie um "app" no painel de desenvolvedor da Meta
-
-1. Acesse <https://developers.facebook.com> e entre com a conta do Facebook.
-2. **Meus apps → Criar app**. Escolha o caso de uso **"Gerenciar tudo na sua
-   página"** ou adicione depois o produto **Instagram**. Dê qualquer nome
-   (ex.: "BookVerse Stories").
-3. No painel do app, adicione o produto **Instagram** e escolha
-   **"API do Instagram com login do Instagram"** (Instagram API with
-   Instagram Login).
-
-### 3) Gere o token de acesso da loja
-
-1. Ainda no painel do app: **Instagram → Configuração da API com login do
-   Instagram** (API setup with Instagram business login).
-2. Na seção de **gerar token de acesso**, clique em **Adicionar conta** /
-   **Generate token** e entre com a conta do Instagram **da loja**.
-3. Autorize as permissões pedidas — precisa ter
-   `instagram_business_basic` e `instagram_business_content_publish`.
-4. Copie o **token de longa duração** que aparece (um código bem comprido).
-
-> O app pode ficar no **modo de desenvolvimento** para sempre: como só a
-> própria loja usa (você é o admin do app), não precisa passar por revisão
-> da Meta.
-
-### 4) Conecte no site
-
-1. Entre no site com um e-mail de **admin** → **Minha conta → Administração**.
-2. Abra o bloco **"Instagram — story dos livros"**, cole o token e toque em
-   **Conectar Instagram**. Aparece "Conectado como @sualoja" — pronto!
-
-O token é guardado **no servidor** (nenhum cliente tem acesso) e vale 60
-dias — mas ele se **renova sozinho** a cada story publicado, então na
-prática não expira com o uso normal. Se ficar 2 meses sem publicar e o
-token vencer, é só gerar outro (passo 3) e conectar de novo.
-
-### Dicas e limites
-
-- **Molde personalizado:** quer usar uma arte sua de fundo? Salve uma imagem
-  **1080×1920** em `img/story-molde.jpg`. Ela substitui o céu, a marca e o
-  rodapé — a capa, o nome e o preço continuam sendo desenhados por cima.
-- O site precisa estar **publicado na internet** (o Instagram baixa a imagem
-  do story pelo endereço público do site — testando só no computador não
-  funciona).
-- O Instagram permite no máximo **100 publicações por dia** via API — mais
-  que suficiente.
-- O story sai como **foto** e desaparece em 24h, como um story normal.
+> Só **administradores logados** conseguem usar os recursos de IA, para proteger
+> a cota da chave.
 
 ---
 
