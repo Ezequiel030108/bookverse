@@ -23,15 +23,19 @@ window.Analytics = (function () {
   const ADS_CARRINHO = String(CFG.conversaoCarrinhoLabel || "").trim();// Add carrinho: "AW-XXXXXXXXXX/rótulo"
   const ADS_CHECKOUT = String(CFG.conversaoCheckoutLabel || "").trim();// Início checkout: "AW-XXXXXXXXXX/rótulo"
 
+  const PIXEL_ID = String(CFG.metaPixelId || "").trim();          // Meta Pixel: "1234567890123456"
+
   const moeda = (window.LOJA_CONFIG && window.LOJA_CONFIG.moeda && window.LOJA_CONFIG.moeda.codigo) || "BRL";
-  const ligado = !!(GA_ID || ADS_ID);
+  const gtagOn  = !!(GA_ID || ADS_ID);   // Google ligado?
+  const pixelOn = !!PIXEL_ID;            // Meta (Instagram/Facebook) ligado?
+  const ligado  = gtagOn || pixelOn;
 
   // A fila do gtag existe mesmo desligado, para que window.gtag(...) nunca quebre.
   window.dataLayer = window.dataLayer || [];
   function gtag() { window.dataLayer.push(arguments); }
   if (!window.gtag) window.gtag = gtag;
 
-  if (ligado) {
+  if (gtagOn) {
     // Carrega o gtag.js UMA vez (usa o primeiro ID disponível para a tag base).
     const idBase = GA_ID || ADS_ID;
     const s = document.createElement("script");
@@ -42,6 +46,37 @@ window.Analytics = (function () {
     window.gtag("js", new Date());
     if (GA_ID)  window.gtag("config", GA_ID);   // GA4 (métricas + page_view automático)
     if (ADS_ID) window.gtag("config", ADS_ID);  // Google Ads (remarketing / conversões)
+  }
+
+  // Carrega o Meta Pixel (fbq) UMA vez e conta a visita da página.
+  if (pixelOn) {
+    (function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = true; n.version = "2.0";
+      n.queue = []; t = b.createElement(e); t.async = true;
+      t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+    })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    window.fbq("init", PIXEL_ID);
+    window.fbq("track", "PageView");
+  }
+
+  // Dispara um evento no Meta Pixel (só se o pixel estiver ligado).
+  function metaEvento(nome, params) {
+    if (!pixelOn) return;
+    try { window.fbq("track", nome, params || {}); } catch (e) {}
+  }
+  // Campos de conteúdo (produto) que o Meta usa p/ catálogo e remarketing.
+  function metaConteudo(itens, valor) {
+    const its = itens || [];
+    return {
+      content_type: "product",
+      content_ids: its.map(function (i) { return String(i.item_id || i.id || ""); }),
+      contents: its.map(function (i) { return { id: String(i.item_id || i.id || ""), quantity: i.quantity || 1 }; }),
+      value: Number(valor || 0) || 0,
+      currency: moeda
+    };
   }
 
   /* ---------- Ajudantes ---------- */
@@ -113,7 +148,7 @@ window.Analytics = (function () {
   }
 
   function evento(nome, params) {
-    if (!ligado) return;
+    if (!gtagOn) return;
     try { window.gtag("event", nome, params || {}); } catch (e) {}
   }
 
@@ -129,6 +164,7 @@ window.Analytics = (function () {
       if (!livro) return;
       const it = itemDeLivro(livro, 1);
       evento("view_item", { currency: moeda, value: it.price, items: [it] });
+      metaEvento("ViewContent", Object.assign(metaConteudo([it], it.price), { content_name: it.item_name }));
     },
 
     // Cliente adicionou um livro ao carrinho.
@@ -138,30 +174,32 @@ window.Analytics = (function () {
       const valor = it.price * it.quantity;
       evento("add_to_cart", { currency: moeda, value: valor, items: [it] });
       if (ADS_CARRINHO) evento("conversion", { send_to: ADS_CARRINHO, value: valor, currency: moeda });
+      metaEvento("AddToCart", metaConteudo([it], valor));
     },
 
     // Cliente pesquisou algo.
     busca: function (termo) {
       termo = String(termo || "").trim();
-      if (termo) evento("search", { search_term: termo });
+      if (termo) { evento("search", { search_term: termo }); metaEvento("Search", { search_string: termo }); }
     },
 
     // Cliente começou o checkout (abriu a página com itens).
     iniciarCheckout: function (resumo) {
       if (!resumo || resumo.vazio) return;
       const valor = Number(resumo.subtotal || 0) || 0;
-      evento("begin_checkout", {
-        currency: moeda,
-        value: valor,
-        items: itensDeLinhas(resumo.itens)
-      });
+      const itens = itensDeLinhas(resumo.itens);
+      evento("begin_checkout", { currency: moeda, value: valor, items: itens });
       if (ADS_CHECKOUT) evento("conversion", { send_to: ADS_CHECKOUT, value: valor, currency: moeda });
+      metaEvento("InitiateCheckout", Object.assign(metaConteudo(itens, valor), {
+        num_items: itens.reduce(function (s, i) { return s + (i.quantity || 1); }, 0)
+      }));
     },
 
     // Cliente clicou para falar pelo WhatsApp / Instagram Direct (lead).
     contato: function (canal) {
       evento("generate_lead", { method: canal || "whatsapp" });
       if (ADS_CONTATO) evento("conversion", { send_to: ADS_CONTATO });
+      metaEvento("Lead", { content_name: canal || "whatsapp" });
     },
 
     // Compra concluída. Dispara o "purchase" do GA4 E a conversão do
@@ -196,6 +234,8 @@ window.Analytics = (function () {
           currency: moeda
         });
       }
+
+      metaEvento("Purchase", metaConteudo(itens, valor));
     }
   };
 

@@ -184,7 +184,16 @@ window.LOJA_CONFIG = {
     conversaoCompraLabel: "AW-17981859266/t8jECMfxls0cEMLLtf5C",  // conversão "Compra BookVerse"
     conversaoContatoLabel: "AW-17981859266/pxOzCLecvc0cEMLLtf5C",  // conversão de contato/lead (WhatsApp/Instagram)
     conversaoCarrinhoLabel: "AW-17981859266/EKvbCI_-pM0cEMLLtf5C",  // conversão "Adicionar ao carrinho"
-    conversaoCheckoutLabel: "AW-17981859266/gDtiCIn9vM0cEMLLtf5C"   // conversão "Iniciar finalização de compra"
+    conversaoCheckoutLabel: "AW-17981859266/gDtiCIn9vM0cEMLLtf5C",  // conversão "Iniciar finalização de compra"
+
+    // ---------- META (Instagram / Facebook Ads) ----------
+    // metaPixelId: o ID do Meta Pixel (Gerenciador de Eventos do Meta →
+    //   Fontes de dados → seu pixel → o número que aparece no topo).
+    //   Só números, ex.: "1234567890123456". Enquanto ficar vazio, o Meta
+    //   fica DESLIGADO (nada do Meta é carregado). Ligado, ele mede visitas,
+    //   produtos vistos e compras, e monta o público de remarketing do
+    //   Instagram/Facebook. Passo a passo no arquivo META-ADS.md.
+    metaPixelId: ""
   },
 
   /* ---------- ENTREGA / FRETE ----------
