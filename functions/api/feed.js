@@ -122,14 +122,20 @@ module.exports = async (req, res) => {
 
     const id = idLivro(livro);
 
-    // Fora do feed: sem estoque disponível (o site também some com ele) e sem
-    // preço. Estoque DISPONÍVEL = estoque de casa - unidades já vendidas/
-    // reservadas (a mesma conta do site em main.js). Sem descontar isso, um
-    // livro vendido continuava no feed marcado como "in_stock".
-    const estoque = Number(livro.estoque) - (bloqueados.get(id) || 0);
-    if (!(estoque > 0)) return;
+    // Fora do feed: livro que a loja não tem (estoque de casa 0 = esgotado, o
+    // site também some com ele) e livro sem preço.
+    const estoqueBase = Number(livro.estoque);
+    if (!(estoqueBase > 0)) return;
     const preco = precoNumerico(livro.preco);
     if (preco === null || preco <= 0) return;
+
+    // Estoque DISPONÍVEL = estoque de casa - unidades já vendidas/reservadas
+    // (a mesma conta do site em main.js). O livro vendido CONTINUA no feed,
+    // mas marcado "out_of_stock": assim o Google para de anunciá-lo já no
+    // próximo processamento, em vez de esperar a expiração (~30 dias) que
+    // aconteceria se ele apenas sumisse do feed.
+    const disponivel = estoqueBase - (bloqueados.get(id) || 0);
+    const availability = disponivel > 0 ? "in_stock" : "out_of_stock";
 
     const idFeed = idParaFeed(id);   // <= 50 caracteres, exigência do Google
     const link = base + "/?livro=" + encodeURIComponent(id);   // link usa o id COMPLETO
@@ -148,7 +154,7 @@ module.exports = async (req, res) => {
       `    <g:description>${escXml(descricao)}</g:description>\n` +
       `    <g:link>${escXml(link)}</g:link>\n` +
       `    <g:image_link>${escXml(imagem)}</g:image_link>\n` +
-      `    <g:availability>in_stock</g:availability>\n` +
+      `    <g:availability>${availability}</g:availability>\n` +
       `    <g:price>${preco.toFixed(2)} BRL</g:price>\n` +
       (promocional !== null ? `    <g:sale_price>${promocional.toFixed(2)} BRL</g:sale_price>\n` : "") +
       `    <g:condition>${condicaoGoogle(livro)}</g:condition>\n` +
