@@ -2870,8 +2870,10 @@ main {
   content: "";
   position: absolute;
   top: 10px;
-  left: -50%;
-  width: 100%;
+  /* Conecta só o vão entre as bolas: recua o raio da bola (+ folga) de
+     cada lado para a linha nunca invadir os círculos — cheios ou vazios. */
+  left: calc(-50% + 13px);
+  width: calc(100% - 26px);
   height: 2px;
   background: rgba(184, 158, 255, .2);
 }
