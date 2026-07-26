@@ -21,10 +21,31 @@ catálogo fica travado na revisão.
 
 ---
 
+## Onde fica esse campo (e por que ele "não aparece")
+
+⚠️ **O campo só existe DEPOIS que a Loja está criada.** Ele mora dentro dos
+detalhes da Loja, não do catálogo:
+
+```
+Gerenciador de Comércio → Configurações → Geral
+   → "Detalhes da loja"  → Editar
+   → "URL de finalização de compra" → Editar
+```
+
+Ou seja: **não dá para preencher a URL antes de criar a Loja** — e, por
+tabela, o catálogo cinza na tela "Selecionar catálogo" **não é** por falta
+dessa URL. A ordem certa é:
+
+1. destravar o catálogo (seção abaixo) →
+2. criar a Loja →
+3. **aí sim** cadastrar a URL de finalização.
+
+---
+
 ## O que você faz (uma vez, ~2 minutos)
 
-1. Abra o **Gerenciador de Comércio** → sua **Loja** → *Configurações →
-   Finalização da compra* (ou *Método de checkout*).
+1. Com a Loja já criada, abra **Gerenciador de Comércio → Configurações →
+   Geral → Detalhes da loja → Editar → URL de finalização de compra**.
 2. Escolha **"Finalizar a compra em outro site"**.
 3. No campo da URL, cole exatamente:
 
@@ -48,19 +69,11 @@ catálogo fica travado na revisão.
 Mensagem: *"Não é possível selecionar esse(a) Catálogo porque não atende aos
 nossos requisitos para lojas."*
 
-O "Saiba mais" dessa mensagem aponta para o artigo **"Sobre as mudanças nas
-Lojas e no checkout do Facebook e Instagram"** — ou seja, o Meta está mesmo
-falando da **URL de finalização de compra**. Então o **primeiro passo** é o da
-seção acima: cadastrar a URL. Procure em dois lugares, porque o Meta mudou isso
-de lugar mais de uma vez:
-
-- **Gerenciador de Comércio → Configurações → Finalização da compra**; e
-- **Gerenciador de Comércio → Catálogo → Configurações** (o campo às vezes fica
-  preso ao catálogo, não à loja).
-
-Se, mesmo com a URL cadastrada, o catálogo continuar cinza, **confira os
-requisitos de elegibilidade do catálogo**, um por um. Basta um deles falhar para
-o catálogo ficar bloqueado:
+O "Saiba mais" dessa mensagem leva ao artigo **"Sobre as mudanças nas Lojas e no
+checkout do Facebook e Instagram"**, que é o aviso geral da mudança — **não é**
+o motivo do bloqueio. Como a URL de finalização só pode ser cadastrada depois
+que a Loja existe (veja a seção acima), o que trava aqui é um **requisito de
+elegibilidade do catálogo**. Confira um por um — basta um falhar:
 
 | Requisito | Onde conferir |
 |---|---|
@@ -79,6 +92,34 @@ o catálogo ficar bloqueado:
 Se depois disso ainda travar, clique em **"Ver catálogo"** na própria mensagem:
 a aba **Problemas** diz, item por item, o que o Meta recusou — e aí dá para
 agir no ponto certo em vez de adivinhar.
+
+### O atalho: criar um catálogo novo pelo próprio fluxo da Loja
+
+Na mesma tela de "Selecionar catálogo", a opção de baixo (**criar um catálogo
+novo**) continua disponível. Criar o catálogo *por dentro do fluxo da Loja*
+resolve de uma vez os três motivos mais comuns do bloqueio: o catálogo nasce do
+**tipo certo** (e-commerce), com o **portfólio de negócios como dono**, e sem
+estar preso a nenhuma outra Loja.
+
+Depois de criar, é só apontar a mesma fonte de dados:
+
+```
+Adicionar itens → Feed de dados → Usar URL
+https://www.bookverse.com.br/feed.xml   (atualização diária)
+```
+
+O que muda: o catálogo antigo continua existindo (os anúncios que já usam ele
+seguem funcionando). Vale repontar o **Instagram Shopping** e o **catálogo do
+WhatsApp** para o catálogo novo, senão a marcação de produtos continua olhando
+para o antigo.
+
+> ❌ **Não adianta criar um feed separado só para o Meta.** A URL de finalização
+> **não é um campo do feed** — não existe `checkout_url` na especificação de
+> produtos do Meta. Ela é uma configuração da Loja (o caminho do começo deste
+> guia). Um feed exclusivo do Meta só faria sentido para outra coisa: ajustar
+> campos que só o Meta usa (`fb_product_category`, por exemplo) sem risco nenhum
+> para o Google Shopping — o que é fácil de fazer se um dia a aba **Problemas**
+> apontar erro em algum campo.
 
 ---
 
