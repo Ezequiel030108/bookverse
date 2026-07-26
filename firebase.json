@@ -17,6 +17,7 @@
       "MIGRACAO-FIREBASE.md",
       "METRICAS.md",
       "CAMPANHA-GOOGLE-ADS.md",
+      "META-CATALOGO.md",
       "package.json",
       "package-lock.json"
     ],
@@ -41,6 +42,14 @@
           "functionId": "api",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/finalizar",
+        "destination": "/finalizar.html"
+      },
+      {
+        "source": "/finalizar/",
+        "destination": "/finalizar.html"
       }
     ]
   },

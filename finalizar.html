@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0524" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Seu carrinho · BookVerse</title>
+  <meta name="description" content="Montamos seu carrinho com os livros escolhidos e levamos você à finalização da compra." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=meta3" />
+</head>
+<body class="pagina-checkout">
+
+  <!-- ===== BARRA SUPERIOR ===== -->
+  <header class="topbar topbar-checkout" id="topbar">
+    <div class="topbar-linha">
+      <a class="marca" href="./" aria-label="Voltar à BookVerse">
+        <span class="marca-logo-wrap" aria-hidden="true">
+          <img class="marca-logo" src="img/logo.png" alt="" onerror="this.classList.add('logo-erro')">
+        </span>
+        <span class="marca-textos">
+          <img class="marca-titulo" src="img/bookverse-titulo.png" alt="BookVerse" width="924" height="223">
+          <span class="marca-local">Seu carrinho</span>
+        </span>
+      </a>
+      <div class="topbar-acoes">
+        <a class="conta-btn" id="btn-conta" href="conta.html" aria-label="Minha conta" hidden>
+          <span class="conta-btn-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </span>
+          <span class="conta-btn-label">Entrar</span>
+        </a>
+        <a class="link-voltar" href="./">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          <span>Ver a estante</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-wrap mc-wrap" id="main">
+
+    <!-- ===== CABEÇALHO DA PÁGINA ===== -->
+    <div class="mc-cabecalho">
+      <p class="mc-origem" id="mc-origem" hidden>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+        <span id="mc-origem-txt">Carrinho vindo do Instagram / Facebook</span>
+      </p>
+      <h1 class="checkout-titulo mc-titulo" id="mc-titulo">Seu carrinho está pronto</h1>
+      <p class="mc-sub" id="mc-sub">Estamos separando os livros que você escolheu…</p>
+    </div>
+
+    <!-- ===== CARREGANDO ===== -->
+    <div class="mc-carregando" id="mc-carregando" role="status">
+      <span class="mc-spinner" aria-hidden="true"></span>
+      <p>Localizando os livros no catálogo da loja…</p>
+    </div>
+
+    <!-- ===== CONTEÚDO ===== -->
+    <div id="mc-conteudo" hidden>
+
+      <!-- Avisos (livro esgotado, quantidade ajustada, cupom…) -->
+      <div class="mc-avisos" id="mc-avisos"></div>
+
+      <!-- Resumo do carrinho -->
+      <div class="resumo-caixa mc-resumo" id="mc-resumo" hidden>
+        <h2 class="resumo-titulo">Livros selecionados</h2>
+        <div class="resumo-itens" id="mc-itens"></div>
+        <div class="resumo-promo" id="mc-promo" hidden></div>
+        <dl class="resumo-totais">
+          <div class="resumo-linha resumo-total"><dt>Subtotal</dt><dd id="mc-subtotal">R$ 0,00</dd></div>
+        </dl>
+        <p class="resumo-seguro">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Entrega e forma de pagamento você escolhe no próximo passo
+        </p>
+      </div>
+
+      <!-- AÇÃO 1: seguir para o pagamento -->
+      <section class="checkout-bloco mc-acao" id="mc-acao-continuar" hidden>
+        <button type="button" id="mc-btn-continuar" class="botao-loja botao-loja-primario botao-loja-bloco">
+          Ir para o pagamento
+        </button>
+        <p class="mc-acao-nota" id="mc-continuar-nota" hidden>Levando você para a finalização da compra…</p>
+      </section>
+
+      <!-- AÇÃO 2: precisa entrar na conta -->
+      <section class="checkout-bloco mc-acao mc-acao-conta" id="mc-acao-login" hidden>
+        <span class="mc-acao-icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        </span>
+        <h2 class="mc-acao-titulo">Entre na sua conta para finalizar</h2>
+        <p class="mc-acao-texto">
+          Seus livros já estão guardados aqui. Como quase todos os nossos
+          exemplares são <strong>únicos</strong>, a conta é o que garante que
+          eles fiquem reservados para você — e é por ela que você acompanha o
+          pedido até a entrega.
+        </p>
+
+        <div class="pagamento-aviso mc-aviso-app" id="mc-aviso-app" hidden>
+          <strong>Você está no navegador do Instagram/Facebook.</strong>
+          O login com o Google costuma ser bloqueado aqui dentro. Toque nos
+          três pontinhos (⋯) do topo e escolha <strong>“Abrir no navegador”</strong>,
+          ou copie o link abaixo e cole no Chrome/Safari — seu carrinho continua o mesmo.
+        </div>
+
+        <div class="mc-acao-botoes">
+          <button type="button" id="mc-btn-google" class="botao-google">
+            <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+              <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.89 2.68-6.63z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
+              <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.05l3.01-2.33z"/>
+              <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+            </svg>
+            Entrar com Google
+          </button>
+          <button type="button" id="mc-btn-copiar" class="botao-loja botao-loja-secundario botao-loja-bloco" hidden>Copiar link do carrinho</button>
+        </div>
+        <p class="mc-acao-nota">Leva menos de 30 segundos e não custa nada.</p>
+        <p class="pagamento-erro mc-erro" id="mc-erro-login" hidden></p>
+      </section>
+
+      <!-- AÇÃO 3: falta concluir o cadastro -->
+      <section class="checkout-bloco mc-acao mc-acao-conta" id="mc-acao-cadastro" hidden>
+        <span class="mc-acao-icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        </span>
+        <h2 class="mc-acao-titulo">Falta só o seu contato</h2>
+        <p class="mc-acao-texto">
+          Precisamos do seu <strong>nome</strong> e do seu <strong>WhatsApp</strong>
+          para combinar a entrega. É rápido, e depois voltamos direto para este carrinho.
+        </p>
+        <a class="botao-loja botao-loja-primario botao-loja-bloco" id="mc-btn-cadastro" href="conta.html">Concluir cadastro</a>
+      </section>
+
+      <!-- AÇÃO 4: nada disponível -->
+      <section class="checkout-bloco mc-acao mc-acao-conta" id="mc-acao-vazio" hidden>
+        <span class="mc-acao-icone mc-acao-icone-alerta" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v5"/><path d="M12 17.5h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        </span>
+        <h2 class="mc-acao-titulo" id="mc-vazio-titulo">Esses exemplares já saíram</h2>
+        <p class="mc-acao-texto" id="mc-vazio-texto">
+          Nossos livros são quase todos de <strong>segunda mão</strong> e com
+          <strong>cópia única</strong>: quando alguém leva, ele sai da estante na hora.
+          Mas chegam livros novos toda semana — dá uma olhada no que temos agora.
+        </p>
+        <a class="botao-loja botao-loja-primario botao-loja-bloco" href="./">Ver a estante</a>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ===== RODAPÉ ===== -->
+  <footer class="rodape-site">
+    <p class="rodape-links">
+      <a href="./">Início</a>
+      <span class="rodape-sep" aria-hidden="true">·</span>
+      <a href="sobre.html">Sobre</a>
+      <span class="rodape-sep" aria-hidden="true">·</span>
+      <a href="privacidade.html">Política de Privacidade</a>
+      <span class="rodape-sep" aria-hidden="true">·</span>
+      <a href="https://instagram.com/mybookverse.pb" target="_blank" rel="noopener">Instagram</a>
+    </p>
+    <p class="rodape-copy">BookVerse · Juazeirinho/PB</p>
+  </footer>
+
+  <script src="js/util.js"></script>
+  <script src="js/livros.js"></script>
+  <script src="js/config.js?v=meta2"></script>
+  <script src="js/analytics.js?v=meta2"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/precos.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/finalizar.js?v=meta3"></script>
+</body>
+</html>

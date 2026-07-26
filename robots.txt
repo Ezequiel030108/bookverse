@@ -2,5 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /checkout.html
 Disallow: /conta.html
+Disallow: /finalizar
+Disallow: /finalizar.html
 
 Sitemap: https://www.bookverse.com.br/sitemap.xml

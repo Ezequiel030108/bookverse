@@ -3044,3 +3044,143 @@ main {
   font-size: .88rem;
   color: var(--texto-suave);
 }
+
+/* ============================================================
+   PÁGINA "SEU CARRINHO" (finalizar.html)
+   ------------------------------------------------------------
+   É a ponte entre a Loja do Instagram/Facebook e o checkout do
+   site: recebe os livros pela URL, mostra o que foi encontrado
+   e leva o cliente ao pagamento. Reaproveita as caixas do
+   checkout (.resumo-caixa, .checkout-bloco) para manter o mesmo
+   visual — aqui ficam só os ajustes próprios desta página.
+   ============================================================ */
+.mc-wrap { max-width: 560px; }
+.mc-cabecalho { text-align: center; margin-bottom: 18px; }
+.mc-titulo { margin: 6px 0 8px; }
+.mc-sub {
+  margin: 0 auto;
+  max-width: 420px;
+  color: var(--texto-suave);
+  font-size: .93rem;
+  line-height: 1.55;
+}
+
+/* Selo "veio do Instagram/Facebook" */
+.mc-origem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,122,217,.35);
+  background: rgba(255,122,217,.12);
+  color: var(--lavanda-clara);
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.mc-origem svg { color: var(--aurora-rosa); flex-shrink: 0; }
+.mc-origem[hidden] { display: none; }
+
+/* Enquanto os livros são localizados no catálogo */
+.mc-carregando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 44px 20px;
+  color: var(--texto-suave);
+  font-size: .92rem;
+}
+.mc-carregando p { margin: 0; }
+.mc-spinner {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 3px solid rgba(184,158,255,.22);
+  border-top-color: var(--lavanda);
+  animation: mc-girar .8s linear infinite;
+}
+@keyframes mc-girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .mc-spinner { animation-duration: 2.4s; }
+}
+
+/* Avisos (livro vendido, quantidade ajustada, cupom recebido) */
+.mc-avisos:not(:empty) { margin-bottom: 16px; display: grid; gap: 10px; }
+.mc-avisos .pagamento-aviso,
+.mc-avisos .pagamento-demo { margin-bottom: 0; }
+.mc-aviso-lista { margin: 8px 0 8px; padding-left: 20px; }
+.mc-aviso-lista li { margin: 4px 0; line-height: 1.5; }
+
+.mc-resumo { margin-bottom: 16px; }
+.mc-resumo .resumo-total { border-top: 0; margin-top: 0; padding-top: 0; }
+.mc-resumo .resumo-total dd { font-size: 1.35rem; }
+
+/* Blocos de ação (continuar, entrar, concluir cadastro, estante vazia) */
+.mc-acao { text-align: center; }
+.mc-acao[hidden] { display: none; }
+.mc-acao-conta { padding: 26px 20px 24px; }
+.mc-acao-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px; height: 54px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  color: var(--lavanda-clara);
+  background: linear-gradient(135deg, rgba(74,43,181,.55), rgba(46,31,138,.5));
+  border: 1px solid var(--vidro-borda);
+}
+.mc-acao-icone-alerta { color: var(--estrela-clara); border-color: rgba(255,217,102,.35); }
+.mc-acao-titulo {
+  margin: 0 0 10px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.22rem;
+  color: var(--texto-claro);
+}
+.mc-acao-texto {
+  margin: 0 auto 18px;
+  max-width: 400px;
+  color: var(--texto-suave);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+.mc-acao-texto strong { color: var(--lavanda-clara); }
+.mc-acao-botoes { display: grid; gap: 10px; }
+.mc-acao-botoes .botao-google { width: 100%; justify-content: center; margin: 0; }
+.mc-acao-nota {
+  margin: 14px 0 0;
+  font-size: .8rem;
+  color: var(--texto-discreto);
+}
+.mc-acao-nota[hidden] { display: none; }
+.mc-aviso-app { text-align: left; }
+.mc-erro { text-align: left; }
+
+/* Cupom recebido pelo link da Loja do Meta (resumo do checkout) */
+.resumo-cupom {
+  background: rgba(122,223,255,.1);
+  border-color: rgba(122,223,255,.32);
+  color: var(--texto-suave);
+}
+.resumo-cupom strong { color: var(--aurora-ciano); }
+
+/* Selos de origem/cupom no painel "Pedidos da loja" */
+.ploja-selos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.ploja-selo {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--lavanda-clara);
+  background: rgba(255,122,217,.14);
+  border: 1px solid rgba(255,122,217,.32);
+}
+.ploja-selo-cupom {
+  color: var(--aurora-ciano);
+  background: rgba(122,223,255,.12);
+  border-color: rgba(122,223,255,.32);
+}

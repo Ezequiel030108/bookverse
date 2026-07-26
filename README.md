@@ -29,6 +29,7 @@ projeto livros/
 ├── index.html         ← a vitrine (estante de livros)
 ├── checkout.html      ← a página de finalizar compra (pagamento)
 ├── conta.html         ← a página "Minha conta" (login Google + pedidos)
+├── finalizar.html     ← recebe o carrinho da Loja do Instagram/Facebook
 ├── functions/         ← backend (Firebase) — Pix automático, IA, etc.
 │   └── api/
 │       ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
@@ -48,6 +49,7 @@ projeto livros/
 │   ├── main.js        ← lógica da vitrine (não precisa mexer)
 │   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
 │   ├── checkout.js    ← lógica do pagamento (não precisa mexer)
+│   ├── finalizar.js   ← carrinho vindo do catálogo do Meta (não precisa mexer)
 │   └── vendor/
 │       └── qrcode.js  ← biblioteca que desenha o QR Code (não precisa mexer)
 ├── img/               ← coloque aqui as fotos das capas
@@ -461,6 +463,24 @@ no feed → o Google atualiza o Shopping. Você **nunca mais precisa mexer aqui*
 
 > ℹ️ Livros **usados** normalmente não têm código de barras (ISBN). O feed já
 > avisa isso ao Google (`identifier_exists: no`), então não é problema.
+
+---
+
+## 🛍️ Vender pelo Instagram/Facebook (catálogo do Meta)
+
+O **mesmo feed** (`/feed.xml`) alimenta o catálogo do Meta — é ele que marca os
+livros nos posts e stories. Para o catálogo ser aprovado como **Loja**, o Meta
+exige uma **URL de finalização de compra**, que já existe no site:
+
+```
+https://www.bookverse.com.br/finalizar
+```
+
+É a página que recebe o carrinho escolhido no Instagram (`?products=id:qtd,...`),
+confere o estoque de verdade, avisa o que mudou e leva ao checkout normal.
+
+👉 Passo a passo no Gerenciador de Comércio, teste e detalhes:
+**`META-CATALOGO.md`**. (Nada disso muda o feed nem afeta o Google Shopping.)
 
 ---
 

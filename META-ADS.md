@@ -85,6 +85,23 @@ Resultado: dá pra **marcar os livros** nos posts/stories, o cliente vê preço 
 "Ver no site", e o catálogo aparece direto na conversa do WhatsApp. E destrava os
 **anúncios dinâmicos de produto** (Advantage+ Catálogo) mais pra frente.
 
+### ⚠️ Para o catálogo virar LOJA: a URL de finalização de compra
+
+O Meta encerrou o checkout dentro do app: hoje, para o catálogo ser **aprovado
+como Loja**, é obrigatório informar uma **URL de finalização de compra** — o
+endereço que recebe o carrinho escolhido no Instagram. **Já está pronta no
+código**:
+
+```
+https://www.bookverse.com.br/finalizar
+```
+
+No Gerenciador de Comércio: *Loja → Finalização da compra → Finalizar em outro
+site* → cole o endereço acima e **marque a opção de que a URL aceita parâmetros
+de produto e cupom**.
+
+👉 Passo a passo completo, teste e o que o cliente vê: **`META-CATALOGO.md`**.
+
 ---
 
 ## Parte 4 — A 1ª campanha

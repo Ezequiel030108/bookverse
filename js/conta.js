@@ -496,6 +496,9 @@
   let plojaFiltro = "";
   let plojaFiltroStatus = "todos";   // todos | apagar | pago | entregue
 
+  /* De onde veio o pedido (campo "origem", gravado pelo checkout). */
+  const ORIGENS_PEDIDO = { meta: "Instagram / Facebook" };
+
   function plojaStatusGrupo(p) {
     // "aprovado" (dinheiro na entrega) entra no grupo dos aprovados/pagos:
     // o pedido já está fechado, falta só entregar (e receber o dinheiro).
@@ -535,6 +538,12 @@
         ? `<a class="ploja-whats" href="${esc(c.whatsappLink)}" target="_blank" rel="noopener">WhatsApp: ${esc(c.telefone || "")}</a>`
         : (c.telefone ? `WhatsApp: ${esc(c.telefone)}` : "");
 
+      // Selos de origem/cupom: pedidos que vieram da Loja do Instagram/
+      // Facebook chegam com essas marcas (veja js/finalizar.js).
+      const selos = [];
+      if (ORIGENS_PEDIDO[p.origem]) selos.push(`<span class="ploja-selo">${esc(ORIGENS_PEDIDO[p.origem])}</span>`);
+      if (p.cupom) selos.push(`<span class="ploja-selo ploja-selo-cupom">Cupom ${esc(p.cupom)}</span>`);
+
       const acoes = [];
       if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Confirmar pagamento</button>`);
       if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="entregue" data-caminho="${esc(p._caminho)}">Marcar como entregue</button>`);
@@ -555,6 +564,7 @@
             <span class="pedido-status ${st.classe}">${esc(st.texto)}</span>
           </div>
           ${data ? `<p class="pedido-data">${esc(data)}</p>` : ""}
+          ${selos.length ? `<p class="ploja-selos">${selos.join("")}</p>` : ""}
           <div class="ploja-cliente">
             <p class="ploja-cliente-nome">${esc(c.nome || "Cliente sem nome")}</p>
             <p class="ploja-cliente-contato">${whats}${c.instagram ? ` · ${esc(c.instagram)}` : ""}${c.email ? ` · ${esc(c.email)}` : ""}</p>
