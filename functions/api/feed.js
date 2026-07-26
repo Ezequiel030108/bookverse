@@ -1,5 +1,22 @@
 /* ============================================================
-   BOOKVERSE — FEED DE PRODUTOS PARA O GOOGLE SHOPPING
+   BOOKVERSE — FEED DE PRODUTOS (Google Shopping e Meta)
+   ------------------------------------------------------------
+   Dois endereços, o MESMO catálogo:
+
+     /feed.xml        -> Google Merchant Center (Google Shopping)
+     /feed-meta.xml   -> Gerenciador de Comércio do Meta
+                         (Instagram Shopping / Loja do Facebook)
+
+   O conteúdo é idêntico, com UMA diferença: o feed do Meta traz
+   também o campo "quantity_to_sell_on_facebook" (quantas
+   unidades ainda dá para vender). Sem ele, o Meta aceita o
+   produto mas NÃO o exibe em Lojas — o item aparece como
+   "Quantidade não informada" e o catálogo não passa nos
+   requisitos para virar Loja.
+
+   Esse campo não existe no padrão do Google, e é justamente por
+   isso que os feeds são separados: o /feed.xml continua exatamente
+   como o Google sempre leu, sem nenhum campo estranho.
    ------------------------------------------------------------
    O Google Shopping (Google Merchant Center) não lê a vitrine
    como um cliente: ele precisa de uma LISTA pronta dos produtos,
@@ -109,6 +126,10 @@ function condicaoGoogle(livro) {
 module.exports = async (req, res) => {
   const base = baseDoRequest(req);
 
+  // Feed do Meta? Definido pela rota /feed-meta.xml (functions/index.js).
+  // Também aceita ?destino=meta, o que facilita testar no navegador.
+  const paraMeta = String((req.query && req.query.destino) || "").toLowerCase() === "meta";
+
   let lista = [];
   try { lista = await carregarLivros(base); } catch (e) { lista = []; }
   // Quem já foi vendido/reservado (mesma fonte que a loja usa para esconder).
@@ -157,6 +178,11 @@ module.exports = async (req, res) => {
       `    <g:link>${escXml(link)}</g:link>\n` +
       `    <g:image_link>${escXml(imagem)}</g:image_link>\n` +
       `    <g:availability>${availability}</g:availability>\n` +
+      // Só no feed do Meta: quantas unidades ainda dá para vender. Sem este
+      // campo o item entra no catálogo mas fica fora das Lojas ("quantidade
+      // não informada"). O Google não conhece este campo — por isso ele não
+      // entra no /feed.xml.
+      (paraMeta ? `    <g:quantity_to_sell_on_facebook>${Math.max(1, Math.floor(disponivel))}</g:quantity_to_sell_on_facebook>\n` : "") +
       `    <g:price>${preco.toFixed(2)} BRL</g:price>\n` +
       (promocional !== null ? `    <g:sale_price>${promocional.toFixed(2)} BRL</g:sale_price>\n` : "") +
       `    <g:condition>${condicaoGoogle(livro)}</g:condition>\n` +
@@ -174,7 +200,7 @@ module.exports = async (req, res) => {
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n' +
     "<channel>\n" +
-    "  <title>BookVerse</title>\n" +
+    `  <title>BookVerse${paraMeta ? " (Meta)" : ""}</title>\n` +
     `  <link>${escXml(base + "/")}</link>\n` +
     "  <description>Livraria em Juazeirinho com entrega. Clássicos, mangás, filosofia e mais — pague com Pix direto pelo site.</description>\n" +
     itens.join("\n") +

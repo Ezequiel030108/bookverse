@@ -1,13 +1,16 @@
-# 🛒 URL de finalização de compra do Meta (aprovar o catálogo e abrir a Loja)
+# 🛒 Catálogo do Meta: abrir a Loja do Instagram/Facebook
 
-Este guia resolve **um problema específico**: o catálogo do Meta não é aprovado
-para virar Loja (Instagram Shopping / Facebook Shop) enquanto você não informar
-uma **URL de finalização de compra** — o endereço para onde o Meta manda o
-cliente com os produtos que ele escolheu.
+Este guia resolve as **duas coisas** que travam o catálogo do Meta na hora de
+virar Loja (Instagram Shopping / Facebook Shop):
 
-> **Resumo em uma linha:** o site já tem essa URL pronta —
-> `https://www.bookverse.com.br/finalizar` — é só colar no Gerenciador de
-> Comércio e marcar a opção que faz o Meta enviar os produtos na URL.
+1. o **feed** precisa mandar a **quantidade** de cada item, senão o Meta importa
+   os produtos mas não os exibe em Lojas;
+2. a Loja precisa de uma **URL de finalização de compra** — o endereço para onde
+   o Meta manda o cliente com os produtos que ele escolheu.
+
+> **Resumo em duas linhas:** use `https://www.bookverse.com.br/feed-meta.xml`
+> como fonte de dados do catálogo, e `https://www.bookverse.com.br/finalizar`
+> como URL de finalização. As duas já estão prontas no site.
 
 ---
 
@@ -64,6 +67,34 @@ dessa URL. A ordem certa é:
 
 ---
 
+## O feed do Meta é outro endereço (e é o que destrava as Lojas)
+
+```
+https://www.bookverse.com.br/feed-meta.xml     ← Meta (use este no catálogo)
+https://www.bookverse.com.br/feed.xml          ← Google Shopping (não mexer)
+```
+
+Mesmo catálogo, **um campo de diferença**: o feed do Meta manda também
+`quantity_to_sell_on_facebook` — quantas unidades ainda dá para vender. Sem ele,
+o Meta importa o produto mas o marca como **"Quantidade não informada"** e o
+deixa **fora das Lojas e dos anúncios** ("Esse item foi marcado como disponível,
+mas a quantidade para venda é 0 ou não foi fornecida"). Com o catálogo inteiro
+nessa situação, ele não atende aos requisitos para virar Loja.
+
+Esse campo **não existe no padrão do Google**, e é por isso que os feeds são
+separados: o `/feed.xml` continua exatamente como o Google Merchant Center
+sempre leu.
+
+### Já cadastrou o catálogo com o `/feed.xml`? Troque a URL
+
+*Gerenciador de Comércio → **Fontes de dados** → seu feed → aba
+**Configurações** → editar a URL do arquivo de dados* → troque para
+`https://www.bookverse.com.br/feed-meta.xml` → **Recarregar arquivo de dados**.
+
+Em poucos minutos o aviso de "Quantidade não informada" deve zerar.
+
+---
+
 ## Se o catálogo aparecer **cinza** na hora de criar a Loja
 
 Mensagem: *"Não é possível selecionar esse(a) Catálogo porque não atende aos
@@ -80,7 +111,7 @@ elegibilidade do catálogo**. Confira um por um — basta um falhar:
 | O catálogo é do tipo **e-commerce** (produtos físicos), não hotel/voo/veículo | Gerenciador de Comércio → Catálogo → Configurações |
 | O catálogo **não está sendo usado por outra Loja** | se você já tentou criar uma Loja antes, apague a antiga primeiro |
 | O **portfólio de negócios é dono** do catálogo e você é **administrador** | Configurações do Negócio → Contas → Catálogos → *Atribuir/assumir propriedade* |
-| O catálogo tem **pelo menos 1 item aprovado** | Gerenciador de Comércio → Catálogo → **Problemas / Qualidade** (o botão *"Ver catálogo"* do próprio aviso leva lá) |
+| O catálogo tem **pelo menos 1 item que pode ser exibido em Lojas** | Gerenciador de Comércio → Catálogo → **Problemas / Qualidade**. ⭐ Se aparecer *"Quantidade não informada"*, é o feed errado — use o `/feed-meta.xml` (seção acima) |
 | Os **links dos produtos** usam um **domínio verificado** | Configurações do Negócio → **Segurança da marca → Domínios** — precisa ter `bookverse.com.br` **verificado** (a meta tag já está no `index.html`) |
 | O negócio está em um **país compatível** com Lojas | Brasil é compatível |
 
@@ -105,7 +136,7 @@ Depois de criar, é só apontar a mesma fonte de dados:
 
 ```
 Adicionar itens → Feed de dados → Usar URL
-https://www.bookverse.com.br/feed.xml   (atualização diária)
+https://www.bookverse.com.br/feed-meta.xml   (atualização diária)
 ```
 
 O que muda: o catálogo antigo continua existindo (os anúncios que já usam ele
@@ -113,13 +144,11 @@ seguem funcionando). Vale repontar o **Instagram Shopping** e o **catálogo do
 WhatsApp** para o catálogo novo, senão a marcação de produtos continua olhando
 para o antigo.
 
-> ❌ **Não adianta criar um feed separado só para o Meta.** A URL de finalização
-> **não é um campo do feed** — não existe `checkout_url` na especificação de
-> produtos do Meta. Ela é uma configuração da Loja (o caminho do começo deste
-> guia). Um feed exclusivo do Meta só faria sentido para outra coisa: ajustar
-> campos que só o Meta usa (`fb_product_category`, por exemplo) sem risco nenhum
-> para o Google Shopping — o que é fácil de fazer se um dia a aba **Problemas**
-> apontar erro em algum campo.
+> ℹ️ O feed separado do Meta (`/feed-meta.xml`) resolve os campos que só o Meta
+> usa — foi assim que a quantidade entrou sem encostar no Google. O que ele
+> **não** carrega é a **URL de finalização**: ela não é campo de feed (não
+> existe `checkout_url` na especificação de produtos do Meta), é configuração da
+> Loja, no caminho do começo deste guia.
 
 ---
 
@@ -180,10 +209,13 @@ fora, porque ele viaja dentro da URL.
 
 ## Isso mexe no Google Shopping?
 
-**Não.** O feed `/feed.xml` (`functions/api/feed.js`) **não foi alterado** — os
-mesmos campos, os mesmos ids, os mesmos links de produto que o Google Merchant
-Center já lê. A URL de finalização é uma configuração que vive **dentro do
-painel do Meta**, não no feed. O Google continua exatamente como estava.
+**Não.** O endereço `/feed.xml` continua produzindo **exatamente o mesmo XML de
+antes** — os mesmos campos, os mesmos ids, os mesmos links de produto que o
+Google Merchant Center já lê. O campo novo (`quantity_to_sell_on_facebook`) sai
+**só** em `/feed-meta.xml`; foi para isso que os dois endereços foram separados,
+e existe um teste que compara as duas saídas para garantir que a do Google não
+mudou. A URL de finalização, por sua vez, é configuração **dentro do painel do
+Meta** — nem passa pelo feed.
 
 A página nova é `noindex` e está bloqueada no `robots.txt`, então também não
 concorre com o site nos resultados de busca.
@@ -194,6 +226,7 @@ concorre com o site nos resultados de busca.
 
 | Arquivo | O que faz |
 |---|---|
+| `functions/api/feed.js` | gera os dois feeds (`/feed.xml` e `/feed-meta.xml`) |
 | `finalizar.html` | a página que o Meta abre |
 | `js/finalizar.js` | lê a URL, acha os livros, confere estoque, monta o carrinho |
 | `firebase.json` | faz `/finalizar` servir o `finalizar.html` |
@@ -212,7 +245,8 @@ longo funcionam igual.
 | Sintoma | O que olhar |
 |---|---|
 | O Meta diz que a URL não carregou os produtos | Confirme que a opção *"aceita parâmetros de produto e cupom"* está marcada e teste o link do exemplo acima no navegador. |
-| Abre a página dizendo que os livros não estão mais no catálogo | O feed do Meta está velho: no Gerenciador de Comércio, force a atualização do feed (`https://www.bookverse.com.br/feed.xml`). |
+| Abre a página dizendo que os livros não estão mais no catálogo | O feed do Meta está velho: em *Fontes de dados*, clique em **Recarregar arquivo de dados**. |
+| Os itens aparecem como **"Quantidade não informada"** | O catálogo está apontando para o `/feed.xml`. Troque para `/feed-meta.xml` (seção "O feed do Meta é outro endereço"). |
 | O cliente diz que o login não abre | Ele está no navegador do Instagram — o aviso na tela ensina a abrir no Chrome/Safari. |
 | Quer permitir compra sem conta | `js/config.js` → `pedidos.exigirConta: false`. A página passa a ir direto para o pagamento. |
 

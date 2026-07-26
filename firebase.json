@@ -44,6 +44,13 @@
         }
       },
       {
+        "source": "/feed-meta.xml",
+        "function": {
+          "functionId": "api",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/finalizar",
         "destination": "/finalizar.html"
       },

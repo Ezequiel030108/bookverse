@@ -70,6 +70,14 @@ exports.api = onRequest(
       return rotas["feed"](req, res);
     }
 
+    // Feed do Meta (Instagram/Facebook): /feed-meta.xml → o MESMO handler,
+    // marcado com destino=meta. A diferença é só um campo a mais
+    // (quantity_to_sell_on_facebook), exigido pelas Lojas do Meta.
+    if (/^\/feed-meta\.xml\/?$/.test(caminho)) {
+      definirQuery(req, { destino: "meta" });
+      return rotas["feed"](req, res);
+    }
+
     // Link compartilhado: /livro/<id> → handler "livro" (o id vira ?id=,
     // igual ao rewrite que existia no vercel.json).
     let m = caminho.match(/^\/livro\/([^/]+)\/?$/);

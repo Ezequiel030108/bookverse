@@ -63,19 +63,27 @@ o público de remarketing. **Já deixei ele instalado** — só falta ligar com 
 
 ## Parte 3 — Catálogo (livros no Instagram Shopping e no WhatsApp) · JÁ PRONTO
 
-Você **já tem um feed de produtos** dinâmico (o mesmo do Google Shopping), que se
-atualiza sozinho quando você mexe em `js/livros.js`:
+Você **já tem um feed de produtos** dinâmico, que se atualiza sozinho quando você
+mexe em `js/livros.js`. São **dois endereços com o mesmo catálogo** — use o do
+Meta aqui:
 
 ```
-https://www.bookverse.com.br/feed.xml
+https://www.bookverse.com.br/feed-meta.xml     ← Meta (Instagram/Facebook)
+https://www.bookverse.com.br/feed.xml          ← Google Shopping
 ```
+
+> A diferença é um campo só: o feed do Meta manda também a **quantidade
+> disponível** de cada livro (`quantity_to_sell_on_facebook`). Sem ele, o Meta
+> aceita o produto mas **não o exibe em Lojas** — e o catálogo não passa nos
+> requisitos. Como esse campo não existe no padrão do Google, os feeds ficam
+> separados e o do Google segue intocado.
 
 O Meta lê feeds nesse formato. Então **não precisa gerar nada** — é só apontar:
 
 1. Business Suite → **Gerenciador de Comércio (Commerce Manager) → Criar catálogo
    → tipo "E-commerce"**.
-2. *Adicionar itens → Feed de dados → Usar URL* → cole
-   `https://www.bookverse.com.br/feed.xml` → agendar atualização **diária**.
+2. *Adicionar itens → **Arquivo de dados** → usar URL* → cole
+   `https://www.bookverse.com.br/feed-meta.xml` → agendar atualização **diária**.
 3. **Conectar o catálogo** à Página, ao Instagram e ao Pixel.
 4. Ativar o **Instagram Shopping** (*Configurações do Instagram → Compras* — passa
    por uma revisão do Meta) e o **catálogo do WhatsApp** (WhatsApp Business →

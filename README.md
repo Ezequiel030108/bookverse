@@ -35,7 +35,7 @@ projeto livros/
 │       ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
 │       ├── status-pix.js  ← o checkout pergunta "já caiu?"
 │       ├── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
-│       └── feed.js        ← gera /feed.xml para o Google Shopping (automático)
+│       └── feed.js        ← gera /feed.xml (Google) e /feed-meta.xml (Meta)
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
@@ -468,9 +468,16 @@ no feed → o Google atualiza o Shopping. Você **nunca mais precisa mexer aqui*
 
 ## 🛍️ Vender pelo Instagram/Facebook (catálogo do Meta)
 
-O **mesmo feed** (`/feed.xml`) alimenta o catálogo do Meta — é ele que marca os
-livros nos posts e stories. Para o catálogo ser aprovado como **Loja**, o Meta
-exige uma **URL de finalização de compra**, que já existe no site:
+O catálogo do Meta — que marca os livros nos posts e stories — tem um feed
+próprio, com o **mesmo catálogo** do Google e um campo a mais (a quantidade
+disponível, exigida pelas Lojas do Meta):
+
+```
+https://www.bookverse.com.br/feed-meta.xml
+```
+
+Para o catálogo ser aprovado como **Loja**, o Meta também exige uma **URL de
+finalização de compra**, que já existe no site:
 
 ```
 https://www.bookverse.com.br/finalizar
