@@ -61,12 +61,10 @@
   let compraDireta = null;
   try { compraDireta = JSON.parse(sessionStorage.getItem("bookverse_compra_direta") || "null"); } catch (e) {}
 
-  /* Marcas deixadas pela página /finalizar (carrinho vindo da Loja do
-     Instagram/Facebook): o cupom que o Meta enviou e a origem do pedido.
-     Não mudam o preço — vão no e-mail e no histórico para a loja saber de
-     onde veio a venda e conferir o cupom antes da entrega. */
-  let cupomPedido = "", origemPedido = "";
-  try { cupomPedido = String(sessionStorage.getItem("bookverse_cupom") || "").trim().slice(0, 40); } catch (e) {}
+  /* Marca deixada pela página /finalizar: a origem do pedido (carrinho vindo
+     da Loja do Instagram/Facebook). Não muda o preço — vai no e-mail e no
+     histórico, para a loja saber de onde veio a venda. */
+  let origemPedido = "";
   try { origemPedido = String(sessionStorage.getItem("bookverse_origem") || "").trim(); } catch (e) {}
 
   const ORIGENS = { meta: "Instagram / Facebook (catálogo do Meta)" };
@@ -147,17 +145,6 @@
         Precos.dataFimPromo() ? " · válido até " + Precos.dataFimPromo() : ""}.`;
     } else {
       elPromo.hidden = true;
-    }
-
-    // Cupom recebido pelo link da Loja do Instagram/Facebook.
-    const elCupom = document.getElementById("resumo-cupom");
-    if (elCupom) {
-      elCupom.hidden = !cupomPedido;
-      if (cupomPedido) {
-        elCupom.innerHTML = `<strong>Cupom ${esc(cupomPedido)}</strong> registrado no pedido. ` +
-          `Os descontos já ativos aparecem nos preços acima; se este cupom valer um desconto ` +
-          `extra, a loja confirma com você antes da entrega.`;
-      }
     }
 
     // Totais
@@ -745,7 +732,6 @@
       presente: !!cliente.presente,
       presenteMsg: cliente.presenteMsg || "",
       observacoes: cliente.observacoes || "",
-      cupom: cupomPedido || "",
       origem: origemPedido || "",
       pagamentoId: pagamentoId || "",
       pix: pixCopiaCola || "",
@@ -829,7 +815,6 @@
       cliente.instagram ? `Instagram: ${cliente.instagram}` : "",
       ``,
       origemTexto() ? `Origem do pedido: ${origemTexto()}` : "",
-      cupomPedido ? `Cupom informado pelo cliente: ${cupomPedido} (confira antes da entrega)` : "",
       `Entrega: ${cliente.entrega}`,
       `Endereço: ${cliente.endereco || "Entrega a combinar (retirada local)"}`,
       presenteTxt,
@@ -857,7 +842,6 @@
       "Abrir no WhatsApp": cliente.whatsappLink,
       "Instagram": cliente.instagram || "—",
       "Origem do pedido": origemTexto() || "Site",
-      "Cupom informado": cupomPedido || "—",
       "Entrega": cliente.entrega,
       "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
       "Embalar para presente": cliente.presente ? (`SIM (+ ${Precos.formatarBRL(presente)})` + (cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : "")) : "Não",
@@ -990,11 +974,8 @@
       Carrinho.limpar();
     }
 
-    // Pedido fechado: as marcas do link do Meta não valem para o próximo.
-    try {
-      sessionStorage.removeItem("bookverse_cupom");
-      sessionStorage.removeItem("bookverse_origem");
-    } catch (e) {}
+    // Pedido fechado: a marca do link do Meta não vale para o próximo.
+    try { sessionStorage.removeItem("bookverse_origem"); } catch (e) {}
 
     document.getElementById("checkout-grid").hidden = true;
     document.getElementById("checkout-vazio").hidden = true;

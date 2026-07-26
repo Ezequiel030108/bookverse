@@ -538,11 +538,10 @@
         ? `<a class="ploja-whats" href="${esc(c.whatsappLink)}" target="_blank" rel="noopener">WhatsApp: ${esc(c.telefone || "")}</a>`
         : (c.telefone ? `WhatsApp: ${esc(c.telefone)}` : "");
 
-      // Selos de origem/cupom: pedidos que vieram da Loja do Instagram/
-      // Facebook chegam com essas marcas (veja js/finalizar.js).
+      // Selo de origem: pedidos que vieram da Loja do Instagram/Facebook
+      // chegam com essa marca (veja js/finalizar.js).
       const selos = [];
       if (ORIGENS_PEDIDO[p.origem]) selos.push(`<span class="ploja-selo">${esc(ORIGENS_PEDIDO[p.origem])}</span>`);
-      if (p.cupom) selos.push(`<span class="ploja-selo ploja-selo-cupom">Cupom ${esc(p.cupom)}</span>`);
 
       const acoes = [];
       if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Confirmar pagamento</button>`);

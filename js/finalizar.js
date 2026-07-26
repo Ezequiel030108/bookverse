@@ -5,7 +5,7 @@
    toca em "Ver no site"/"Comprar" dentro da nossa Loja do Meta.
    O Meta manda o carrinho pela própria URL:
 
-     /finalizar?products=ID:QTD,ID:QTD&coupon=CODIGO
+     /finalizar?products=ID:QTD,ID:QTD
 
    O que ela faz, nesta ordem:
      1. lê os produtos e a quantidade da URL;
@@ -53,7 +53,6 @@
 
   /* ---------- Estado ---------- */
   let itensFinais = [];     // [{ id, qty, livro }] já validados pelo estoque
-  let cupom = "";           // código de cupom recebido do Meta (se houver)
   let indo = false;         // trava contra clique duplo em "Ir para o pagamento"
   let houveAjuste = false;  // true quando o carrinho precisou ser ajustado
   let trocouCarrinho = false; // o cliente já tinha OUTRO carrinho no site
@@ -64,9 +63,11 @@
 
   /* Nomes aceitos para a lista de produtos. O formato oficial do Meta é
      "products=ID:QTD,ID:QTD", mas aceitamos as variações mais comuns para
-     que um ajuste de configuração no painel do Meta nunca quebre a página. */
+     que um ajuste de configuração no painel do Meta nunca quebre a página.
+
+     A loja não trabalha com cupom: se o Meta mandar um "coupon" na URL, ele é
+     simplesmente ignorado — o link continua funcionando normalmente. */
   const CHAVES_PRODUTOS = ["products", "product", "items", "item", "product_ids", "productids", "cart", "produtos"];
-  const CHAVES_CUPOM    = ["coupon", "coupon_code", "couponcode", "cupom", "promo_code", "promocode", "discount", "discount_code"];
 
   function query() {
     try { return new URLSearchParams(location.search); } catch (e) { return null; }
@@ -134,11 +135,6 @@
       }
     });
     return pedidos;
-  }
-
-  function cupomDaURL() {
-    const bruto = primeiroParam(query(), CHAVES_CUPOM).split(/[,;]/)[0] || "";
-    return bruto.trim().slice(0, 40);
   }
 
   /* ============================================================
@@ -356,14 +352,6 @@
         `Quer os dois? Finalize este e depois volte à estante.</div>`);
     }
 
-    if (cupom) {
-      blocos.push(
-        `<div class="pagamento-demo mc-aviso-cupom">` +
-        `<strong>Cupom ${esc(cupom)}</strong> registrado no seu pedido. ` +
-        `Os descontos da BookVerse já estão aplicados nos preços abaixo; ` +
-        `se este cupom valer um desconto extra, a loja confirma com você pelo WhatsApp antes da entrega.</div>`);
-    }
-
     elAvisos.innerHTML = blocos.join("");
   }
 
@@ -485,11 +473,9 @@
     const itens = itensFinais.map(i => ({ id: i.id, qty: i.qty }));
     Carrinho.substituir(itens);
 
-    // Marcas do pedido: o cupom recebido e a origem (catálogo do Meta).
-    // O checkout leva as duas para o e-mail do pedido e para o histórico.
+    // Marca do pedido: a origem (catálogo do Meta). O checkout leva isso para
+    // o e-mail do pedido e para o histórico, para a loja saber de onde veio.
     try {
-      if (cupom) sessionStorage.setItem("bookverse_cupom", cupom);
-      else sessionStorage.removeItem("bookverse_cupom");
       sessionStorage.setItem("bookverse_origem", "meta");
       sessionStorage.removeItem("bookverse_retorno");
     } catch (e) {}
@@ -658,7 +644,6 @@
     if (elOrigem) elOrigem.hidden = false;
 
     const pedidos = produtosDaURL();
-    cupom = cupomDaURL();
 
     // Guarda a intenção ANTES de qualquer login: assim um redirecionamento
     // do Google (ou uma passada pelo cadastro) volta exatamente para cá.

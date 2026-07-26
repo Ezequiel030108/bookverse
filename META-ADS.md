@@ -98,7 +98,8 @@ https://www.bookverse.com.br/finalizar
 
 No Gerenciador de Comércio: *Loja → Finalização da compra → Finalizar em outro
 site* → cole o endereço acima e **marque a opção de que a URL aceita parâmetros
-de produto e cupom**.
+de produto e cupom** (a loja não usa cupom — o parâmetro é simplesmente
+ignorado, e o link continua funcionando).
 
 👉 Passo a passo completo, teste e o que o cliente vê: **`META-CATALOGO.md`**.
 

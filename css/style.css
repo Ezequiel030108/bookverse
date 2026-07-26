@@ -3106,7 +3106,7 @@ main {
   .mc-spinner { animation-duration: 2.4s; }
 }
 
-/* Avisos (livro vendido, quantidade ajustada, cupom recebido) */
+/* Avisos (livro vendido, quantidade ajustada, carrinho substituído) */
 .mc-avisos:not(:empty) { margin-bottom: 16px; display: grid; gap: 10px; }
 .mc-avisos .pagamento-aviso,
 .mc-avisos .pagamento-demo { margin-bottom: 0; }
@@ -3158,15 +3158,7 @@ main {
 .mc-aviso-app { text-align: left; }
 .mc-erro { text-align: left; }
 
-/* Cupom recebido pelo link da Loja do Meta (resumo do checkout) */
-.resumo-cupom {
-  background: rgba(122,223,255,.1);
-  border-color: rgba(122,223,255,.32);
-  color: var(--texto-suave);
-}
-.resumo-cupom strong { color: var(--aurora-ciano); }
-
-/* Selos de origem/cupom no painel "Pedidos da loja" */
+/* Selo de origem no painel "Pedidos da loja" */
 .ploja-selos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
 .ploja-selo {
   display: inline-flex;
@@ -3178,9 +3170,4 @@ main {
   color: var(--lavanda-clara);
   background: rgba(255,122,217,.14);
   border: 1px solid rgba(255,122,217,.32);
-}
-.ploja-selo-cupom {
-  color: var(--aurora-ciano);
-  background: rgba(122,223,255,.12);
-  border-color: rgba(122,223,255,.32);
 }
