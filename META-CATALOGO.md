@@ -85,6 +85,25 @@ Esse campo **não existe no padrão do Google**, e é por isso que os feeds são
 separados: o `/feed.xml` continua exatamente como o Google Merchant Center
 sempre leu.
 
+### O selo "Poucas unidades" na Loja
+
+O Meta coloca esse selo sozinho quando a quantidade informada é baixa, e **não
+existe botão no painel dele para desligar**. Como quase todo livro daqui é cópia
+única, o selo aparecia em *todos* os produtos.
+
+Por isso o feed do Meta nunca informa menos que **25 unidades**
+(`QUANTIDADE_MINIMA_META`, no topo do `functions/api/feed.js`). Esse número não
+aparece para ninguém: serve só para o Meta entender que o produto está
+disponível, sem tratar como "acabando".
+
+Não há risco de vender o que não existe — quem manda no estoque é o site: livro
+vendido **sai do feed**, a página `/finalizar` confere a disponibilidade e o
+checkout valida de novo antes de fechar o pedido.
+
+> Quer o selo de volta? Troque `QUANTIDADE_MINIMA_META` por `1`: o feed volta a
+> informar a quantidade real de cada livro. (Para uma loja de usados, o selo é
+> verdadeiro e costuma até ajudar a vender — a escolha é sua.)
+
 ### Já cadastrou o catálogo com o `/feed.xml`? Troque a URL
 
 *Gerenciador de Comércio → **Fontes de dados** → seu feed → aba

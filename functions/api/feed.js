@@ -40,6 +40,28 @@
 
 const { carregarLivros, carregarDisponibilidade, idLivro, baseDoRequest, promocaoAtual } = require("./_catalogo");
 
+/* ============================================================
+   👉 SELO "POUCAS UNIDADES" NA LOJA DO INSTAGRAM/FACEBOOK
+   ------------------------------------------------------------
+   O Meta coloca esse selo sozinho quando a quantidade informada
+   é baixa — e não existe botão no painel dele para desligar.
+   Como quase todo livro daqui é cópia ÚNICA, o selo aparecia em
+   todos os produtos.
+
+   Solução: o feed do Meta nunca informa menos que este número.
+   Ele não aparece para ninguém — serve só para o Meta entender
+   que o produto está disponível, sem tratar como "acabando".
+
+   Isso NÃO cria risco de vender o que não existe: quem controla
+   o estoque de verdade é o site. Livro vendido sai do feed, a
+   página /finalizar confere a disponibilidade e o checkout
+   valida de novo antes de fechar o pedido.
+
+   PARA TRAZER O SELO DE VOLTA: troque o número por 1 — aí o
+   feed volta a informar a quantidade real de cada livro.
+   ============================================================ */
+const QUANTIDADE_MINIMA_META = 25;
+
 /* Escapa os caracteres que quebram um XML (&, <, >, aspas). */
 function escXml(t) {
   return String(t == null ? "" : t)
@@ -178,11 +200,12 @@ module.exports = async (req, res) => {
       `    <g:link>${escXml(link)}</g:link>\n` +
       `    <g:image_link>${escXml(imagem)}</g:image_link>\n` +
       `    <g:availability>${availability}</g:availability>\n` +
-      // Só no feed do Meta: quantas unidades ainda dá para vender. Sem este
-      // campo o item entra no catálogo mas fica fora das Lojas ("quantidade
-      // não informada"). O Google não conhece este campo — por isso ele não
-      // entra no /feed.xml.
-      (paraMeta ? `    <g:quantity_to_sell_on_facebook>${Math.max(1, Math.floor(disponivel))}</g:quantity_to_sell_on_facebook>\n` : "") +
+      // Só no feed do Meta: a quantidade à venda. Sem este campo o item entra
+      // no catálogo mas fica fora das Lojas ("quantidade não informada"). O
+      // piso QUANTIDADE_MINIMA_META evita o selo "Poucas unidades" (veja o
+      // comentário lá em cima). O Google não conhece este campo — por isso ele
+      // não entra no /feed.xml.
+      (paraMeta ? `    <g:quantity_to_sell_on_facebook>${Math.max(QUANTIDADE_MINIMA_META, Math.floor(disponivel))}</g:quantity_to_sell_on_facebook>\n` : "") +
       `    <g:price>${preco.toFixed(2)} BRL</g:price>\n` +
       (promocional !== null ? `    <g:sale_price>${promocional.toFixed(2)} BRL</g:sale_price>\n` : "") +
       `    <g:condition>${condicaoGoogle(livro)}</g:condition>\n` +
