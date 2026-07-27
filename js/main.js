@@ -1267,8 +1267,52 @@ async function compartilharLivro(livro) {
   }
 }
 
-/* Se a página abriu com ?livro=<id>, mostra esse livro no modal. */
+/* ---------- Abrir um livro pelo link (?livro=<id>) ----------
+   Metade do catálogo é cadastrada pelo painel admin e mora no Firestore,
+   não no js/livros.js. Pelo caminho normal, esses livros só apareciam
+   depois de carregar o SDK inteiro do Firebase (três arquivos) e pedir a
+   coleção toda — o que, no celular ou no navegador do Instagram, deixava
+   o cliente olhando para a estante por vários segundos.
+
+   Então, quando o livro do link não está no catálogo local, buscamos
+   SÓ ELE, direto na API do Firestore: uma única requisição pequena, sem
+   SDK nenhum. Se falhar, nada se perde — o caminho antigo continua
+   valendo e abre o livro quando o catálogo completo chegar. */
+
+/* Converte um documento do Firestore (formato REST) em objeto simples.
+   Mesma conversão que o servidor faz em functions/api/_catalogo.js. */
+function livroDeDocFirestore(doc) {
+  const campos = (doc && doc.fields) || {};
+  const out = { id: String(doc.name || "").split("/").pop() };
+  Object.keys(campos).forEach(k => {
+    const v = campos[k] || {};
+    if (v.stringValue !== undefined) out[k] = v.stringValue;
+    else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
+    else if (v.doubleValue !== undefined) out[k] = v.doubleValue;
+    else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
+  });
+  return out;
+}
+
+/* Busca um único livro do catálogo do admin. Devolve null se não achar. */
+async function buscarLivroDireto(id) {
+  const projeto = (window.LOJA_CONFIG && window.LOJA_CONFIG.firebase &&
+                   window.LOJA_CONFIG.firebase.projectId) || "";
+  if (!projeto || !id) return null;
+  try {
+    const url = "https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(projeto) +
+                "/databases/(default)/documents/catalogo/" + encodeURIComponent(id);
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!r.ok) return null;
+    const doc = await r.json();
+    if (!doc || !doc.fields) return null;
+    return livroDeDocFirestore(doc);
+  } catch (e) { return null; }
+}
+
 let livroDaURLJaAberto = false;
+let buscaDiretaFeita = false;
+
 function abrirLivroDaURL() {
   if (livroDaURLJaAberto) return;
   let id = null;
@@ -1278,7 +1322,20 @@ function abrirLivroDaURL() {
   if (livro) {
     livroDaURLJaAberto = true;
     abrirModal(livro);
+    return;
   }
+
+  // Não está no catálogo local: busca só este livro, uma vez.
+  if (buscaDiretaFeita) return;
+  buscaDiretaFeita = true;
+  buscarLivroDireto(id).then(achado => {
+    if (!achado || livroDaURLJaAberto) return;
+    if (!aplicarCatalogoExtras([achado])) return;
+    livroDaURLJaAberto = true;
+    renderizar((campoBusca && campoBusca.value) || "");
+    const oLivro = LIVROS.find(l => idLivro(l) === id);
+    if (oLivro) abrirModal(oLivro);
+  });
 }
 
 /* ---------- Inicialização ---------- */
