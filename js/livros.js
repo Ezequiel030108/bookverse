@@ -98,9 +98,9 @@
    "descontoMaximo" nele (explicado lá em cima).
    ============================================================ */
 const PROMOCAO = {
-  nome: "Festival de Leitura",
+  nome: "Promoção da Semana",
   inicio: "2026-08-02",  // primeiro dia da promoção
-  fim: "2026-08-31",     // último dia da promoção
+  fim: "2026-08-07",     // último dia da promoção (sexta-feira)
   descontoUm: 10,        // % off em qualquer livro
   descontoDupla: 20      // % off em cada um, levando 2 ou mais
 };

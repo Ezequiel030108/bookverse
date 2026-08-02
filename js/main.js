@@ -1074,18 +1074,12 @@ function ativarModoPromocao() {
       <span class="vitrine-aurora" aria-hidden="true"></span>
       <div class="vitrine-conteudo">
         <div class="vitrine-head">
-          <span class="vitrine-tag">
-            <span class="vitrine-icone" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.1 6.1 6.3.2-5 3.8 1.8 6.1-5.2-3.6-5.2 3.6 1.8-6.1-5-3.8 6.3-.2z"/></svg>
-            </span>
-            ${esc(PROMOCAO.nome)}
-          </span>
+          <span class="vitrine-tag">${esc(PROMOCAO.nome)}</span>
           <span class="vitrine-prazo${ultimoDiaPromo() ? " urgente" : ""}">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
             ${ultimoDiaPromo() ? "Último dia!" : "Até " + dataFimPromo()}
           </span>
         </div>
-        <p class="vitrine-msg">O desconto entra sozinho no carrinho — não precisa de cupom.</p>
         <ol class="vitrine-rota">
           <li class="vitrine-parada">
             <span class="parada-estrela" aria-hidden="true"></span>

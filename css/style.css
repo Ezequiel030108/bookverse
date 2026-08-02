@@ -1292,23 +1292,17 @@ main {
 }
 .vitrine-conteudo { position: relative; }
 
-/* No celular o nome e o prazo ficam um embaixo do outro (o nome não
-   fica espremido); do tablet para cima voltam para a mesma linha. */
+/* Cabeçalho enxuto: só o título e a data em que a promoção acaba.
+   No celular ficam um embaixo do outro; do tablet para cima, na mesma
+   linha, com a data na ponta direita. */
 .vitrine-head {
   display: flex; flex-direction: column; align-items: flex-start;
-  gap: 8px; margin-bottom: 8px;
+  gap: 10px; margin-bottom: 16px;
 }
 .vitrine-tag {
-  display: inline-flex; align-items: center; gap: 10px;
   font-family: 'Playfair Display', Georgia, serif; font-weight: 800;
-  font-size: clamp(1.15rem, 3.6vw, 1.45rem); color: #fff;
+  font-size: clamp(1.25rem, 4vw, 1.55rem); color: #fff;
   letter-spacing: .2px; text-shadow: 0 2px 10px rgba(0,0,0,.35);
-}
-.vitrine-icone {
-  display: grid; place-items: center; width: 34px; height: 34px; flex: none;
-  border-radius: 10px; color: var(--estrela);
-  background: rgba(255,217,102,.14);
-  border: 1px solid rgba(255,217,102,.34);
 }
 /* Prazo: chip discreto. Só vira dourado no último dia, quando a
    urgência é real. */
@@ -1325,11 +1319,6 @@ main {
   border-color: rgba(255,217,102,.6);
   box-shadow: 0 3px 12px rgba(255,217,102,.32);
 }
-.vitrine-msg {
-  margin: 0 0 18px; font-size: .9rem; line-height: 1.45;
-  color: var(--texto-suave); max-width: 52ch;
-}
-
 /* ---- A rota: duas paradas ligadas por um traço ---- */
 .vitrine-rota {
   list-style: none; margin: 0; padding: 0;
