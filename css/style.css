@@ -375,9 +375,13 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   flex: 1 1 auto;
   min-width: 0;
 }
+/* A lupa fica POR CIMA do campo. Sem o z-index ela ficava embaixo: o
+   campo tem backdrop-filter (vidro fosco), o que o faz pintar depois do
+   ícone — e a lupa saía borrada atrás do vidro, virando um borrão. */
 .icone-busca {
   position: absolute;
   left: 14px;
+  z-index: 2;
   color: var(--lavanda);
   pointer-events: none;
   opacity: .9;
