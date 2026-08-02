@@ -116,7 +116,10 @@ function precoPromocional(livro, base, promo) {
   const teto = livro.descontoMaximo || 100;
   const pct = Math.min(promo.descontoUm || 0, teto);
   if (!pct) return null;
-  const comDesconto = Math.ceil(base * (1 - pct / 100) - 0.5);  // arredonda a favor do cliente
+  // Arredonda para baixo, igualzinho ao js/precos.js — o preço do feed
+  // PRECISA bater com o preço do site (senão o Google/Meta reprova o item
+  // por divergência de preço).
+  const comDesconto = Math.floor(base * (1 - pct / 100));
   return comDesconto < base ? comDesconto : null;
 }
 

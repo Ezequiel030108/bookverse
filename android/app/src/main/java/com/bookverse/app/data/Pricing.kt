@@ -4,13 +4,13 @@ import com.bookverse.app.model.Book
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
-import kotlin.math.ceil
+import kotlin.math.floor
 
 /** Promoção — espelha a constante PROMOCAO de js/livros.js. */
 object Promocao {
-    const val nome = "Copa do Mundo"
-    const val inicio = "2026-06-11"
-    const val fim = "2026-06-29"
+    const val nome = "Festival de Leitura"
+    const val inicio = "2026-08-02"
+    const val fim = "2026-08-31"
     const val descontoUm = 10       // % off em qualquer livro
     const val descontoDupla = 20    // % off levando 2 ou mais
 }
@@ -51,8 +51,10 @@ object Pricing {
         return limpo.toDoubleOrNull()
     }
 
-    /** Arredonda para o real cheio, a favor do cliente (22,50 -> 22). */
-    fun arredondarReal(valor: Double): Int = ceil(valor - 0.5).toInt()
+    /** Arredonda para o real cheio SEMPRE a favor do cliente (22,50 -> 22).
+     *  Para baixo, como no js/precos.js: para cima, um livro de R$ 14 com
+     *  "10% off" sairia por R$ 13 — menos desconto do que o anunciado. */
+    fun arredondarReal(valor: Double): Int = floor(valor).toInt()
 
     /** Formata em Reais no padrão brasileiro: 45.0 -> "R$ 45,00". */
     fun formatarBRL(valor: Double): String {

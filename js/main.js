@@ -290,7 +290,7 @@ function precoCardHTML(livro) {
     const p = precosPromo(livro);
     if (p) {
       const linhaDupla = p.limitado
-        ? `<p class="preco-dupla">⚽ preço especial da Copa</p>`
+        ? `<p class="preco-dupla">preço especial da promoção</p>`
         : `<p class="preco-dupla">levando 2 livros: ${formatarReal(p.dupla)}</p>`;
       return `
         <p class="info-preco em-promo">
@@ -871,9 +871,10 @@ function abrirModal(livro) {
       avisoPromo.className = "modal-promo";
       modal.querySelector(".modal-detalhes").insertAdjacentElement("afterend", avisoPromo);
     }
+    const estrela = `<svg class="promo-estrela" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.1 6.1 6.3.2-5 3.8 1.8 6.1-5.2-3.6-5.2 3.6 1.8-6.1-5-3.8 6.3-.2z"/></svg>`;
     avisoPromo.innerHTML = promo.limitado
-      ? `⚽ <strong>${PROMOCAO.nome}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
-      : `⚽ <strong>${PROMOCAO.nome}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
+      ? `${estrela} <strong>${esc(PROMOCAO.nome)}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
+      : `${estrela} <strong>${esc(PROMOCAO.nome)}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
   } else if (avisoPromo) {
     avisoPromo.remove();
   }
@@ -1052,61 +1053,56 @@ document.addEventListener("keydown", (e) => {
   }, true);
 })();
 
-/* ---------- Decoração da promoção (tema Copa do Mundo) ----------
-   Só acontece com a promoção ativa e some sozinho quando ela acaba —
-   nada fica "sujo" no site fora do período. */
+/* ---------- Faixa da promoção ----------
+   Só aparece com a promoção ativa e some sozinha quando ela acaba —
+   nada fica "sujo" no site fora do período.
+
+   A faixa é desenhada como uma ROTA entre duas estrelas: levando 1
+   livro o desconto é um, levando 2 ou mais ele cresce. Por isso as
+   duas ofertas são uma LISTA ORDENADA (<ol>) — a ordem aqui é a
+   própria informação, e a segunda parada é a estrela mais brilhante. */
 function ativarModoPromocao() {
   if (!promocaoAtiva()) return;
   document.body.classList.add("modo-promo");
 
-  // Vitrine: faixa de ponta a ponta, logo abaixo do cabeçalho.
+  // Faixa de ponta a ponta, logo abaixo do cabeçalho.
   const vitrine = document.createElement("section");
   vitrine.className = "vitrine-promo";
   vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
   vitrine.innerHTML = `
     <div class="vitrine-card">
-      <span class="vitrine-glow" aria-hidden="true"></span>
-      <span class="vitrine-losango" aria-hidden="true"></span>
+      <span class="vitrine-aurora" aria-hidden="true"></span>
       <div class="vitrine-conteudo">
         <div class="vitrine-head">
           <span class="vitrine-tag">
             <span class="vitrine-icone" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H5a2 2 0 0 1-2-2 1 1 0 0 1 1-1h2M17 6h2a2 2 0 0 0 2-2 1 1 0 0 0-1-1h-2"/></svg>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.1 6.1 6.3.2-5 3.8 1.8 6.1-5.2-3.6-5.2 3.6 1.8-6.1-5-3.8 6.3-.2z"/></svg>
             </span>
-            ${PROMOCAO.nome}
+            ${esc(PROMOCAO.nome)}
           </span>
-          <span class="vitrine-prazo">
+          <span class="vitrine-prazo${ultimoDiaPromo() ? " urgente" : ""}">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
             ${ultimoDiaPromo() ? "Último dia!" : "Até " + dataFimPromo()}
           </span>
         </div>
-        <p class="vitrine-msg">Entrou no clima da Copa? Os descontos já entram sozinhos no seu carrinho.</p>
-        <div class="vitrine-ofertas">
-          <div class="vitrine-oferta">
+        <p class="vitrine-msg">O desconto entra sozinho no carrinho — não precisa de cupom.</p>
+        <ol class="vitrine-rota">
+          <li class="vitrine-parada">
+            <span class="parada-estrela" aria-hidden="true"></span>
             <span class="vitrine-pct">${PROMOCAO.descontoUm}<small>% OFF</small></span>
-            <span class="vitrine-oferta-txt">em qualquer livro</span>
-          </div>
-          <div class="vitrine-oferta destaque">
-            <span class="vitrine-selo">Melhor oferta</span>
+            <span class="vitrine-oferta-txt">levando 1 livro</span>
+          </li>
+          <li class="vitrine-parada destaque">
+            <span class="parada-estrela" aria-hidden="true"></span>
+            <span class="vitrine-selo">Melhor escolha</span>
             <span class="vitrine-pct">${PROMOCAO.descontoDupla}<small>% OFF</small></span>
-            <span class="vitrine-oferta-txt">levando 2 ou mais</span>
-          </div>
-        </div>
+            <span class="vitrine-oferta-txt">em cada livro, levando 2 ou mais</span>
+          </li>
+        </ol>
       </div>
     </div>
   `;
   topbar.insertAdjacentElement("afterend", vitrine);
-
-  // Bolas de futebol discretas flutuando no fundo.
-  const ceu = document.createElement("div");
-  ceu.className = "ceu-bolas";
-  ceu.setAttribute("aria-hidden", "true");
-  for (let i = 0; i < 7; i++) {
-    const bola = document.createElement("span");
-    bola.textContent = ["⚽", "🏆", "⚽", "🥅", "⚽", "🏆", "⚽"][i];
-    ceu.appendChild(bola);
-  }
-  document.body.appendChild(ceu);
 }
 
 /* ---------- Ações de compra no modal ---------- */

@@ -1254,130 +1254,180 @@ main {
 }
 
 /* ============================================================
-   PROMOÇÃO — TEMA COPA DO MUNDO (cores do Brasil)
-   Só aparece com a promoção ativa; some sozinho fora do período.
-   ============================================================ */
-:root {
-  --br-verde: #009c3b;
-  --br-verde-esc: #007a2f;
-  --br-verde-prof: #04531f;
-  --br-amarelo: #ffdf00;
-  --br-azul: #012169;
-}
+   PROMOÇÃO — FAIXA DE OFERTAS (mesmo céu noturno do resto do site)
+   Só aparece com a promoção ativa; some sozinha fora do período.
 
-/* ---- Card da promoção — compacto, com as ofertas explícitas ---- */
-.vitrine-promo { position: relative; z-index: 1; padding: 14px clamp(12px, 3.5vw, 20px) 0; }
+   A ideia do desenho: o desconto CRESCE de 1 para 2 livros, então a
+   faixa é uma ROTA entre duas estrelas. A primeira parada é discreta,
+   a segunda é a estrela brilhante (dourada) — quem bate o olho já
+   entende que vale mais a pena levar dois. O dourado (--estrela) é
+   usado SÓ nessa segunda parada e nos preços com desconto; o resto
+   fica quieto, para o destaque não competir com nada.
+   ============================================================ */
+.vitrine-promo {
+  position: relative; z-index: 1;
+  padding: 14px clamp(12px, 3.5vw, 20px) 0;
+  animation: promo-entra .5s ease-out both;
+}
+@keyframes promo-entra {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: none; }
+}
 .vitrine-card {
   position: relative; overflow: hidden; isolation: isolate;
   max-width: 1080px; margin: 0 auto;
   padding: 20px clamp(18px, 3vw, 30px);
-  border-radius: 20px; color: #fff;
-  background: linear-gradient(135deg, #00a83f 0%, #017a30 52%, #044f20 100%);
-  border: 1px solid rgba(255,223,0,.35);
-  box-shadow: 0 16px 40px rgba(0,40,16,.5), inset 0 1px 0 rgba(255,255,255,.16);
+  border-radius: 20px; color: var(--texto-claro);
+  background: linear-gradient(135deg, var(--noite) 0%, var(--indigo) 55%, var(--violeta) 100%);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 16px 40px rgba(6,2,26,.6), inset 0 1px 0 rgba(255,255,255,.12);
 }
-/* Brilhos suaves (amarelo no topo, azul embaixo — cores da bandeira) */
-.vitrine-glow {
-  position: absolute; inset: 0; z-index: -2; pointer-events: none;
+/* Aurora suave (rosa no alto, ciano embaixo) — o mesmo par de acentos
+   que o site já usa, bem apagado para servir de fundo. */
+.vitrine-aurora {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(58% 120% at 92% -12%, rgba(255,223,0,.30), transparent 60%),
-    radial-gradient(48% 120% at 6% 122%, rgba(1,33,105,.5), transparent 60%);
-}
-/* Losango do Brasil (decorativo, à direita) */
-.vitrine-losango {
-  position: absolute; z-index: -1; right: -96px; top: 50%;
-  width: 300px; height: 300px; transform: translateY(-50%) rotate(45deg);
-  background: linear-gradient(135deg, rgba(255,223,0,.20), rgba(255,223,0,.03));
-  border-radius: 40px; pointer-events: none;
+    radial-gradient(56% 120% at 90% -14%, rgba(255,122,217,.28), transparent 62%),
+    radial-gradient(50% 120% at 4% 120%, rgba(122,223,255,.20), transparent 62%);
 }
 .vitrine-conteudo { position: relative; }
 
-.vitrine-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+/* No celular o nome e o prazo ficam um embaixo do outro (o nome não
+   fica espremido); do tablet para cima voltam para a mesma linha. */
+.vitrine-head {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 8px; margin-bottom: 8px;
+}
 .vitrine-tag {
   display: inline-flex; align-items: center; gap: 10px;
   font-family: 'Playfair Display', Georgia, serif; font-weight: 800;
   font-size: clamp(1.15rem, 3.6vw, 1.45rem); color: #fff;
-  letter-spacing: .2px; text-shadow: 0 2px 10px rgba(0,0,0,.28);
+  letter-spacing: .2px; text-shadow: 0 2px 10px rgba(0,0,0,.35);
 }
 .vitrine-icone {
   display: grid; place-items: center; width: 34px; height: 34px; flex: none;
-  border-radius: 10px; color: #04631f;
-  background: linear-gradient(135deg, #ffe863, #ffc400);
-  box-shadow: 0 4px 12px rgba(255,196,0,.4);
+  border-radius: 10px; color: var(--estrela);
+  background: rgba(255,217,102,.14);
+  border: 1px solid rgba(255,217,102,.34);
 }
+/* Prazo: chip discreto. Só vira dourado no último dia, quando a
+   urgência é real. */
 .vitrine-prazo {
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-  font-size: .72rem; font-weight: 800; color: #06351a;
-  background: linear-gradient(135deg, #ffe863, #ffce2b);
+  font-size: .72rem; font-weight: 700; color: var(--lavanda-clara);
+  background: rgba(184,158,255,.14);
+  border: 1px solid rgba(184,158,255,.3);
   padding: 5px 11px; border-radius: 999px;
-  box-shadow: 0 3px 10px rgba(255,196,0,.3);
+}
+.vitrine-prazo.urgente {
+  color: #2a1503; font-weight: 800;
+  background: linear-gradient(135deg, var(--estrela-clara), var(--estrela));
+  border-color: rgba(255,217,102,.6);
+  box-shadow: 0 3px 12px rgba(255,217,102,.32);
 }
 .vitrine-msg {
-  margin: 0 0 16px; font-size: .9rem; line-height: 1.45;
-  color: rgba(255,255,255,.92); max-width: 52ch;
+  margin: 0 0 18px; font-size: .9rem; line-height: 1.45;
+  color: var(--texto-suave); max-width: 52ch;
 }
 
-.vitrine-ofertas { display: flex; gap: 12px; flex-wrap: wrap; }
-.vitrine-oferta {
-  position: relative; flex: 1 1 200px; min-width: 0;
+/* ---- A rota: duas paradas ligadas por um traço ---- */
+.vitrine-rota {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.vitrine-parada {
+  position: relative; min-width: 0;
   display: flex; flex-direction: column;
-  padding: 14px 16px; border-radius: 14px;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  padding: 14px 46px 14px 16px; border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(184,158,255,.22);
+}
+/* O traço que liga uma parada à outra (vertical no celular). */
+.vitrine-parada + .vitrine-parada::before {
+  content: ""; position: absolute; pointer-events: none;
+  left: 30px; top: -17px; width: 2px; height: 17px;
+  background: linear-gradient(180deg, rgba(184,158,255,.15), var(--estrela));
+}
+/* Estrela de cada parada: pequena e lavanda na primeira, maior e
+   acesa na segunda. */
+.parada-estrela {
+  position: absolute; top: 14px; right: 16px;
+  width: 13px; height: 13px; background: var(--lavanda);
+  opacity: .65;
+  clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
 }
 .vitrine-pct {
   font-family: 'Playfair Display', Georgia, serif; font-weight: 800;
-  font-size: 2.1rem; line-height: 1; color: var(--br-amarelo);
+  font-size: 2.1rem; line-height: 1; color: var(--lavanda-clara);
   display: flex; align-items: baseline; gap: 5px;
 }
 .vitrine-pct small { font-size: .85rem; font-weight: 700; letter-spacing: .3px; }
-.vitrine-oferta-txt { font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.9); margin-top: 5px; }
+.vitrine-oferta-txt { font-size: .78rem; font-weight: 600; color: var(--texto-suave); margin-top: 6px; }
 
-.vitrine-oferta.destaque {
-  background: linear-gradient(135deg, #ffe75a, #ffc400);
-  border-color: rgba(255,255,255,.5);
-  box-shadow: 0 10px 24px rgba(255,196,0,.35);
+/* A segunda parada — onde mora o destaque da faixa inteira. */
+.vitrine-parada.destaque {
+  background: linear-gradient(135deg, rgba(255,217,102,.16), rgba(74,43,181,.28));
+  border-color: rgba(255,217,102,.5);
+  box-shadow: 0 10px 28px rgba(255,217,102,.16);
 }
-.vitrine-oferta.destaque .vitrine-pct { color: #04631f; }
-.vitrine-oferta.destaque .vitrine-oferta-txt { color: #0a3d1c; }
+.vitrine-parada.destaque .vitrine-pct { color: var(--estrela); }
+.vitrine-parada.destaque .vitrine-oferta-txt { color: var(--texto-claro); }
+.vitrine-parada.destaque .parada-estrela {
+  width: 19px; height: 19px; opacity: 1; background: var(--estrela);
+  filter: drop-shadow(0 0 9px rgba(255,217,102,.85));
+  animation: estrela-pulsa 3.4s ease-in-out infinite;
+}
+@keyframes estrela-pulsa {
+  0%, 100% { transform: scale(1);    opacity: .92; }
+  50%      { transform: scale(1.16); opacity: 1;   }
+}
 .vitrine-selo {
-  position: absolute; top: -9px; right: 12px;
+  align-self: flex-start; margin-bottom: 8px;
   font-size: .61rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
-  color: #fff; background: linear-gradient(135deg, #1466d6, #012169);
+  color: #2a1503; background: linear-gradient(135deg, var(--estrela-clara), var(--estrela));
   padding: 3px 9px; border-radius: 999px;
-  box-shadow: 0 4px 10px rgba(1,33,105,.5);
+}
+
+/* Da largura de tablet para cima a rota vira horizontal: as duas
+   paradas lado a lado, com o traço no meio. */
+@media (min-width: 620px) {
+  .vitrine-head { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+  .vitrine-rota { flex-direction: row; gap: 18px; }
+  .vitrine-parada { flex: 1 1 0; }
+  .vitrine-parada + .vitrine-parada::before {
+    left: -18px; top: 50%; width: 18px; height: 2px; transform: translateY(-50%);
+    background: linear-gradient(90deg, rgba(184,158,255,.15), var(--estrela));
+  }
+  /* Lado a lado, o selo sai do fluxo e as duas paradas ganham o mesmo
+     recuo no topo — assim os dois "% OFF" ficam na mesma linha. */
+  .vitrine-parada { padding-top: 46px; }
+  .vitrine-selo { position: absolute; top: 14px; left: 16px; margin-bottom: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrine-promo { animation: none; }
+  .vitrine-parada.destaque .parada-estrela { animation: none; }
 }
 
 /* ---- Preços promocionais no card ---- */
 .info-preco.em-promo { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
 .preco-antigo { color: var(--texto-discreto); text-decoration: line-through; font-size: .82rem; font-weight: 500; }
-.preco-promo { color: var(--br-amarelo); font-weight: 800; }
-.preco-dupla { margin: 1px 0 0; font-size: .74rem; font-weight: 600; color: #7be0a3; }
+.preco-promo { color: var(--estrela); font-weight: 800; }
+.preco-dupla { margin: 1px 0 0; font-size: .74rem; font-weight: 600; color: var(--aurora-ciano); }
 
 /* ---- Preço promocional no carrossel (hero) ---- */
-.hero-preco.em-promo { color: var(--br-amarelo); }
+.hero-preco.em-promo { color: var(--estrela); }
 .hero-preco.em-promo s { color: var(--texto-discreto); font-weight: 500; margin-right: 6px; font-size: .85em; }
 
 /* ---- Promoção no modal ---- */
 .modal-preco-antigo { color: var(--texto-discreto); text-decoration: line-through; margin-right: 6px; font-weight: 600; font-size: .85em; }
 .modal-promo {
-  margin: 12px 0 0; padding: 11px 13px; font-size: .86rem; line-height: 1.4; color: #eafff2;
-  background: linear-gradient(135deg, rgba(0,156,59,.22), rgba(4,83,31,.22));
-  border: 1px solid rgba(255,223,0,.4); border-radius: var(--raio);
+  margin: 12px 0 0; padding: 11px 13px; font-size: .86rem; line-height: 1.4; color: var(--texto-claro);
+  background: linear-gradient(135deg, rgba(255,217,102,.12), rgba(74,43,181,.24));
+  border: 1px solid rgba(255,217,102,.4); border-radius: var(--raio);
 }
-.modal-promo strong { color: var(--br-amarelo); }
-
-/* ---- Bolas de futebol flutuando no fundo (discreto) ---- */
-.ceu-bolas { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.ceu-bolas span { position: absolute; font-size: 1.5rem; opacity: .10; animation: bola-flutua 14s ease-in-out infinite; }
-.ceu-bolas span:nth-child(1) { left: 6%;  top: 24%; animation-delay: 0s;   }
-.ceu-bolas span:nth-child(2) { left: 82%; top: 18%; animation-delay: 1.6s; font-size: 1.1rem; }
-.ceu-bolas span:nth-child(3) { left: 24%; top: 66%; animation-delay: 3.2s; }
-.ceu-bolas span:nth-child(4) { left: 68%; top: 56%; animation-delay: 4.8s; font-size: 1.2rem; }
-.ceu-bolas span:nth-child(5) { left: 47%; top: 36%; animation-delay: 6.4s; font-size: 1rem;   }
-.ceu-bolas span:nth-child(6) { left: 90%; top: 72%; animation-delay: 8s;   }
-.ceu-bolas span:nth-child(7) { left: 13%; top: 86%; animation-delay: 9.6s; font-size: 1.1rem; }
-@keyframes bola-flutua { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-22px) rotate(180deg); } }
-@media (prefers-reduced-motion: reduce) { .ceu-bolas span { animation: none; } }
+.modal-promo strong { color: var(--estrela); }
+.modal-promo .promo-estrela { color: var(--estrela); vertical-align: -2px; margin-right: 2px; }
 
 /* ============================================================
    ============================================================

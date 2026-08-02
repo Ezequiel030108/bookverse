@@ -115,9 +115,9 @@ fun BookDetailSheet(
                 Spacer(Modifier.height(12.dp))
                 Text(
                     text = if (promo.limitado)
-                        "⚽ ${com.bookverse.app.data.Promocao.nome}: este livro participa com ${com.bookverse.app.data.Promocao.descontoUm}% de desconto. Válida até ${Pricing.dataFimPromo()}."
+                        "★ ${com.bookverse.app.data.Promocao.nome}: este livro participa com ${com.bookverse.app.data.Promocao.descontoUm}% de desconto. Válida até ${Pricing.dataFimPromo()}."
                     else
-                        "⚽ ${com.bookverse.app.data.Promocao.nome}: levando 2 livros ou mais, este sai por ${Pricing.formatarReal(promo.dupla)} (${com.bookverse.app.data.Promocao.descontoDupla}% off). Válida até ${Pricing.dataFimPromo()}.",
+                        "★ ${com.bookverse.app.data.Promocao.nome}: levando 2 livros ou mais, este sai por ${Pricing.formatarReal(promo.dupla)} (${com.bookverse.app.data.Promocao.descontoDupla}% off). Válida até ${Pricing.dataFimPromo()}.",
                     color = Estrela,
                     fontSize = 12.sp,
                     lineHeight = 17.sp,

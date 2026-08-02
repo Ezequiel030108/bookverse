@@ -83,15 +83,24 @@
    PROMOÇÃO (liga e desliga sozinha pelas datas abaixo)
    ------------------------------------------------------------
    Enquanto a data de hoje estiver entre "inicio" e "fim", o site
-   entra no modo promoção: preços com desconto, faixa no topo e
-   decoração temática da Copa do Mundo. Fora desse período tudo
-   volta ao normal sozinho. Para testar antes da data, abra o site
-   com ?promo=teste no fim do endereço.
+   entra no modo promoção: a faixa de ofertas aparece no topo e o
+   desconto passa a valer em TODO o site sozinho — vitrine, modal,
+   carrinho, checkout e também os feeds do Google Shopping e do
+   Meta. Fora desse período tudo volta ao normal sozinho, sem
+   precisar mexer em nada. Para testar antes da data de início,
+   abra o site com ?promo=teste no fim do endereço.
+
+   descontoUm    -> % off em QUALQUER livro, levando 1.
+   descontoDupla -> % off em CADA livro, levando 2 ou mais.
+
+   O desconto vale para todos os livros. Se algum dia você quiser
+   limitar o desconto de um livro específico, é só pôr o campo
+   "descontoMaximo" nele (explicado lá em cima).
    ============================================================ */
 const PROMOCAO = {
-  nome: "Copa do Mundo",
-  inicio: "2026-06-11",  // começo do torneio
-  fim: "2026-06-29",     // último dia da promoção
+  nome: "Festival de Leitura",
+  inicio: "2026-08-02",  // primeiro dia da promoção
+  fim: "2026-08-31",     // último dia da promoção
   descontoUm: 10,        // % off em qualquer livro
   descontoDupla: 20      // % off em cada um, levando 2 ou mais
 };

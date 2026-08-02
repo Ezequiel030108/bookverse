@@ -30,8 +30,12 @@ window.Precos = (function () {
     return isNaN(n) ? null : n;
   }
 
-  /* Arredonda para o real cheio, a favor do cliente (22,50 -> 22). */
-  function arredondarReal(valor) { return Math.ceil(valor - 0.5); }
+  /* Arredonda para o real cheio SEMPRE a favor do cliente (22,50 -> 22).
+     Tem que ser para BAIXO: arredondando para cima, um livro de R$ 14 com
+     "10% off" sairia por R$ 13 — só 7% de desconto, menos do que a faixa
+     da promoção anuncia. Para baixo, o desconto nunca fica abaixo do
+     que foi prometido. */
+  function arredondarReal(valor) { return Math.floor(valor); }
 
   /* Formata um número em Reais no padrão brasileiro: 45 -> "R$ 45,00". */
   function formatarBRL(valor) {
