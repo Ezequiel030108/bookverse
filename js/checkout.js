@@ -1093,40 +1093,22 @@
      O checkout precisa da MESMA junção: sem ela, um "Comprar agora" em um
      livro do catálogo chegava aqui sem correspondência e a página dizia
      que o carrinho estava vazio. */
-  function aplicarCatalogo(extras) {
-    if (!Array.isArray(extras) || !extras.length) return false;
-    if (typeof LIVROS === "undefined" || !Array.isArray(LIVROS)) return false;
-    const idDe = window.idLivro || (l => l.id);
-    const indice = new Map();
-    LIVROS.forEach((l, i) => indice.set(idDe(l), i));
-    let mudou = false;
-    extras.forEach(l => {
-      if (!l || !l.id) return;
-      if (indice.has(l.id)) {
-        const atual = LIVROS[indice.get(l.id)];
-        const novo = Object.assign({}, atual, l);
-        if (JSON.stringify(novo) !== JSON.stringify(atual)) {
-          LIVROS[indice.get(l.id)] = novo;
-          mudou = true;
-        }
-      } else {
-        LIVROS.push(l);
-        indice.set(l.id, LIVROS.length - 1);
-        mudou = true;
-      }
-    });
-    return mudou;
+  /* A junção (e a limpeza de livros ocultos, repetidos e apagados) mora
+     em js/catalogo.js — a mesma que a vitrine usa. */
+  function aplicarCatalogo(extras, autoritativo) {
+    if (!window.CatalogoLoja) return false;
+    return window.CatalogoLoja.aplicarExtras(extras, autoritativo);
   }
 
   function carregarCatalogo() {
     // 1) Cache local gravado pela vitrine: aplica na hora, sem esperar a rede.
     try {
-      aplicarCatalogo(JSON.parse(localStorage.getItem("bookverse_cache_catalogo_v1") || "null"));
+      aplicarCatalogo(JSON.parse(localStorage.getItem("bookverse_cache_catalogo_v1") || "null"), false);
     } catch (e) {}
     // 2) Resposta fresca do Firestore: se mudar algo, refaz a página.
     if (window.Auth && window.Auth.configurado && window.Auth.lerCatalogo) {
       window.Auth.lerCatalogo().then(extras => {
-        if (aplicarCatalogo(extras)) initLoja();
+        if (aplicarCatalogo(extras, true)) initLoja();
       }).catch(() => {});
     }
   }

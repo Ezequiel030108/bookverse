@@ -153,30 +153,10 @@
   }
 
   /* Junta os livros do painel admin ao catálogo local (mesma regra do
-     index e do checkout). */
-  function aplicarExtras(extras) {
-    if (!Array.isArray(extras) || !extras.length) return false;
-    if (typeof LIVROS === "undefined" || !Array.isArray(LIVROS)) return false;
-    const idDe = window.idLivro || (l => l.id);
-    const indice = new Map();
-    LIVROS.forEach((l, i) => indice.set(idDe(l), i));
-    let mudou = false;
-    extras.forEach(l => {
-      if (!l || !l.id) return;
-      if (indice.has(l.id)) {
-        const atual = LIVROS[indice.get(l.id)];
-        const novo = Object.assign({}, atual, l);
-        if (JSON.stringify(novo) !== JSON.stringify(atual)) {
-          LIVROS[indice.get(l.id)] = novo;
-          mudou = true;
-        }
-      } else {
-        LIVROS.push(l);
-        indice.set(l.id, LIVROS.length - 1);
-        mudou = true;
-      }
-    });
-    return mudou;
+     index e do checkout — a junção mora em js/catalogo.js). */
+  function aplicarExtras(extras, autoritativo) {
+    if (!window.CatalogoLoja) return false;
+    return window.CatalogoLoja.aplicarExtras(extras, autoritativo);
   }
 
   function lerCache(chave) {
@@ -189,12 +169,12 @@
 
   async function carregarCatalogo() {
     // 1) cache local da vitrine: vale na hora, sem esperar a rede.
-    aplicarExtras(lerCache(CACHE_CAT) || []);
+    aplicarExtras(lerCache(CACHE_CAT) || [], false);
     // 2) resposta fresca do Firestore.
     if (!(window.Auth && window.Auth.configurado && window.Auth.lerCatalogo)) return;
     const extras = await comLimite(window.Auth.lerCatalogo(), 8000);
     if (Array.isArray(extras) && extras.length) {
-      aplicarExtras(extras);
+      aplicarExtras(extras, true);
       // Regrava o cache que o checkout lê de forma síncrona: sem isto, um
       // livro cadastrado pelo admin poderia "sumir" do carrinho na troca de
       // página (o carrinho descarta ids que ainda não estão no catálogo).
@@ -218,8 +198,16 @@
 
   async function carregarDisponibilidade() {
     window.__bloqueados = montarBloqueados(lerCache(CACHE_DISP) || {});
-    if (!(window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade)) return;
-    const mapa = await comLimite(window.Auth.lerDisponibilidade(), 8000);
+    let mapa = null;
+    if (window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade) {
+      mapa = await comLimite(window.Auth.lerDisponibilidade(), 8000);
+    }
+    // O Firebase não respondeu (null = "não sei")? Esta é a página onde o
+    // pedido é fechado: pergunta direto à API do Firestore, que é mais leve
+    // e não depende do SDK, antes de confiar no cache antigo.
+    if (!(mapa && typeof mapa === "object") && window.CatalogoLoja) {
+      mapa = await comLimite(window.CatalogoLoja.disponibilidadeRapida(6000), 6000);
+    }
     if (mapa && typeof mapa === "object") {
       gravarCache(CACHE_DISP, mapa);
       window.__bloqueados = montarBloqueados(mapa);

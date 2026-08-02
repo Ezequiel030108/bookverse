@@ -199,11 +199,14 @@
       salvarCarrinho: async () => {},
       lerCarrinho: async () => null,
       cadastroCompleto: async () => false,
-      lerDisponibilidade: async () => ({}),
+      // null = "não sei" (e NÃO "nada foi vendido" / "não há livros").
+      // Quem usa mantém o que já tinha — senão um livro vendido voltaria
+      // para a estante sempre que o Firebase não estivesse disponível.
+      lerDisponibilidade: async () => null,
       reservarLivros: async () => {},
       marcarVendidos: async () => {},
       liberarLivros: async () => {},
-      lerCatalogo: async () => [],
+      lerCatalogo: async () => null,
       adicionarLivro: async () => {},
       removerLivro: async () => {},
       apagarConta: async () => {}
@@ -240,8 +243,9 @@
         salvarPedido: async () => {}, atualizarStatusPedido: async () => {}, atualizarPedido: async () => {}, listarPedidos: async () => [],
         ouvirPedidos: async () => () => {},
         salvarCarrinho: async () => {}, lerCarrinho: async () => null, cadastroCompleto: async () => false,
-        lerDisponibilidade: async () => ({}), reservarLivros: async () => {}, marcarVendidos: async () => {},
-        liberarLivros: async () => {}, lerCatalogo: async () => [], adicionarLivro: async () => {}, removerLivro: async () => {},
+        // null = "não sei" (veja o comentário na lista de cima).
+        lerDisponibilidade: async () => null, reservarLivros: async () => {}, marcarVendidos: async () => {},
+        liberarLivros: async () => {}, lerCatalogo: async () => null, adicionarLivro: async () => {}, removerLivro: async () => {},
         apagarConta: async () => {}
       };
       Auth.pronto = true;
@@ -415,13 +419,15 @@
       },
 
       // Disponibilidade dos livros (reservados/vendidos) — leitura pública.
+      // Devolve null se a leitura falhar. Um mapa vazio significaria "nada
+      // foi vendido" e devolveria os livros vendidos para a estante.
       lerDisponibilidade: async function () {
         try {
           const snap = await comTimeout(db.collection("disponibilidade").get(), 6000);
           const mapa = {};
           snap.forEach(doc => { mapa[doc.id] = doc.data(); });
           return mapa;
-        } catch (e) { return {}; }
+        } catch (e) { return null; }
       },
       // itens aceita ["id"] ou [{id, qty}] — a quantidade permite que um
       // livro com várias unidades continue na loja após vender uma.
@@ -467,11 +473,13 @@
       },
 
       // Livros cadastrados pelo admin (coleção "catalogo") — leitura pública.
+      // Devolve null se a leitura falhar (lista vazia significaria que o
+      // admin não tem nenhum livro cadastrado, e a loja apagaria todos).
       lerCatalogo: async function () {
         try {
           const snap = await comTimeout(db.collection("catalogo").get(), 8000);
           return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-        } catch (e) { return []; }
+        } catch (e) { return null; }
       },
       adicionarLivro: async function (livro) {
         if (!usuarioAtual || !livro || !livro.id) return;

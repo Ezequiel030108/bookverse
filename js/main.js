@@ -176,6 +176,11 @@ function disponivel(livro) {
 const CACHE_DISP = "bookverse_cache_disp_v1";
 const CACHE_CAT  = "bookverse_cache_catalogo_v1";
 
+/* A estante já foi desenhada pelo menos uma vez? A primeira vez espera
+   a lista de vendidos/reservados (veja "Inicialização", no fim do
+   arquivo) — por isso o resto do código não pode redesenhar antes. */
+let vitrineDesenhada = false;
+
 function lerCacheLoja(chave) {
   try { const s = localStorage.getItem(chave); return s ? JSON.parse(s) : null; }
   catch (e) { return null; }
@@ -205,16 +210,25 @@ function bloqueadosIguais(a, b) {
   return true;
 }
 
+/* Guarda o que já foi vendido/reservado e redesenha a estante se mudou.
+   Devolve true quando alguma coisa mudou de verdade. */
+function aplicarDisponibilidade(mapa) {
+  if (!mapa) return false;
+  gravarCacheLoja(CACHE_DISP, mapa);
+  const bloq = montarBloqueados(mapa);
+  if (bloqueadosIguais(window.__bloqueados, bloq)) return false;   // nada mudou: sem "pisca"
+  window.__bloqueados = bloq;
+  return true;
+}
+
 /* Carrega a disponibilidade (reservados/vendidos) e re-renderiza a loja. */
 function carregarDisponibilidade() {
   if (!(window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade)) return;
   window.Auth.lerDisponibilidade().then(mapa => {
-    gravarCacheLoja(CACHE_DISP, mapa || {});
-    const bloq = montarBloqueados(mapa);
-    if (bloqueadosIguais(window.__bloqueados, bloq)) return;   // nada mudou: sem "pisca"
-    window.__bloqueados = bloq;
-    const termo = (campoBusca && campoBusca.value) || "";
-    renderizar(termo);
+    // mapa null = a leitura falhou: mantém o que a loja já sabia.
+    if (!aplicarDisponibilidade(mapa)) return;
+    if (!vitrineDesenhada) return;   // ainda não desenhou: a estreia usa o mapa novo
+    renderizar((campoBusca && campoBusca.value) || "");
   }).catch(() => {});
 }
 
@@ -526,7 +540,33 @@ function criarFileira(titulo, livros, opts = {}) {
 
 /* ---------- Renderização principal ---------- */
 
+/* Enquanto a loja não sabe quais livros já foram vendidos, mostra a
+   estante em "esqueleto" (moldura dos cards) no lugar dos livros. É o
+   que evita a página em branco na abertura — e, principalmente, evita
+   mostrar um livro que já foi vendido só para escondê-lo em seguida. */
+function mostrarCarregandoEstante(ligado) {
+  if (!catalogo) return;
+  const existente = document.getElementById("estante-carregando");
+  if (!ligado) { if (existente) existente.remove(); return; }
+  if (existente) return;
+
+  const bloco = document.createElement("div");
+  bloco.id = "estante-carregando";
+  bloco.className = "estante-carregando";
+  bloco.setAttribute("aria-hidden", "true");
+  let html = "";
+  for (let f = 0; f < 2; f++) {
+    let cards = "";
+    for (let i = 0; i < 6; i++) cards += '<span class="ec-card"></span>';
+    html += '<div class="ec-fileira"><span class="ec-titulo"></span>' +
+            '<div class="ec-cards">' + cards + '</div></div>';
+  }
+  bloco.innerHTML = html;
+  catalogo.appendChild(bloco);
+}
+
 function renderizar(termoBusca) {
+  vitrineDesenhada = true;
   const termo = normalizar((termoBusca ?? "").trim());
   const buscando = termo.length > 0;
 
@@ -1123,31 +1163,14 @@ function ativarModoPromocao() {
 })();
 
 /* Junta os livros cadastrados/editados pelo admin ao catálogo local.
-   Devolve true só quando algo REALMENTE mudou (evita re-render à toa). */
-function aplicarCatalogoExtras(extras) {
-  if (!Array.isArray(extras) || !extras.length) return false;
-  const idDe = window.idLivro || (l => l.id);
-  const indice = new Map();
-  LIVROS.forEach((l, i) => indice.set(idDe(l), i));
-  let mudou = false;
-  extras.forEach(l => {
-    if (!l || !l.id) return;
-    if (indice.has(l.id)) {
-      // Edição de um livro existente: aplica as alterações por cima do original.
-      const atual = LIVROS[indice.get(l.id)];
-      const novo = Object.assign({}, atual, l);
-      if (JSON.stringify(novo) !== JSON.stringify(atual)) {
-        LIVROS[indice.get(l.id)] = novo;
-        mudou = true;
-      }
-    } else {
-      // Livro novo, cadastrado pelo admin.
-      LIVROS.push(l);
-      indice.set(l.id, LIVROS.length - 1);
-      mudou = true;
-    }
-  });
-  return mudou;
+   A junção (e a limpeza de livros ocultos, repetidos e apagados) mora
+   em js/catalogo.js, compartilhada com o checkout e o finalizar.
+   Devolve true só quando algo REALMENTE mudou (evita re-render à toa).
+   "autoritativo" = a lista veio fresca do Firestore (e não do cache). */
+function aplicarCatalogoExtras(extras, autoritativo) {
+  return window.CatalogoLoja
+    ? window.CatalogoLoja.aplicarExtras(extras, autoritativo)
+    : false;
 }
 
 /* Carrega os livros cadastrados pelo admin (Firestore) e os junta ao catálogo. */
@@ -1156,7 +1179,7 @@ function carregarCatalogo() {
   window.Auth.lerCatalogo().then(extras => {
     if (!Array.isArray(extras)) return;
     gravarCacheLoja(CACHE_CAT, extras);
-    const mudou = aplicarCatalogoExtras(extras);
+    const mudou = aplicarCatalogoExtras(extras, true);
     if (mudou) {
       const termo = (campoBusca && campoBusca.value) || "";
       renderizar(termo);
@@ -1277,6 +1300,7 @@ function livroDeDocFirestore(doc) {
   Object.keys(campos).forEach(k => {
     const v = campos[k] || {};
     if (v.stringValue !== undefined) out[k] = v.stringValue;
+    else if (v.timestampValue !== undefined) out[k] = v.timestampValue;
     else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
     else if (v.doubleValue !== undefined) out[k] = v.doubleValue;
     else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
@@ -1366,7 +1390,43 @@ if (buscaInicial) {
   if (campoBusca) campoBusca.value = buscaInicial;
   if (campoBuscaMob) campoBuscaMob.value = buscaInicial;
 }
-renderizar(buscaInicial);
-abrirLivroDaURL();           // abre o livro do link compartilhado (?livro=...)
-carregarDisponibilidade();   // esconde reservados/vendidos quando a lista carrega
-carregarCatalogo();          // adiciona os livros cadastrados pelo admin
+/* A estante SÓ é desenhada depois de saber quais livros já foram
+   vendidos ou reservados. Antes, a página aparecia com todos os livros
+   e escondia os vendidos quando o Firebase respondia — daí o livro
+   vendido que "aparecia e depois sumia". Agora a loja pergunta isso
+   direto à API do Firestore (uma requisição pequena, sem o SDK) e
+   espera a resposta, mostrando o esqueleto da estante nesse meio tempo.
+
+   ESPERA_MAX é uma rede de segurança: se a resposta demorar demais
+   (internet ruim), a estante abre assim mesmo com o que a loja já
+   sabe — melhor uma estante um pouco desatualizada do que nenhuma. */
+const ESPERA_MAX_DISPONIBILIDADE = 3500;
+
+let estreiaFeita = false;   // a abertura da estante já aconteceu?
+
+function desenharVitrine(busca) {
+  if (estreiaFeita) return;
+  estreiaFeita = true;
+  mostrarCarregandoEstante(false);
+  renderizar(busca);
+  abrirLivroDaURL();         // abre o livro do link compartilhado (?livro=...)
+  carregarCatalogo();        // adiciona os livros cadastrados pelo admin
+  carregarDisponibilidade(); // confirma pelo Firebase e mantém o cache quente
+}
+
+(function iniciarVitrine(busca) {
+  mostrarCarregandoEstante(true);
+  const leitura = window.CatalogoLoja
+    ? window.CatalogoLoja.disponibilidadeRapida(ESPERA_MAX_DISPONIBILIDADE)
+    : Promise.resolve(null);
+  const rede = setTimeout(() => desenharVitrine(busca), ESPERA_MAX_DISPONIBILIDADE);
+
+  leitura.then(mapa => {
+    clearTimeout(rede);
+    const mudou = aplicarDisponibilidade(mapa);
+    if (!estreiaFeita) { desenharVitrine(busca); return; }
+    // Resposta atrasada (a estante já abriu pela rede de segurança, ou o
+    // cliente já pesquisou alguma coisa enquanto a estante carregava).
+    if (mudou) renderizar((campoBusca && campoBusca.value) || "");
+  });
+})(buscaInicial);

@@ -591,6 +591,23 @@ aspas e salve.
 Apague o bloco inteiro do livro, das chaves `{` até a `},`
 (incluindo a vírgula do final). Salve e atualize a página.
 
+> 💜 **Livro cadastrado pelo painel (Administração):** ele não está neste
+> arquivo, e sim no Firebase. Para tirá-lo do ar, use **Minha conta →
+> Administração → Remover**.
+>
+> Se precisar sumir com ele na hora, sem abrir o painel, ponha o **id** do
+> livro na lista `LIVROS_OCULTOS`, no começo do `js/livros.js`. Livro que
+> está nessa lista não aparece em lugar nenhum: nem na estante, nem na
+> busca, nem no carrinho, nem nos anúncios. O id é o pedacinho que fica no
+> fim do link do livro (`www.bookverse.com.br/livro/AQUI-FICA-O-ID`).
+
+### 👯 Livro repetido na estante
+
+Se o mesmo livro for cadastrado duas vezes com títulos escritos de formas
+diferentes, o site percebe sozinho: dois cadastros com a **mesma foto de
+capa** são o mesmo livro, e só o cadastro mais recente aparece. O antigo
+continua no painel — apague-o por lá quando puder.
+
 ---
 
 ## 🖼️ Como adicionar a foto da capa de um livro

@@ -80,6 +80,33 @@
 
 
 /* ============================================================
+   LIVROS QUE NÃO DEVEM APARECER NO SITE
+   ------------------------------------------------------------
+   Lista de "ids" de livros que ficam FORA da loja, aconteça o
+   que acontecer: não aparecem na estante, nem na busca, nem no
+   carrinho, nem nos anúncios (Google Shopping e Meta).
+
+   Serve para tirar do ar um cadastro errado ou repetido sem
+   precisar abrir o Firebase Console. O id é aquele que aparece
+   no fim do link do livro:
+   www.bookverse.com.br/livro/AQUI-FICA-O-ID
+
+   👉 Isto é um remendo, não a arrumação definitiva: o cadastro
+      errado continua no painel (Minha conta → Administração),
+      e o melhor é apagá-lo por lá quando der. Depois de apagar,
+      pode tirar o id daqui.
+   ============================================================ */
+const LIVROS_OCULTOS = [
+  // O MESMO livro foi cadastrado duas vezes, com nomes diferentes:
+  // "FNAF Fazbear Fright's 6 Hora de Acordar" (este id, cadastrado em
+  // 17/07) e "Five Nights at Freddy's: Pavores de Fazbear #3: Hora de
+  // Acordar" (cadastro de 02/08, com a capa e o número certos — na foto
+  // da capa lê-se "PAVORES DE FAZBEAR 3"). Por isso o livro apareceu
+  // repetido na estante. Fica valendo o cadastro novo; este sai do site.
+  "fnaf-fazbear-fright-s-6-hora-de-acordar-scott-cawhton"
+];
+
+/* ============================================================
    PROMOÇÃO (liga e desliga sozinha pelas datas abaixo)
    ------------------------------------------------------------
    Enquanto a data de hoje estiver entre "inicio" e "fim", o site

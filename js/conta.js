@@ -887,8 +887,10 @@
     preencherGeneros();
     if (!adminCarregado) {
       if (carregando) { carregando.hidden = false; carregando.textContent = "Carregando catálogo…"; }
-      try { dispMapaAdmin = await Auth.lerDisponibilidade(); } catch (e) { dispMapaAdmin = {}; }
-      try { livrosCatalogo = await Auth.lerCatalogo(); } catch (e) { livrosCatalogo = []; }
+      // As leituras devolvem null quando falham ("não sei"): aqui o painel
+      // cai no vazio mesmo, mas sem quebrar (o admin recarrega a página).
+      try { dispMapaAdmin = (await Auth.lerDisponibilidade()) || {}; } catch (e) { dispMapaAdmin = {}; }
+      try { livrosCatalogo = (await Auth.lerCatalogo()) || []; } catch (e) { livrosCatalogo = []; }
       idsCatalogo = new Set((livrosCatalogo || []).map(l => l && l.id).filter(Boolean));
       adminCarregado = true;
     }

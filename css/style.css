@@ -744,6 +744,49 @@ main {
 .fileira-seta.oculta { opacity: 0 !important; pointer-events: none; }
 
 /* ============================================================
+   ESTANTE CARREGANDO (esqueleto)
+   ------------------------------------------------------------
+   Aparece por um instante na abertura, enquanto a loja confere
+   quais livros já foram vendidos. É só a moldura das fileiras:
+   evita a página em branco e, principalmente, evita mostrar um
+   livro vendido para escondê-lo em seguida.
+   ============================================================ */
+.estante-carregando { padding-top: 6px; }
+.estante-carregando .ec-fileira { margin: 22px 0; }
+.estante-carregando .ec-titulo {
+  display: block;
+  height: 22px;
+  width: min(52%, 240px);
+  margin: 0 16px 18px;
+  border-radius: 8px;
+}
+.estante-carregando .ec-cards {
+  display: flex;
+  gap: 14px;
+  padding: 6px 16px 12px;
+  overflow: hidden;
+}
+.estante-carregando .ec-card {
+  flex: 0 0 var(--card-largura);
+  width: var(--card-largura);
+  aspect-ratio: 2 / 3;
+  border-radius: var(--raio);
+}
+.estante-carregando .ec-titulo,
+.estante-carregando .ec-card {
+  background: linear-gradient(160deg, rgba(46, 31, 138, .5), rgba(20, 9, 58, .5));
+  border: 1px solid var(--vidro-borda);
+  animation: pulsarEsqueleto 1.3s ease-in-out infinite;
+}
+.estante-carregando .ec-card:nth-child(2n) { animation-delay: .15s; }
+.estante-carregando .ec-card:nth-child(3n) { animation-delay: .3s; }
+
+@keyframes pulsarEsqueleto {
+  0%, 100% { opacity: .45; }
+  50%      { opacity: .8; }
+}
+
+/* ============================================================
    CARD DE LIVRO
    ============================================================ */
 .card-livro {

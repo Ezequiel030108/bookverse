@@ -30,6 +30,7 @@ function converterDoc(doc) {
   Object.keys(f).forEach(k => {
     const v = f[k] || {};
     if (v.stringValue !== undefined) out[k] = v.stringValue;
+    else if (v.timestampValue !== undefined) out[k] = v.timestampValue;
     else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
     else if (v.doubleValue !== undefined) out[k] = v.doubleValue;
     else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
@@ -38,7 +39,8 @@ function converterDoc(doc) {
 }
 
 let cache = { t: 0, lista: [] };
-let promoEstatica = null;   // a constante PROMOCAO lida do js/livros.js
+let promoEstatica = null;    // a constante PROMOCAO lida do js/livros.js
+let ocultosEstaticos = [];   // a lista LIVROS_OCULTOS lida do js/livros.js
 
 const TEMPO_CACHE = 5 * 60 * 1000;   // idade máxima do cache em memória
 const TEMPO_LIMITE_MS = 4000;        // espera máxima por CADA busca externa
@@ -55,10 +57,12 @@ async function livrosEstaticos(base) {
     const fn = new Function("window", codigo +
       "\n;return {" +
       "  livros: (typeof LIVROS !== 'undefined') ? LIVROS : []," +
-      "  promocao: (typeof PROMOCAO !== 'undefined') ? PROMOCAO : null" +
+      "  promocao: (typeof PROMOCAO !== 'undefined') ? PROMOCAO : null," +
+      "  ocultos: (typeof LIVROS_OCULTOS !== 'undefined') ? LIVROS_OCULTOS : []" +
       "};");
     const out = fn({}) || {};
     promoEstatica = out.promocao || null;
+    ocultosEstaticos = Array.isArray(out.ocultos) ? out.ocultos : [];
     return Array.isArray(out.livros) ? out.livros.slice() : null;
   } catch (e) { return null; }
 }
@@ -81,6 +85,39 @@ async function livrosDoAdmin() {
   } catch (e) { return null; }
 }
 
+/* Tira da lista o que não deve aparecer em lugar nenhum — as MESMAS regras
+   do site (js/catalogo.js), para que o feed de anúncios e a prévia dos links
+   mostrem exatamente o que a loja mostra:
+     • ids listados em LIVROS_OCULTOS (js/livros.js);
+     • o mesmo livro cadastrado duas vezes (capa idêntica): fica o mais novo. */
+function limparLista(lista) {
+  const escondidos = new Set(ocultosEstaticos.map(id => String(id || "").trim()).filter(Boolean));
+  const porFoto = new Map();
+  const out = [];
+  lista.forEach(livro => {
+    if (!livro || escondidos.has(idLivro(livro))) return;
+    const img = String(livro.imagem || "");
+    const foto = img.slice(0, 5).toLowerCase() === "data:" ? img : "";
+    if (foto) {
+      const pos = porFoto.get(foto);
+      if (pos !== undefined) {
+        if (quandoEntrou(livro) > quandoEntrou(out[pos])) out[pos] = livro;
+        return;
+      }
+      porFoto.set(foto, out.length);
+    }
+    out.push(livro);
+  });
+  return out;
+}
+function quandoEntrou(l) {
+  const c = (l && l.criadoEm) || "";
+  const t = Date.parse(typeof c === "object" ? "" : c);
+  if (!Number.isNaN(t)) return t;
+  const d = Date.parse(((l && l.dataAdicao) || "") + "T00:00:00");
+  return Number.isNaN(d) ? 0 : d;
+}
+
 /* Lista completa de livros (estáticos + admin), com cache de 5 min.
    As duas buscas correm em paralelo e têm limite de tempo; se alguma
    falhar, a última lista completa continua valendo — assim o link de
@@ -94,17 +131,18 @@ async function carregarLivros(base) {
   // uma pela metade (o livro do link poderia desaparecer da prévia).
   if ((!estaticos || !extras) && cache.lista.length) return cache.lista;
 
-  const lista = (estaticos || []).slice();
-  const indice = new Map(lista.map((l, i) => [idLivro(l), i]));
+  const juntos = (estaticos || []).slice();
+  const indice = new Map(juntos.map((l, i) => [idLivro(l), i]));
   (extras || []).forEach(l => {
     if (!l || !l.id) return;
     if (indice.has(l.id)) {
-      lista[indice.get(l.id)] = Object.assign({}, lista[indice.get(l.id)], l);
+      juntos[indice.get(l.id)] = Object.assign({}, juntos[indice.get(l.id)], l);
     } else {
-      lista.push(l);
+      juntos.push(l);
     }
   });
 
+  const lista = limparLista(juntos);
   if (lista.length && estaticos && extras) cache = { t: Date.now(), lista };
   return lista;
 }
