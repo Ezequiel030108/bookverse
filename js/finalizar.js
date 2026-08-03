@@ -197,7 +197,8 @@
   }
 
   async function carregarDisponibilidade() {
-    window.__bloqueados = montarBloqueados(lerCache(CACHE_DISP) || {});
+    // Mesma ordem do index: cache desta pessoa, senão a foto da publicação.
+    window.__bloqueados = montarBloqueados(lerCache(CACHE_DISP) || window.VENDIDOS_FOTO || {});
     let mapa = null;
     if (window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade) {
       mapa = await comLimite(window.Auth.lerDisponibilidade(), 8000);

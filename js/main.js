@@ -1353,9 +1353,14 @@ function abrirLivroDaURL() {
 }
 
 /* ---------- Inicialização ---------- */
-// Aplica o cache local ANTES da primeira renderização: livros vendidos
-// não "piscam" na tela e o título do carrossel não troca depois.
-window.__bloqueados = montarBloqueados(lerCacheLoja(CACHE_DISP) || {});
+// Ponto de partida de quem já foi vendido, na ordem do mais fresco para
+// o mais antigo: o que este navegador viu na última visita e, na falta
+// dele (primeira visita), a foto tirada na publicação do site
+// (js/vendidos.js). Assim a estante nunca começa achando que NADA foi
+// vendido — era isso que fazia o livro vendido piscar na tela.
+// Quando a resposta do Firebase chega, ela substitui os dois.
+window.__bloqueados = montarBloqueados(
+  lerCacheLoja(CACHE_DISP) || window.VENDIDOS_FOTO || {});
 aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
 
 // Contatos: Instagram (barra no desktop + faixa) e WhatsApp (faixa).

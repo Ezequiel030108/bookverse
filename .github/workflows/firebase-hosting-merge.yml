@@ -11,6 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # Atualiza a "foto" dos livros já vendidos (js/vendidos.js) antes de
+      # publicar. É o ponto de partida que a loja usa quando a resposta do
+      # Firebase demora — sem isso, numa internet ruim, um livro vendido
+      # apareceria na estante até a resposta chegar. Se o Firebase não
+      # responder, o script mantém o arquivo anterior e a publicação segue.
+      - name: Atualizar a lista de livros vendidos
+        run: node scripts/gerar-vendidos.js
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

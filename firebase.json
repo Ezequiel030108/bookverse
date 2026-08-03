@@ -58,6 +58,17 @@
         "source": "/finalizar/",
         "destination": "/finalizar.html"
       }
+    ],
+    "headers": [
+      {
+        "source": "/js/vendidos.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          }
+        ]
+      }
     ]
   },
   "functions": [
@@ -67,8 +78,14 @@
     }
   ],
   "emulators": {
-    "hosting": { "port": 5000 },
-    "functions": { "port": 5001 },
-    "ui": { "enabled": true }
+    "hosting": {
+      "port": 5000
+    },
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true
+    }
   }
 }
