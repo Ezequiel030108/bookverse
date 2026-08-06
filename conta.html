@@ -92,6 +92,7 @@
         <button type="button" class="conta-menu-item ativo" data-tab="dados">Meus dados</button>
         <button type="button" class="conta-menu-item" data-tab="pedidos">Meus pedidos</button>
         <button type="button" class="conta-menu-item conta-menu-admin" data-tab="loja" hidden>Pedidos da loja</button>
+        <button type="button" class="conta-menu-item conta-menu-admin" data-tab="novidades" hidden>Novidades</button>
         <button type="button" class="conta-menu-item conta-menu-admin" data-tab="admin" hidden>Administração</button>
       </nav>
 
@@ -185,6 +186,41 @@
             <p class="conta-ajuda">Inclua pontos de referência para a entrega chegar certinho.</p>
           </div>
 
+          <!-- Avisos: o que o cliente quer receber da loja -->
+          <div id="p-avisos-bloco" hidden>
+            <h3 class="conta-sub" id="avisos">Avisos e novidades</h3>
+            <p class="conta-ajuda">Escolha como a gente fala com você. Você pode mudar quando quiser.</p>
+            <ul class="avisos-opcoes">
+              <li class="avisos-opcao">
+                <label for="p-av-email">
+                  <input type="checkbox" id="p-av-email" checked />
+                  <span class="avisos-texto">
+                    <span class="avisos-titulo">Avisos por e-mail</span>
+                    <span class="avisos-desc">Pedido recebido, pagamento confirmado, saiu para entrega e entregue.</span>
+                  </span>
+                </label>
+              </li>
+              <li class="avisos-opcao">
+                <label for="p-av-whats">
+                  <input type="checkbox" id="p-av-whats" checked />
+                  <span class="avisos-texto">
+                    <span class="avisos-titulo">Avisos pelo WhatsApp</span>
+                    <span class="avisos-desc">Os mesmos avisos do pedido, na hora, no seu WhatsApp.</span>
+                  </span>
+                </label>
+              </li>
+              <li class="avisos-opcao">
+                <label for="p-av-novidades">
+                  <input type="checkbox" id="p-av-novidades" checked />
+                  <span class="avisos-texto">
+                    <span class="avisos-titulo">Novidades e promoções</span>
+                    <span class="avisos-desc">Livro novo na estante e promoção da semana. Sem exagero, prometemos.</span>
+                  </span>
+                </label>
+              </li>
+            </ul>
+          </div>
+
           <p class="pagamento-erro" id="onboarding-erro" hidden></p>
           <button type="submit" id="btn-salvar-perfil" class="botao-loja botao-loja-primario botao-loja-bloco">Salvar</button>
           <p id="perfil-ok" class="conta-salvo" hidden>Dados salvos ✓</p>
@@ -213,7 +249,7 @@
       <!-- Painel: pedidos de TODOS os clientes (só admins) -->
       <section id="painel-pedidos-loja" class="checkout-bloco" hidden>
         <h2 class="checkout-subtitulo">Pedidos da loja</h2>
-        <p class="conta-ajuda">Todos os pedidos feitos pelos clientes. Confirme o pagamento quando o Pix cair e dê baixa como <strong>entregue</strong> quando o pedido chegar ao cliente.</p>
+        <p class="conta-ajuda">Todos os pedidos feitos pelos clientes. Confirme o pagamento quando o Pix cair, toque em <strong>saiu para entrega</strong> quando sair com o pedido e dê baixa como <strong>entregue</strong> quando ele chegar. <strong>A cada passo o cliente é avisado automaticamente</strong> por e-mail e WhatsApp.</p>
 
         <div class="admin-ferramentas">
           <div class="admin-busca-wrap">
@@ -223,6 +259,7 @@
             <button type="button" class="admin-chip ativo" data-filtro="todos">Todos</button>
             <button type="button" class="admin-chip" data-filtro="apagar">A pagar</button>
             <button type="button" class="admin-chip" data-filtro="pago">Pagos</button>
+            <button type="button" class="admin-chip" data-filtro="enviado">A caminho</button>
             <button type="button" class="admin-chip" data-filtro="entregue">Entregues</button>
           </div>
         </div>
@@ -230,6 +267,77 @@
         <p id="ploja-carregando" class="conta-ajuda">Carregando pedidos…</p>
         <p id="ploja-erro" class="pagamento-erro" hidden></p>
         <div id="ploja-lista" class="lista-pedidos"></div>
+      </section>
+
+      <!-- Painel: novidades / campanhas (só admins) -->
+      <section id="painel-novidades" class="checkout-bloco" hidden>
+        <h2 class="checkout-subtitulo">Anunciar novidades</h2>
+        <p class="conta-ajuda">Escreva uma vez e a mensagem vai para todos os clientes que aceitam receber novidades — por e-mail e/ou pelo WhatsApp da loja. Bom para livro novo na estante, promoção da semana ou recado importante.</p>
+
+        <div id="camp-publico" class="camp-publico" aria-live="polite">Contando quantas pessoas vão receber…</div>
+
+        <form id="form-campanha" class="camp-form" novalidate>
+          <div class="campo">
+            <label for="camp-titulo">Título <span class="obrig">*</span></label>
+            <input type="text" id="camp-titulo" maxlength="90" placeholder="Ex.: Chegaram 12 clássicos novos 📚" required />
+            <small class="campo-dica">Vira o assunto do e-mail. Curto e específico funciona melhor.</small>
+          </div>
+
+          <div class="campo">
+            <label for="camp-texto">Mensagem <span class="obrig">*</span></label>
+            <textarea id="camp-texto" rows="6" maxlength="1200" placeholder="Escreva como você falaria com um cliente na loja.&#10;&#10;Deixe uma linha em branco para separar parágrafos." required></textarea>
+            <small class="campo-dica">Uma linha em branco separa parágrafos.</small>
+          </div>
+
+          <div class="campo-linha">
+            <div class="campo campo-cresce">
+              <label for="camp-link">Link do botão <span class="opcional">(opcional)</span></label>
+              <input type="url" id="camp-link" placeholder="https://bookverse.com.br" />
+            </div>
+            <div class="campo campo-cresce">
+              <label for="camp-botao">Texto do botão <span class="opcional">(opcional)</span></label>
+              <input type="text" id="camp-botao" maxlength="30" placeholder="Ver na loja" />
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="camp-imagem">Imagem de capa <span class="opcional">(opcional)</span></label>
+            <input type="url" id="camp-imagem" placeholder="https://bookverse.com.br/img/capa.jpg" />
+            <small class="campo-dica">Endereço de uma imagem já publicada (a capa do livro, por exemplo).</small>
+          </div>
+
+          <h3 class="conta-sub">Por onde enviar</h3>
+          <ul class="avisos-opcoes">
+            <li class="avisos-opcao">
+              <label for="camp-canal-email">
+                <input type="checkbox" id="camp-canal-email" checked />
+                <span class="avisos-texto">
+                  <span class="avisos-titulo">E-mail</span>
+                  <span class="avisos-desc">Chega com o visual da loja e o botão de "não quero mais receber".</span>
+                </span>
+              </label>
+            </li>
+            <li class="avisos-opcao">
+              <label for="camp-canal-whats">
+                <input type="checkbox" id="camp-canal-whats" />
+                <span class="avisos-texto">
+                  <span class="avisos-titulo">WhatsApp</span>
+                  <span class="avisos-desc">Precisa do modelo de novidades aprovado na Meta (veja o README). A Meta cobra por mensagem de marketing.</span>
+                </span>
+              </label>
+            </li>
+          </ul>
+
+          <h3 class="conta-sub">Prévia</h3>
+          <div id="camp-previa" class="camp-previa" aria-live="polite"></div>
+
+          <p class="pagamento-erro" id="camp-erro" hidden></p>
+          <div class="camp-acoes">
+            <button type="button" id="camp-teste" class="botao-loja botao-loja-secundario">Enviar teste para mim</button>
+            <button type="submit" id="camp-enviar" class="botao-loja botao-loja-primario">Enviar para todos</button>
+          </div>
+          <div id="camp-progresso" class="camp-progresso" hidden aria-live="polite"></div>
+        </form>
       </section>
 
       <!-- Painel: administração (só para e-mails de admin) -->
@@ -389,8 +497,9 @@
   <script src="js/config.js?v=meta2"></script>
   <script src="js/analytics.js?v=meta2"></script>
   <script src="js/auth.js?v=vitrine1"></script>
+  <script src="js/avisos.js?v=avisos1"></script>
   <script src="js/precos.js?v=promo2"></script>
   <script src="js/cart.js"></script>
-  <script src="js/conta.js?v=vitrine1"></script>
+  <script src="js/conta.js?v=avisos1"></script>
 </body>
 </html>

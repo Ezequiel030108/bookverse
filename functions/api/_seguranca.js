@@ -42,8 +42,10 @@ function listaAdmins() {
   return lista.map(e => String(e || "").trim().toLowerCase()).filter(Boolean);
 }
 
-/* Valida o idToken no Google e devolve o e-mail, ou null. */
-async function emailDoToken(req) {
+/* Valida o idToken no Google e devolve { uid, email, nome }, ou null.
+   É a mesma checagem do emailDoToken — só que devolvendo o usuário
+   inteiro, porque os avisos precisam saber DE QUEM é o pedido. */
+async function usuarioDoToken(req) {
   const m = String(req.headers.authorization || "").match(/^Bearer\s+(.+)$/i);
   if (!m) return null;
   const key = process.env.FIREBASE_API_KEY || FIREBASE_API_KEY_PADRAO;
@@ -59,19 +61,36 @@ async function emailDoToken(req) {
     if (!r.ok) return null;
     const data = await r.json();
     const u = (data.users || [])[0];
-    return (u && u.email) ? String(u.email).toLowerCase() : null;
+    if (!u || !u.localId) return null;
+    return {
+      uid: String(u.localId),
+      email: u.email ? String(u.email).toLowerCase() : "",
+      nome: u.displayName || ""
+    };
   } catch (e) {
     return null;
   }
+}
+
+/* Valida o idToken no Google e devolve o e-mail, ou null. */
+async function emailDoToken(req) {
+  const u = await usuarioDoToken(req);
+  return u && u.email ? u.email : null;
+}
+
+/* O e-mail é de um administrador da loja? */
+function ehAdmin(email) {
+  const e = String(email || "").trim().toLowerCase();
+  return !!e && listaAdmins().indexOf(e) >= 0;
 }
 
 /* Garante que quem chama é admin. Se não for, responde 401 e
    devolve false — o endpoint deve simplesmente dar return. */
 async function exigirAdmin(req, res) {
   const email = await emailDoToken(req);
-  if (email && listaAdmins().indexOf(email) >= 0) return true;
+  if (ehAdmin(email)) return true;
   res.status(401).json({ error: "Apenas administradores podem usar este recurso. Entre com uma conta de admin." });
   return false;
 }
 
-module.exports = { aplicarHeaders, exigirAdmin, emailDoToken };
+module.exports = { aplicarHeaders, exigirAdmin, emailDoToken, usuarioDoToken, ehAdmin, listaAdmins };

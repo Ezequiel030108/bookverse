@@ -1,0 +1,14 @@
+{
+  "//": "Índices do Firestore. O único que a loja precisa é o de baixo: ele permite ao webhook do Mercado Pago achar um pedido pelo id do pagamento, procurando dentro das subcoleções 'pedidos' de TODOS os clientes de uma vez. Publique com: firebase deploy --only firestore:indexes",
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "pedidos",
+      "fieldPath": "pagamentoId",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    }
+  ]
+}

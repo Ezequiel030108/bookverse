@@ -134,6 +134,34 @@
     } catch (e) { /* sem internet ou fora do ar: preenche à mão */ }
   });
 
+  /* ---------- Avisos: o que o cliente quer receber ----------
+     Tudo começa MARCADO (quem faz um pedido espera ser avisado).
+     Só fica desligado o que a pessoa desmarcar aqui — ou o clique
+     em "não quero mais receber" no rodapé do e-mail. */
+  const AVISOS_CFG = CFG.avisos || {};
+  const blocoAvisos = document.getElementById("p-avisos-bloco");
+  if (blocoAvisos) blocoAvisos.hidden = AVISOS_CFG.preferencias === false;
+
+  function marcado(id) {
+    const el = document.getElementById(id);
+    return el ? !!el.checked : true;
+  }
+  function preencherAvisos(perfil) {
+    const n = (perfil && perfil.notificacoes) || {};
+    const par = [["p-av-email", n.email], ["p-av-whats", n.whatsapp], ["p-av-novidades", n.novidades]];
+    par.forEach(([id, valor]) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = valor !== false;   // ausente = ligado
+    });
+  }
+  function avisosDoFormulario() {
+    return {
+      email: marcado("p-av-email"),
+      whatsapp: marcado("p-av-whats"),
+      novidades: marcado("p-av-novidades")
+    };
+  }
+
   /* ---------- Form do perfil ---------- */
   const formPerfil = document.getElementById("form-perfil");
   const perfilOk = document.getElementById("perfil-ok");
@@ -186,6 +214,7 @@
           cidade: v("p-cidade"), uf: v("p-uf").toUpperCase(),
           descricao: v("p-end-descricao")
         },
+        notificacoes: avisosDoFormulario(),
         cadastroCompleto: true
       });
 
@@ -217,16 +246,19 @@
 
   /* ---------- Menu (abas) ---------- */
   function abrirTab(tab) {
-    const abaPedidos = tab === "pedidos";
-    const abaLoja    = tab === "loja";
-    const abaAdmin   = tab === "admin";
-    const abaDados   = !abaPedidos && !abaLoja && !abaAdmin;
+    const abaPedidos   = tab === "pedidos";
+    const abaLoja      = tab === "loja";
+    const abaAdmin     = tab === "admin";
+    const abaNovidades = tab === "novidades";
+    const abaDados     = !abaPedidos && !abaLoja && !abaAdmin && !abaNovidades;
     if (painelDados) painelDados.hidden = !abaDados;
     if (painelPedidos) painelPedidos.hidden = !abaPedidos;
     const painelLoja = document.getElementById("painel-pedidos-loja");
     if (painelLoja) painelLoja.hidden = !abaLoja;
     const painelAdmin = document.getElementById("painel-admin");
     if (painelAdmin) painelAdmin.hidden = !abaAdmin;
+    const painelNov = document.getElementById("painel-novidades");
+    if (painelNov) painelNov.hidden = !abaNovidades;
     document.querySelectorAll(".conta-menu-item").forEach(b =>
       b.classList.toggle("ativo", b.dataset.tab === tab));
     // Traz a aba ativa para a área visível (o menu rola na horizontal).
@@ -237,6 +269,7 @@
     if (abaPedidos) carregarPedidos();
     if (abaLoja) carregarPedidosLoja();
     if (abaAdmin) carregarAdmin();
+    if (abaNovidades) carregarNovidades();
   }
   document.querySelectorAll(".conta-menu-item").forEach(b =>
     b.addEventListener("click", () => abrirTab(b.dataset.tab)));
@@ -256,6 +289,7 @@
     if (zonaPerigo) zonaPerigo.hidden = true;
     const pa = document.getElementById("painel-admin"); if (pa) pa.hidden = true;
     const pl = document.getElementById("painel-pedidos-loja"); if (pl) pl.hidden = true;
+    const pn = document.getElementById("painel-novidades"); if (pn) pn.hidden = true;
   }
   function entrarModoDashboard() {
     modo = "dashboard";
@@ -273,11 +307,13 @@
     document.querySelectorAll(".conta-menu-admin").forEach(b => { b.hidden = !admin; });
     adminCarregado = false;   // recarrega disponibilidade a cada abertura do painel
     plojaCarregado = false;   // idem para os pedidos da loja
+    novidadesCarregado = false;
 
     let abaInicial = "dados";
     if (location.hash === "#pedidos") abaInicial = "pedidos";
     else if (location.hash === "#loja" && admin) abaInicial = "loja";
     else if (location.hash === "#admin" && admin) abaInicial = "admin";
+    else if (location.hash === "#novidades" && admin) abaInicial = "novidades";
     abrirTab(abaInicial);
   }
   function entrarModoOk() {
@@ -288,6 +324,7 @@
     if (painelPedidos) painelPedidos.hidden = true;
     const paOk = document.getElementById("painel-admin"); if (paOk) paOk.hidden = true;
     const plOk = document.getElementById("painel-pedidos-loja"); if (plOk) plOk.hidden = true;
+    const pnOk = document.getElementById("painel-novidades"); if (pnOk) pnOk.hidden = true;
     if (onbOk) onbOk.hidden = false;
     const okNome = document.getElementById("ok-nome");
     if (okNome) okNome.textContent = (v("p-nome") || "leitor(a)").split(" ")[0];
@@ -305,15 +342,25 @@
     aprovado:   { texto: "Aprovado · pague na entrega", classe: "pedido-pago" },
     pendente:   { texto: "Aguardando pagamento",   classe: "pedido-pendente" },
     aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" },
+    enviado:    { texto: "A caminho 🚚",           classe: "pedido-pago" },
     entregue:   { texto: "Entregue ✓",             classe: "pedido-entregue" },
     cancelado:  { texto: "Cancelado",              classe: "pedido-cancelado" }
   };
 
-  /* Linha do tempo do pedido: Pedido feito → Pagamento → Entrega.
-     A baixa de "entregue" é dada pelos admins em "Pedidos da loja". */
+  /* Linha do tempo do pedido:
+       Pedido feito → Pagamento → A caminho → Entregue
+     Quem move o pedido de "a caminho" para "entregue" são os
+     admins, no painel "Pedidos da loja" — e cada passo dispara o
+     aviso correspondente para o cliente. */
+  function nivelPedido(status) {
+    if (status === "entregue") return 4;
+    if (status === "enviado") return 3;
+    if (status === "pago" || status === "aprovado") return 2;
+    return 1;
+  }
   function passosHTML(status) {
     if (status === "cancelado") return "";
-    const nivel = status === "entregue" ? 3 : (status === "pago" || status === "aprovado" ? 2 : 1);
+    const nivel = nivelPedido(status);
     // "aprovado" = pedido em dinheiro: aprovado na hora, paga-se na entrega.
     const rotuloPagamento = status === "aprovado"
       ? "Aprovado, pague na entrega"
@@ -321,10 +368,12 @@
     const passos = [
       { rotulo: "Pedido feito", feito: true },
       { rotulo: rotuloPagamento, feito: nivel >= 2 },
-      { rotulo: nivel >= 3 ? "Entregue" : "Entrega", feito: nivel >= 3 }
+      { rotulo: nivel >= 3 ? "Saiu para entrega" : "A caminho", feito: nivel >= 3 },
+      { rotulo: nivel >= 4 ? "Entregue" : "Entrega", feito: nivel >= 4 }
     ];
+    const ultimo = passos.length - 1;
     return `<ol class="pedido-passos" aria-label="Andamento do pedido">` + passos.map((p, i) => `
-      <li class="passo${p.feito ? " feito" : ""}${(i === nivel && nivel < 3) || (i === 1 && nivel === 1) ? " atual" : ""}">
+      <li class="passo${p.feito ? " feito" : ""}${i === nivel && nivel <= ultimo ? " atual" : ""}">
         <span class="passo-bola" aria-hidden="true">${p.feito ? "✓" : ""}</span>
         <span class="passo-rotulo">${p.rotulo}</span>
       </li>`).join("") + `</ol>`;
@@ -363,7 +412,9 @@
         ? `<p class="pedido-contato-aviso">Pagamento confirmado. Em breve entraremos em contato para combinar a entrega.</p>`
         : (p.status === "aprovado"
           ? `<p class="pedido-contato-aviso">Pedido aprovado: você paga em dinheiro em espécie na entrega. Em breve entraremos em contato.</p>`
-          : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue. Boa leitura!</p>` : ""));
+          : (p.status === "enviado"
+            ? `<p class="pedido-contato-aviso">Seu pedido saiu para entrega. Avisamos pelo WhatsApp quando estivermos chegando.</p>`
+            : (p.status === "entregue" ? `<p class="pedido-contato-aviso pedido-aviso-entregue">Pedido entregue. Boa leitura!</p>` : "")));
       return `
         <article class="pedido-card">
           <div class="pedido-topo">
@@ -429,6 +480,11 @@
           // silêncio e a RESERVA segura o livro até o admin dar baixa.
           try { await Auth.marcarVendidos(itens); } catch (e) {}
           try { await Auth.reservarLivros(itens); } catch (e) {}
+          // Rede de recuperação do aviso ao CLIENTE: se o webhook do
+          // Mercado Pago não chegou (ou o site estava fechado), o aviso
+          // de "pagamento confirmado" sai agora. O servidor guarda o que
+          // já foi enviado, então ninguém recebe duas vezes.
+          if (window.Avisos) window.Avisos.avisar("pago", { codigo: p.codigo });
           mudou = true;
         }
       }
@@ -503,9 +559,27 @@
     // "aprovado" (dinheiro na entrega) entra no grupo dos aprovados/pagos:
     // o pedido já está fechado, falta só entregar (e receber o dinheiro).
     if (p.status === "pago" || p.status === "aprovado") return "pago";
+    if (p.status === "enviado") return "enviado";
     if (p.status === "entregue") return "entregue";
     if (p.status === "cancelado") return "cancelado";
     return "apagar";   // pendente / aguardando
+  }
+
+  const AVISO_ROTULO = {
+    recebido: "pedido recebido", pago: "pagamento", enviado: "saiu para entrega",
+    entregue: "entregue", cancelado: "cancelado"
+  };
+
+  /* Qual aviso combina com cada mudança de status. */
+  const AVISO_DO_STATUS = {
+    pago: "pago", aprovado: "pago", enviado: "enviado",
+    entregue: "entregue", cancelado: "cancelado"
+  };
+
+  /* O caminho do pedido é "users/<uid>/pedidos/<codigo>". */
+  function uidDoCaminho(caminho) {
+    const partes = String(caminho || "").split("/");
+    return partes.length >= 2 ? partes[1] : "";
   }
 
   function renderPedidosLoja() {
@@ -545,16 +619,29 @@
 
       const acoes = [];
       if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Confirmar pagamento</button>`);
-      if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="entregue" data-caminho="${esc(p._caminho)}">Marcar como entregue</button>`);
-      if (grupo === "apagar" || grupo === "pago")
+      if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="enviado" data-caminho="${esc(p._caminho)}">Saiu para entrega</button>`);
+      if (grupo === "pago" || grupo === "enviado")
+        acoes.push(`<button type="button" class="botao-loja ${grupo === "enviado" ? "botao-loja-primario" : "botao-loja-secundario"} ploja-btn" data-acao="entregue" data-caminho="${esc(p._caminho)}">Marcar como entregue</button>`);
+      if (grupo === "apagar" || grupo === "pago" || grupo === "enviado")
         acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn ploja-btn-cancelar" data-acao="cancelado" data-caminho="${esc(p._caminho)}">Cancelar pedido</button>`);
       if (grupo === "cancelado" || grupo === "entregue")
         acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Reabrir como pago</button>`);
       // Reenvio manual do e-mail do pedido (para pedidos pagos/aprovados
       // que têm o corpo salvo). O envio pelo servidor é barrado pelo
       // Cloudflare do Web3Forms, então quem manda é o navegador do admin.
-      if ((grupo === "pago") && p.emailBody)
+      if ((grupo === "pago" || grupo === "enviado") && p.emailBody)
         acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-email-btn" data-caminho="${esc(p._caminho)}">${p.emailEnviado ? "Reenviar e-mail do pedido" : "Enviar e-mail do pedido"}</button>`);
+      // Reenviar ao CLIENTE o aviso do momento atual do pedido.
+      const avisoAtual = AVISO_DO_STATUS[p.status];
+      if (avisoAtual)
+        acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-avisar-btn" data-evento="${esc(avisoAtual)}" data-caminho="${esc(p._caminho)}">${(p.avisos || {})[avisoAtual] ? "Reavisar o cliente" : "Avisar o cliente"}</button>`);
+
+      // Linha de status do aviso: mostra o que já foi enviado e, quando o
+      // WhatsApp automático não está ligado, o link para mandar num toque.
+      const enviados = Object.keys(p.avisos || {}).filter(k => p.avisos[k]);
+      const statusAviso = enviados.length
+        ? `Cliente avisado: ${enviados.map(e => AVISO_ROTULO[e] || e).join(", ")}`
+        : "Cliente ainda não avisado por aqui";
 
       return `
         <article class="pedido-card ploja-card">
@@ -575,6 +662,7 @@
             <span>${esc(p.entrega || "")}${p.endereco ? " · " + esc(p.endereco) : ""}</span>
             <strong>${fmt(p.total)}</strong>
           </div>
+          <p class="ploja-aviso-status" data-caminho="${esc(p._caminho)}">${esc(statusAviso)}</p>
           <div class="ploja-acoes">${acoes.join("")}</div>
         </article>`;
     }).join("");
@@ -666,18 +754,33 @@
       return;
     }
 
+    // Avisar o cliente (ou reavisar) sobre o momento atual do pedido.
+    const avisarBtn = e.target.closest(".ploja-avisar-btn");
+    if (avisarBtn) {
+      const caminhoAviso = avisarBtn.dataset.caminho;
+      const pedidoAviso = plojaPedidos.find(x => x._caminho === caminhoAviso);
+      if (!pedidoAviso) return;
+      const origAviso = avisarBtn.textContent;
+      avisarBtn.disabled = true; avisarBtn.textContent = "Enviando…";
+      const r = await dispararAviso(pedidoAviso, avisarBtn.dataset.evento, true);
+      avisarBtn.disabled = false;
+      avisarBtn.textContent = r && r.enviado ? "Aviso enviado ✓" : origAviso;
+      return;
+    }
+
     const btn = e.target.closest(".ploja-btn");
     if (!btn) return;
     const caminho = btn.dataset.caminho;
     const acao = btn.dataset.acao;
     if (!caminho || !acao) return;
-    if (acao === "cancelado" && !window.confirm("Cancelar este pedido?")) return;
+    if (acao === "cancelado" && !window.confirm("Cancelar este pedido? O cliente recebe um aviso avisando do cancelamento.")) return;
 
     const original = btn.textContent;
     btn.disabled = true; btn.textContent = "Salvando…";
     try {
       const campos = { status: acao };
       const pedido = plojaPedidos.find(x => x._caminho === caminho);
+      if (acao === "enviado") campos.enviadoEm = Date.now();
       if (acao === "entregue") campos.entregueEm = Date.now();
       await Auth.atualizarPedidoLoja(caminho, campos);
       // Pagou (ou entregou sem ter passado por "pago"): baixa o estoque.
@@ -688,9 +791,258 @@
       }
       if (pedido) pedido.status = acao;
       renderPedidosLoja();
+      // O CLIENTE é avisado logo depois de o status mudar. Não bloqueia
+      // nem desfaz nada: o pedido já está salvo.
+      if (pedido) dispararAviso(pedido, AVISO_DO_STATUS[acao], false);
     } catch (err) {
       btn.disabled = false; btn.textContent = original;
       window.alert("Não foi possível salvar agora. Tente novamente.");
+    }
+  });
+
+  /* ------------------------------------------------------------
+     Manda o aviso ao cliente e conta o que aconteceu na linha
+     "Cliente avisado: …" do card. Quando o WhatsApp automático não
+     está ligado (ou a Meta recusa), mostramos um link para o admin
+     enviar num toque pelo próprio WhatsApp Business.
+     ------------------------------------------------------------ */
+  function linhaAviso(caminho) {
+    return document.querySelector(`.ploja-aviso-status[data-caminho="${(window.CSS && CSS.escape) ? CSS.escape(caminho) : caminho}"]`);
+  }
+
+  async function dispararAviso(pedido, evento, forcar) {
+    if (!evento || !window.Avisos) return null;
+    const uid = uidDoCaminho(pedido._caminho);
+    const linha = linhaAviso(pedido._caminho);
+    if (linha) { linha.textContent = "Avisando o cliente…"; linha.className = "ploja-aviso-status"; }
+
+    let r = null;
+    try {
+      r = await window.Avisos.avisar(evento, {
+        codigo: pedido.codigo, uid: uid, forcar: !!forcar, propagarErro: true
+      });
+    } catch (e) {
+      if (linha) {
+        linha.className = "ploja-aviso-status ploja-aviso-falhou";
+        linha.textContent = "Não deu para avisar o cliente: " + e.message;
+      }
+      return null;
+    }
+    // null sem erro = o aviso está desligado no js/config.js (bloco "avisos").
+    if (!r) {
+      if (linha) {
+        linha.className = "ploja-aviso-status";
+        linha.textContent = `Aviso de "${AVISO_ROTULO[evento] || evento}" está desligado no js/config.js.`;
+      }
+      return null;
+    }
+
+    // Guarda o que saiu para o card continuar certo ao redesenhar.
+    if (r.enviado) {
+      pedido.avisos = Object.assign({}, pedido.avisos, { [evento]: true });
+    }
+
+    if (linha) {
+      const partes = [];
+      if (r.email) partes.push(r.email.ok ? "e-mail ✓" : "e-mail ✗");
+      if (r.whatsapp) partes.push(r.whatsapp.ok ? "WhatsApp ✓" : "WhatsApp ✗");
+      const rotulo = AVISO_ROTULO[evento] || evento;
+      const zapLink = r.whatsapp && !r.whatsapp.ok && r.whatsapp.link ? r.whatsapp.link : "";
+
+      if (r.jaEnviado) {
+        linha.className = "ploja-aviso-status";
+        linha.textContent = `Aviso de "${rotulo}" já tinha sido enviado.`;
+      } else {
+        linha.className = "ploja-aviso-status" + (r.enviado ? " ploja-aviso-ok" : " ploja-aviso-falhou");
+        linha.innerHTML = esc(`Aviso de "${rotulo}": ${partes.join(" · ") || "nenhum canal disponível"}`) +
+          (zapLink
+            ? ` <a class="ploja-whats" href="${esc(zapLink)}" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>`
+            : "") +
+          (!r.enviado && !zapLink && r.email && r.email.motivo ? ` <span class="ploja-aviso-motivo">${esc(r.email.motivo)}</span>` : "");
+      }
+    }
+    return r;
+  }
+
+  /* ================================================================
+     NOVIDADES (admin): o anúncio para toda a base de clientes.
+     Escreve uma vez, escolhe os canais, vê a prévia, manda um teste
+     para si mesmo e só então dispara para todo mundo — em lotes,
+     com barra de progresso.
+     ================================================================ */
+  let novidadesCarregado = false;
+  let campanhaRodando = false;
+
+  const campTitulo  = document.getElementById("camp-titulo");
+  const campTexto   = document.getElementById("camp-texto");
+  const campLink    = document.getElementById("camp-link");
+  const campBotao   = document.getElementById("camp-botao");
+  const campImagem  = document.getElementById("camp-imagem");
+  const campPrevia  = document.getElementById("camp-previa");
+  const campErro    = document.getElementById("camp-erro");
+  const campProg    = document.getElementById("camp-progresso");
+  const formCamp    = document.getElementById("form-campanha");
+
+  function campCanais() {
+    const canais = [];
+    const e = document.getElementById("camp-canal-email");
+    const w = document.getElementById("camp-canal-whats");
+    if (e && e.checked) canais.push("email");
+    if (w && w.checked) canais.push("whatsapp");
+    return canais;
+  }
+
+  function campDados() {
+    return {
+      titulo: (campTitulo && campTitulo.value.trim()) || "",
+      texto: (campTexto && campTexto.value.trim()) || "",
+      link: (campLink && campLink.value.trim()) || "",
+      imagem: (campImagem && campImagem.value.trim()) || "",
+      rotuloBotao: (campBotao && campBotao.value.trim()) || "",
+      canais: campCanais()
+    };
+  }
+
+  /* Prévia: aproximação do que o cliente vai ver no e-mail. */
+  function renderPrevia() {
+    if (!campPrevia) return;
+    const d = campDados();
+    const nomeLoja = CFG.nomeLoja || "BookVerse";
+    if (!d.titulo && !d.texto) {
+      campPrevia.innerHTML = `<p class="conta-ajuda">Comece a escrever para ver a prévia aqui.</p>`;
+      return;
+    }
+    const imgOk = window.Util && window.Util.imagemSrcSegura ? window.Util.imagemSrcSegura(d.imagem) : "";
+    const paragrafos = d.texto.split(/\n{2,}/).filter(Boolean)
+      .map(t => `<p>${esc(t).replace(/\n/g, "<br>")}</p>`).join("");
+    campPrevia.innerHTML = `
+      <article class="camp-cartao">
+        <header class="camp-cartao-topo">
+          <span class="camp-cartao-marca">${esc(nomeLoja)}</span>
+          <span class="camp-cartao-selo">Novidades</span>
+        </header>
+        <div class="camp-cartao-corpo">
+          <h4>${esc(d.titulo || "(sem título)")}</h4>
+          ${imgOk ? `<img src="${esc(imgOk)}" alt="" class="camp-cartao-img" loading="lazy">` : ""}
+          ${paragrafos || `<p class="conta-ajuda">(sem mensagem)</p>`}
+          ${d.link ? `<span class="camp-cartao-botao">${esc(d.rotuloBotao || "Ver na loja")}</span>` : ""}
+        </div>
+        <footer class="camp-cartao-rodape">${esc(nomeLoja)} · não quero mais receber novidades</footer>
+      </article>
+      ${d.canais.indexOf("whatsapp") >= 0 ? `
+      <div class="camp-zap">
+        <p class="camp-zap-rotulo">No WhatsApp:</p>
+        <p class="camp-zap-balao">${esc(d.titulo)}<br><br>${esc(d.texto).replace(/\n/g, "<br>")}${d.link ? "<br><br>" + esc(d.link) : ""}</p>
+      </div>` : ""}`;
+  }
+
+  [campTitulo, campTexto, campLink, campBotao, campImagem].forEach(el => {
+    if (el) el.addEventListener("input", renderPrevia);
+  });
+  ["camp-canal-email", "camp-canal-whats"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("change", renderPrevia);
+  });
+
+  /* Quantas pessoas vão receber. */
+  async function carregarNovidades() {
+    renderPrevia();
+    if (novidadesCarregado) return;
+    const alvo = document.getElementById("camp-publico");
+    if (!alvo || !window.Avisos) return;
+    alvo.textContent = "Contando quantas pessoas vão receber…";
+    try {
+      const d = await window.Avisos.publico();
+      novidadesCarregado = true;
+      alvo.innerHTML = d.total
+        ? `<strong>${d.total}</strong> cliente${d.total === 1 ? "" : "s"} vão receber esta novidade ` +
+          `<span class="camp-publico-detalhe">(${d.comEmail} por e-mail · ${d.comWhatsapp} por WhatsApp)</span>`
+        : `Nenhum cliente aceita receber novidades ainda. Assim que as pessoas criarem conta na loja, elas aparecem aqui.`;
+    } catch (e) {
+      alvo.textContent = "Não deu para contar os clientes agora: " + e.message;
+    }
+  }
+
+  function campMostrarErro(msg) {
+    if (!campErro) return;
+    campErro.hidden = !msg;
+    campErro.textContent = msg || "";
+  }
+
+  function campTravar(travado) {
+    campanhaRodando = travado;
+    ["camp-teste", "camp-enviar"].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.disabled = travado;
+    });
+  }
+
+  /* Envia a campanha inteira, um lote por vez. */
+  async function enviarCampanhaCompleta() {
+    const d = campDados();
+    if (!d.titulo || !d.texto) { campMostrarErro("Preencha o título e a mensagem."); return; }
+    if (!d.canais.length) { campMostrarErro("Escolha pelo menos um canal (e-mail ou WhatsApp)."); return; }
+    if (!window.confirm(`Enviar "${d.titulo}" para todos os clientes que aceitam novidades?`)) return;
+
+    campMostrarErro("");
+    campTravar(true);
+    if (campProg) { campProg.hidden = false; campProg.textContent = "Preparando o envio…"; }
+
+    let cursor = "", campanhaId = "", total = 0, porEmail = 0, porZap = 0, falhas = 0, voltas = 0;
+    try {
+      do {
+        const r = await window.Avisos.campanha(Object.assign({}, d, { cursor, campanhaId }));
+        campanhaId = r.campanhaId || campanhaId;
+        total += r.enviados || 0;
+        porEmail += r.porEmail || 0;
+        porZap += r.porWhatsapp || 0;
+        falhas += (r.falhas || []).length;
+        cursor = r.proximo || "";
+        if (campProg) {
+          campProg.textContent = `Enviando… ${total} cliente${total === 1 ? "" : "s"} até agora` +
+            (cursor ? " (continuando…)" : "");
+        }
+      } while (cursor && ++voltas < 100);   // trava: no máximo 6.000 clientes
+
+      if (campProg) {
+        campProg.innerHTML = `<strong>Pronto!</strong> ${total} cliente${total === 1 ? "" : "s"} ` +
+          `receberam a novidade (${porEmail} por e-mail · ${porZap} por WhatsApp).` +
+          (falhas ? ` <span class="camp-falhas">${falhas} não deu para entregar.</span>` : "");
+      }
+    } catch (e) {
+      campMostrarErro("O envio parou: " + e.message +
+        (total ? ` (${total} cliente(s) já tinham recebido).` : ""));
+      if (campProg) campProg.hidden = true;
+    } finally {
+      campTravar(false);
+    }
+  }
+
+  if (formCamp) formCamp.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!campanhaRodando) enviarCampanhaCompleta();
+  });
+
+  const campTesteBtn = document.getElementById("camp-teste");
+  if (campTesteBtn) campTesteBtn.addEventListener("click", async () => {
+    const d = campDados();
+    if (!d.titulo || !d.texto) { campMostrarErro("Preencha o título e a mensagem antes de testar."); return; }
+    if (!d.canais.length) { campMostrarErro("Escolha pelo menos um canal (e-mail ou WhatsApp)."); return; }
+    campMostrarErro("");
+    campTravar(true);
+    if (campProg) { campProg.hidden = false; campProg.textContent = "Enviando o teste para você…"; }
+    try {
+      const r = await window.Avisos.campanha(Object.assign({}, d, { teste: true }));
+      if (campProg) {
+        campProg.innerHTML = r.enviados
+          ? `Teste enviado ✓ Confira sua caixa de entrada${r.porWhatsapp ? " e o WhatsApp" : ""}. Se estiver bom, use "Enviar para todos".`
+          : `O teste não saiu. Motivo: ${esc((r.falhas && r.falhas[0] && r.falhas[0].motivo) || "canal não configurado")}.`;
+      }
+    } catch (e) {
+      campMostrarErro("Não deu para enviar o teste: " + e.message);
+      if (campProg) campProg.hidden = true;
+    } finally {
+      campTravar(false);
     }
   });
 
@@ -1421,6 +1773,7 @@
       // Perfis antigos não têm "modo": assume descrição se só houver o texto.
       aplicarModoEndereco(en.modo || (en.descricao && !en.rua ? "descricao" : "campos"));
     }
+    preencherAvisos(perfil);
     atualizarDicaWhats();
 
     reconciliacaoRodando = false;

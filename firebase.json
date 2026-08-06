@@ -3,6 +3,7 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "firestore.indexes.json",
       "**/.*",
       "**/node_modules/**",
       "functions/**",
@@ -77,6 +78,9 @@
       "codebase": "default"
     }
   ],
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
   "emulators": {
     "hosting": {
       "port": 5000

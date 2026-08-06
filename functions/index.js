@@ -15,6 +15,19 @@
      firebase functions:secrets:set MP_WEBHOOK_SECRET   (digite "-" p/ desativar a validação)
      firebase functions:secrets:set GEMINI_API_KEY
 
+   AVISOS AO CLIENTE (e-mail + WhatsApp) — cadastre TODOS, mesmo
+   os que não for usar: o deploy exige que o segredo exista. Digite
+   "-" (um traço) para deixar o recurso DESLIGADO.
+
+     firebase functions:secrets:set RESEND_API_KEY      (e-mail — resend.com)
+     firebase functions:secrets:set BREVO_API_KEY       (e-mail — alternativa)
+     firebase functions:secrets:set EMAIL_REMETENTE     ("BookVerse <oi@seudominio.com>")
+     firebase functions:secrets:set WHATSAPP_TOKEN      (WhatsApp Cloud API)
+     firebase functions:secrets:set WHATSAPP_PHONE_ID   (ID do número, na Meta)
+     firebase functions:secrets:set AVISOS_SECRET       (frase secreta p/ o link de descadastro)
+
+   Passo a passo com prints: README, seção "📣 Avisos automáticos".
+
    PROTEÇÃO DE CUSTO: maxInstances limita quantas cópias desta
    função podem rodar ao mesmo tempo — é o freio que impede um
    bug ou ataque de gerar conta surpresa no plano Blaze.
@@ -29,6 +42,14 @@ const WEB3FORMS_KEY = defineSecret("WEB3FORMS_KEY");
 const MP_WEBHOOK_SECRET = defineSecret("MP_WEBHOOK_SECRET");
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
+/* Avisos ao cliente (e-mail + WhatsApp da loja). */
+const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
+const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
+const EMAIL_REMETENTE = defineSecret("EMAIL_REMETENTE");
+const WHATSAPP_TOKEN = defineSecret("WHATSAPP_TOKEN");
+const WHATSAPP_PHONE_ID = defineSecret("WHATSAPP_PHONE_ID");
+const AVISOS_SECRET = defineSecret("AVISOS_SECRET");
+
 /* As mesmas rotas que existiam na Vercel (/api/<nome>). */
 const rotas = {
   "criar-pix": require("./api/criar-pix"),
@@ -41,7 +62,11 @@ const rotas = {
   "capa": require("./api/capa"),
   "livro": require("./api/livro"),
   "feed": require("./api/feed"),
-  "img-livro": require("./api/img-livro")
+  "img-livro": require("./api/img-livro"),
+  // Avisos ao cliente e campanhas de novidades.
+  "avisar": require("./api/avisar"),
+  "campanha": require("./api/campanha"),
+  "descadastrar": require("./api/descadastrar")
 };
 
 /* Define req.query de forma confiável. (No Express, req.query é um
@@ -60,7 +85,11 @@ exports.api = onRequest(
     memory: "512MiB",
     timeoutSeconds: 60,
     maxInstances: 10,
-    secrets: [MP_ACCESS_TOKEN, WEB3FORMS_KEY, MP_WEBHOOK_SECRET, GEMINI_API_KEY]
+    secrets: [
+      MP_ACCESS_TOKEN, WEB3FORMS_KEY, MP_WEBHOOK_SECRET, GEMINI_API_KEY,
+      RESEND_API_KEY, BREVO_API_KEY, EMAIL_REMETENTE,
+      WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, AVISOS_SECRET
+    ]
   },
   async (req, res) => {
     const caminho = String(req.path || "/");

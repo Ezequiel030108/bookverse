@@ -2978,8 +2978,13 @@ main {
 }
 .passo.feito .passo-bola { background: var(--estrela); border-color: var(--estrela); }
 .passo.atual .passo-bola { border-color: var(--estrela); box-shadow: 0 0 0 3px rgba(255, 217, 102, .18); }
-.passo-rotulo { font-size: .68rem; color: var(--texto-suave); }
+.passo-rotulo { font-size: .68rem; color: var(--texto-suave); overflow-wrap: anywhere; }
 .passo.feito .passo-rotulo { color: var(--texto-claro); font-weight: 600; }
+/* São quatro passos (feito → pago → a caminho → entregue): em telas
+   estreitas o rótulo precisa encolher para não empurrar as bolas. */
+@media (max-width: 400px) {
+  .passo-rotulo { font-size: .61rem; }
+}
 
 /* -------- Painel: pedidos da loja (admin) -------- */
 .ploja-cliente { margin: 8px 0 2px; }
@@ -3002,6 +3007,129 @@ main {
 }
 .ploja-acoes .botao-loja { flex: 1 1 auto; font-size: .84rem; padding: 10px 14px; }
 .ploja-btn-cancelar { color: #ffb3b3; }
+
+/* Linha "Cliente avisado: …" dentro do card do pedido (admin) */
+.ploja-aviso-status {
+  margin: 10px 0 0;
+  font-size: .78rem;
+  color: var(--texto-discreto);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.ploja-aviso-status.ploja-aviso-ok { color: #b6f0bd; }
+.ploja-aviso-status.ploja-aviso-falhou { color: #ffb3b3; }
+.ploja-aviso-motivo { color: var(--texto-discreto); }
+
+/* -------- Avisos: o que o cliente quer receber (Meus dados)
+   e "por onde enviar" (Novidades) -------- */
+.avisos-opcoes { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 8px; }
+.avisos-opcao > label {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 14px;
+  border: 1px solid var(--vidro-borda);
+  border-radius: var(--raio);
+  background: var(--vidro);
+  cursor: pointer;
+  min-height: var(--alvo-toque);
+  transition: border-color .16s ease, background .16s ease;
+}
+.avisos-opcao > label:hover { border-color: var(--lavanda); }
+.avisos-opcao input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 18px; height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--violeta);
+  cursor: pointer;
+}
+.avisos-opcao:has(input:checked) > label {
+  border-color: rgba(184, 158, 255, .5);
+  background: rgba(74, 43, 181, .2);
+}
+.avisos-texto { display: flex; flex-direction: column; gap: 3px; }
+.avisos-titulo { font-size: .9rem; font-weight: 600; color: var(--texto-claro); }
+.avisos-desc { font-size: .78rem; color: var(--texto-suave); line-height: 1.45; }
+
+/* -------- Painel: novidades / campanhas (admin) -------- */
+.camp-publico {
+  margin: 0 0 18px;
+  padding: 13px 15px;
+  border-radius: var(--raio);
+  border: 1px solid var(--vidro-borda);
+  background: var(--vidro);
+  font-size: .88rem;
+  color: var(--texto-claro);
+  line-height: 1.5;
+}
+.camp-publico strong { color: var(--estrela); font-size: 1.05rem; }
+.camp-publico-detalhe { color: var(--texto-suave); font-size: .8rem; }
+
+.camp-previa { margin-bottom: 6px; }
+.camp-cartao {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--vidro-borda);
+  background: #fdfcff;
+  color: #241a3d;
+  max-width: 460px;
+}
+.camp-cartao-topo {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--noite), var(--violeta));
+}
+.camp-cartao-marca { font-family: Georgia, serif; font-weight: 700; color: #fff; font-size: .98rem; }
+.camp-cartao-selo {
+  font-size: .62rem; letter-spacing: .8px; text-transform: uppercase; font-weight: 700;
+  color: #fff; background: rgba(255, 255, 255, .2);
+  padding: 4px 9px; border-radius: 999px;
+}
+.camp-cartao-corpo { padding: 16px 18px 20px; }
+.camp-cartao-corpo h4 { margin: 0 0 10px; font-family: Georgia, serif; font-size: 1.08rem; line-height: 1.3; color: #241a3d; }
+.camp-cartao-corpo p { margin: 0 0 10px; font-size: .85rem; line-height: 1.6; color: #4b4166; }
+.camp-cartao-corpo .conta-ajuda { color: #8a7fa8; }
+.camp-cartao-img { width: 100%; border-radius: 9px; margin: 0 0 12px; }
+.camp-cartao-botao {
+  display: inline-block; margin-top: 6px;
+  padding: 10px 22px; border-radius: 999px;
+  background: var(--violeta); color: #fff;
+  font-size: .82rem; font-weight: 700;
+}
+.camp-cartao-rodape {
+  padding: 11px 16px;
+  background: var(--noite);
+  color: rgba(243, 237, 255, .55);
+  font-size: .68rem;
+  text-align: center;
+}
+
+.camp-zap { margin-top: 14px; max-width: 460px; }
+.camp-zap-rotulo { margin: 0 0 6px; font-size: .74rem; color: var(--texto-discreto); text-transform: uppercase; letter-spacing: .8px; }
+.camp-zap-balao {
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: 12px 12px 12px 3px;
+  background: #075e54;
+  color: #f2fff8;
+  font-size: .84rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.camp-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.camp-acoes .botao-loja { flex: 1 1 190px; }
+.camp-progresso {
+  margin-top: 14px;
+  padding: 12px 15px;
+  border-radius: var(--raio);
+  border: 1px solid var(--vidro-borda);
+  background: var(--vidro);
+  font-size: .85rem;
+  line-height: 1.55;
+  color: var(--texto-claro);
+}
+.camp-falhas { color: #ffb3b3; }
 
 /* Páginas internas (conta/checkout) sem meteoros: em telas de formulário
    o risco diagonal parece um defeito cortando a tela. */
