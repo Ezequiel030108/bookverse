@@ -897,11 +897,288 @@
       titulo: (campTitulo && campTitulo.value.trim()) || "",
       texto: (campTexto && campTexto.value.trim()) || "",
       link: (campLink && campLink.value.trim()) || "",
-      imagem: (campImagem && campImagem.value.trim()) || "",
+      imagem: campImagemUrl || (campImagem && campImagem.value.trim()) || "",
       rotuloBotao: (campBotao && campBotao.value.trim()) || "",
       canais: campCanais()
     };
   }
+
+  /* ================================================================
+     ESCOLHER LIVRO / CATEGORIA / IMAGEM
+     ----------------------------------------------------------------
+     Em vez de o lojista ter que descobrir e copiar endereços na mão,
+     ele escolhe numa lista e o campo se preenche sozinho:
+       • um LIVRO      → o link é o mesmo de "Compartilhar" na loja
+       • uma CATEGORIA → abre a estante já filtrada (?busca=)
+       • a CAPA        → a foto daquele livro, com endereço público
+     Digitar/colar à mão continua funcionando igual.
+     ================================================================ */
+  let campImagemUrl = "";        // endereço final da imagem (upload ou capa)
+  let campLivroEscolhido = null; // livro selecionado (contexto para a IA)
+
+  function idDeLivro(l) {
+    const f = window.idLivro || (x => x && x.id);
+    return f(l) || "";
+  }
+
+  /* Endereço público do livro — o mesmo que o botão "Copiar link" gera. */
+  function urlDoLivro(l) {
+    return location.origin + "/livro/" + encodeURIComponent(idDeLivro(l));
+  }
+
+  /* Endereço da capa que FUNCIONA DENTRO DO E-MAIL. Capas enviadas pelo
+     painel ficam guardadas como "data:base64", que o Gmail bloqueia —
+     nesse caso apontamos para /api/img-livro, que devolve a foto como
+     arquivo de verdade. */
+  function urlDaCapa(l) {
+    const src = String((l && l.imagem) || "").trim();
+    if (!src) return "";
+    if (/^https?:\/\//i.test(src)) return src;
+    if (/^data:/i.test(src)) return location.origin + "/api/img-livro?id=" + encodeURIComponent(idDeLivro(l));
+    return location.origin + "/" + src.replace(/^\/+/, "");
+  }
+
+  /* Estante já filtrada por categoria (o mesmo link usado nos anúncios). */
+  function urlDaCategoria(genero) {
+    return location.origin + "/?busca=" + encodeURIComponent(genero);
+  }
+
+  /* Preenche as listas de livros e categorias uma única vez. */
+  let listasCampPreenchidas = false;
+  function preencherListasCampanha() {
+    if (listasCampPreenchidas) return;
+    const livros = (typeof listaLivrosAdmin === "function" ? listaLivrosAdmin() : [])
+      .filter(l => l && l.titulo)
+      .sort((a, b) => String(a.titulo).localeCompare(String(b.titulo), "pt-BR"));
+    if (!livros.length) return;   // catálogo ainda não chegou: tenta de novo depois
+
+    const opcoesLivro = livros.map(l =>
+      `<option value="${esc(idDeLivro(l))}">${esc(l.titulo)}${l.autor ? " — " + esc(l.autor) : ""}</option>`
+    ).join("");
+
+    const selLink = document.getElementById("camp-link-livro");
+    if (selLink) selLink.innerHTML = `<option value="">Escolha um livro…</option>` + opcoesLivro;
+
+    const selImg = document.getElementById("camp-img-livro");
+    if (selImg) {
+      // Só faz sentido oferecer livros que TÊM capa cadastrada.
+      const comCapa = livros.filter(l => String(l.imagem || "").trim());
+      selImg.innerHTML = `<option value="">Escolha um livro…</option>` + comCapa.map(l =>
+        `<option value="${esc(idDeLivro(l))}">${esc(l.titulo)}</option>`
+      ).join("");
+    }
+
+    const generos = [];
+    livros.forEach(l => {
+      const g = String(l.genero || "").trim();
+      if (g && generos.indexOf(g) < 0) generos.push(g);
+    });
+    generos.sort((a, b) => a.localeCompare(b, "pt-BR"));
+    const selCat = document.getElementById("camp-link-categoria");
+    if (selCat) {
+      selCat.innerHTML = `<option value="">Escolha uma categoria…</option>` +
+        generos.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
+    }
+    listasCampPreenchidas = true;
+  }
+
+  function acharLivroPorId(id) {
+    if (!id) return null;
+    const livros = typeof listaLivrosAdmin === "function" ? listaLivrosAdmin() : [];
+    return livros.find(l => idDeLivro(l) === id) || null;
+  }
+
+  function mostrarDica(el, texto, tipo) {
+    if (!el) return;
+    el.hidden = !texto;
+    el.classList.toggle("erro", tipo === "erro");
+    el.classList.toggle("ok", tipo === "ok");
+    el.textContent = texto || "";
+  }
+
+  /* ---------- Link do botão: digitar / livro / categoria ---------- */
+  const campLinkDica = document.getElementById("camp-link-dica");
+  const campLinkModos = document.getElementById("camp-link-modos");
+  const selLinkLivro = document.getElementById("camp-link-livro");
+  const selLinkCategoria = document.getElementById("camp-link-categoria");
+
+  function aplicarModoLink(modo) {
+    if (campLink) campLink.hidden = modo !== "manual";
+    if (selLinkLivro) selLinkLivro.hidden = modo !== "livro";
+    if (selLinkCategoria) selLinkCategoria.hidden = modo !== "categoria";
+    if (campLinkModos) {
+      campLinkModos.querySelectorAll(".camp-chip").forEach(c =>
+        c.classList.toggle("ativo", c.dataset.modo === modo));
+    }
+    if (modo !== "livro") campLivroEscolhido = null;
+    mostrarDica(campLinkDica, "");
+    if (modo === "manual") return;
+    preencherListasCampanha();
+  }
+
+  if (campLinkModos) campLinkModos.addEventListener("click", (e) => {
+    const chip = e.target.closest(".camp-chip");
+    if (chip) aplicarModoLink(chip.dataset.modo || "manual");
+  });
+
+  if (selLinkLivro) selLinkLivro.addEventListener("change", () => {
+    const l = acharLivroPorId(selLinkLivro.value);
+    campLivroEscolhido = l;
+    if (!l) { if (campLink) campLink.value = ""; mostrarDica(campLinkDica, ""); return; }
+    if (campLink) campLink.value = urlDoLivro(l);
+    if (campBotao && !campBotao.value.trim()) campBotao.value = "Ver o livro";
+    mostrarDica(campLinkDica, "O botão vai abrir “" + l.titulo + "” na loja.", "ok");
+    renderPrevia();
+  });
+
+  if (selLinkCategoria) selLinkCategoria.addEventListener("change", () => {
+    const g = selLinkCategoria.value;
+    if (!g) { if (campLink) campLink.value = ""; mostrarDica(campLinkDica, ""); return; }
+    if (campLink) campLink.value = urlDaCategoria(g);
+    if (campBotao && !campBotao.value.trim()) campBotao.value = "Ver os livros";
+    mostrarDica(campLinkDica, "O botão vai abrir a estante filtrada em “" + g + "”.", "ok");
+    renderPrevia();
+  });
+
+  /* ---------- Imagem: nenhuma / capa de livro / upload / endereço ---------- */
+  const campImgDica = document.getElementById("camp-img-dica");
+  const campImgModos = document.getElementById("camp-img-modos");
+  const campImgPrevia = document.getElementById("camp-img-previa");
+  const selImgLivro = document.getElementById("camp-img-livro");
+  const inpImgArquivo = document.getElementById("camp-img-arquivo");
+
+  function mostrarPreviaImagem(url) {
+    if (!campImgPrevia) return;
+    const segura = window.Util && window.Util.imagemSrcSegura ? window.Util.imagemSrcSegura(url) : url;
+    campImgPrevia.hidden = !segura;
+    campImgPrevia.innerHTML = segura
+      ? `<img src="${esc(segura)}" alt="Prévia da imagem da novidade">`
+      : "";
+  }
+
+  function definirImagem(url) {
+    campImagemUrl = url || "";
+    mostrarPreviaImagem(campImagemUrl);
+    renderPrevia();
+  }
+
+  function aplicarModoImagem(modo) {
+    if (selImgLivro) selImgLivro.hidden = modo !== "livro";
+    if (inpImgArquivo) inpImgArquivo.hidden = modo !== "upload";
+    if (campImagem) campImagem.hidden = modo !== "link";
+    if (campImgModos) {
+      campImgModos.querySelectorAll(".camp-chip").forEach(c =>
+        c.classList.toggle("ativo", c.dataset.modo === modo));
+    }
+    mostrarDica(campImgDica, "");
+    if (modo === "nenhuma") {
+      if (campImagem) campImagem.value = "";
+      if (selImgLivro) selImgLivro.value = "";
+      definirImagem("");
+      return;
+    }
+    if (modo === "link") { definirImagem((campImagem && campImagem.value.trim()) || ""); return; }
+    if (modo === "upload") mostrarDica(campImgDica, "Escolha uma foto do aparelho — ela é reduzida e publicada automaticamente.");
+    preencherListasCampanha();
+  }
+
+  if (campImgModos) campImgModos.addEventListener("click", (e) => {
+    const chip = e.target.closest(".camp-chip");
+    if (chip) aplicarModoImagem(chip.dataset.modo || "nenhuma");
+  });
+
+  if (selImgLivro) selImgLivro.addEventListener("change", () => {
+    const l = acharLivroPorId(selImgLivro.value);
+    if (!l) { definirImagem(""); mostrarDica(campImgDica, ""); return; }
+    const url = urlDaCapa(l);
+    definirImagem(url);
+    mostrarDica(campImgDica, url ? "Usando a capa de “" + l.titulo + "”." : "Esse livro não tem capa cadastrada.", url ? "ok" : "erro");
+  });
+
+  if (campImagem) campImagem.addEventListener("input", () => definirImagem(campImagem.value.trim()));
+
+  // Upload: encolhe a foto no navegador e publica pelo /api/imagem-campanha
+  // (o e-mail não exibe imagem embutida em base64 — precisa de endereço).
+  if (inpImgArquivo) inpImgArquivo.addEventListener("change", async () => {
+    const file = inpImgArquivo.files && inpImgArquivo.files[0];
+    if (!file) return;
+    mostrarDica(campImgDica, "Preparando a imagem…");
+    inpImgArquivo.disabled = true;
+    try {
+      const base64 = await comprimirImagem(file, 900, 0.78);
+      mostrarPreviaImagem(base64);   // prévia imediata, antes mesmo de subir
+      mostrarDica(campImgDica, "Publicando a imagem…");
+      const token = await Auth.idToken().catch(() => null);
+      const r = await fetch("/api/imagem-campanha", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" },
+          token ? { "Authorization": "Bearer " + token } : {}),
+        body: JSON.stringify({ imagem: base64 })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.url) throw new Error((d && d.error) || "falha");
+      definirImagem(d.url);
+      mostrarDica(campImgDica, "Imagem publicada ✓", "ok");
+    } catch (err) {
+      definirImagem("");
+      mostrarDica(campImgDica, "Não deu para enviar a imagem: " + (err.message || "tente outra foto."), "erro");
+    } finally {
+      inpImgArquivo.disabled = false;
+    }
+  });
+
+  /* ---------- Escrever a mensagem com IA ---------- */
+  const campBtnIa = document.getElementById("camp-btn-ia");
+  const campIaDica = document.getElementById("camp-ia-dica");
+
+  if (campBtnIa) campBtnIa.addEventListener("click", async () => {
+    const titulo = (campTitulo && campTitulo.value.trim()) || "";
+    if (!titulo) {
+      mostrarDica(campIaDica, "Escreva o título da novidade primeiro — é dele que a IA parte.", "erro");
+      if (campTitulo) campTitulo.focus();
+      return;
+    }
+    if (campTexto && campTexto.value.trim() &&
+        !window.confirm("Isso substitui a mensagem que já está escrita. Continuar?")) return;
+
+    const original = campBtnIa.textContent;
+    campBtnIa.disabled = true; campBtnIa.textContent = "Escrevendo…";
+    mostrarDica(campIaDica, "");
+
+    // Contexto: o livro ou a categoria escolhidos no link do botão.
+    const corpo = { titulo };
+    if (campLivroEscolhido) {
+      corpo.livro = {
+        titulo: campLivroEscolhido.titulo, autor: campLivroEscolhido.autor,
+        genero: campLivroEscolhido.genero, preco: campLivroEscolhido.preco,
+        estado: campLivroEscolhido.estado, sinopse: campLivroEscolhido.sinopse
+      };
+    } else if (selLinkCategoria && !selLinkCategoria.hidden && selLinkCategoria.value) {
+      corpo.categoria = selLinkCategoria.value;
+      const livros = typeof listaLivrosAdmin === "function" ? listaLivrosAdmin() : [];
+      corpo.exemplos = livros.filter(l => l && l.genero === corpo.categoria)
+        .slice(0, 6).map(l => l.titulo);
+    }
+
+    try {
+      const token = await Auth.idToken().catch(() => null);
+      const r = await fetch("/api/gerar-novidade", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type": "application/json" },
+          token ? { "Authorization": "Bearer " + token } : {}),
+        body: JSON.stringify(corpo)
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.texto) throw new Error((d && d.error) || "Não foi possível escrever agora.");
+      if (campTexto) campTexto.value = d.texto;
+      mostrarDica(campIaDica, "Texto gerado pela IA. Leia e ajuste do seu jeito antes de enviar.", "ok");
+      renderPrevia();
+    } catch (err) {
+      mostrarDica(campIaDica, err.message || "Não foi possível escrever agora. Tente de novo ou escreva à mão.", "erro");
+    } finally {
+      campBtnIa.disabled = false; campBtnIa.textContent = original;
+    }
+  });
 
   /* Prévia: aproximação do que o cliente vai ver no e-mail. */
   function renderPrevia() {
@@ -947,6 +1224,13 @@
   /* Quantas pessoas vão receber. */
   async function carregarNovidades() {
     renderPrevia();
+    // O catálogo alimenta as listas de livro/categoria. Os livros originais
+    // (js/livros.js) já estão na página; aqui buscamos os que o admin
+    // cadastrou pelo painel, para eles também aparecerem nas listas.
+    if (!livrosCatalogo.length) {
+      try { livrosCatalogo = (await Auth.lerCatalogo()) || []; } catch (e) { /* usa só os originais */ }
+    }
+    preencherListasCampanha();
     if (novidadesCarregado) return;
     const alvo = document.getElementById("camp-publico");
     if (!alvo || !window.Avisos) return;
@@ -1336,9 +1620,12 @@
   /* ---------- Adicionar livro (formulário) ---------- */
   let fotoBase64 = "";   // capa comprimida em base64 (data URL)
 
-  // Comprime a imagem escolhida no próprio navegador (máx ~520px, JPEG) para
-  // caber bem no Firestore e carregar rápido na loja.
-  function comprimirImagem(file) {
+  // Comprime a imagem escolhida no próprio navegador (JPEG) para caber bem
+  // no Firestore e carregar rápido na loja.
+  //   maxLado   → maior lado em pixels (padrão 520, bom para capa de livro;
+  //               a imagem de campanha usa 900, porque é uma faixa larga)
+  //   qualidade → 0 a 1 (padrão 0,72)
+  function comprimirImagem(file, maxLado, qualidade) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reject(new Error("read"));
@@ -1346,14 +1633,14 @@
         const img = new Image();
         img.onerror = () => reject(new Error("img"));
         img.onload = () => {
-          const max = 520;
+          const max = Number(maxLado) > 0 ? Number(maxLado) : 520;
           let w = img.width, h = img.height;
           if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
           else if (h >= w && h > max) { w = Math.round(w * max / h); h = max; }
           const cv = document.createElement("canvas");
           cv.width = w; cv.height = h;
           cv.getContext("2d").drawImage(img, 0, 0, w, h);
-          resolve(cv.toDataURL("image/jpeg", 0.72));
+          resolve(cv.toDataURL("image/jpeg", Number(qualidade) > 0 ? Number(qualidade) : 0.72));
         };
         img.src = reader.result;
       };

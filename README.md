@@ -39,6 +39,8 @@ projeto livros/
 │       ├── campanha.js    ← 👈 anuncia NOVIDADES para todos os clientes
 │       ├── descadastrar.js← o link "não quero mais novidades" do e-mail
 │       ├── _avisos.js     ← 👈 É AQUI QUE VOCÊ MUDA O TEXTO DOS AVISOS
+│       ├── gerar-novidade.js  ← a IA que escreve o texto da novidade
+│       ├── imagem-campanha.js ← guarda e publica a imagem da campanha
 │       ├── _email.js      ← manda o e-mail (Resend / Brevo)
 │       ├── _whatsapp.js   ← manda pelo WhatsApp Business (API da Meta)
 │       └── feed.js        ← gera /feed.xml (Google) e /feed-meta.xml (Meta)
@@ -528,20 +530,55 @@ WhatsApp" no painel, e você manda com um toque.
 Entre em **Minha conta → Novidades** (só aparece para os e-mails de admin).
 
 1. No topo o painel mostra **quantos clientes vão receber**.
-2. Escreva o **título** (vira o assunto do e-mail) e a **mensagem**. Uma linha
-   em branco separa parágrafos.
-3. Opcional: **link do botão**, **texto do botão** e uma **imagem de capa**
-   (o endereço de uma imagem já publicada, ex.:
-   `https://bookverse.com.br/img/promo.jpg`).
-4. Escolha os canais: **E-mail** e/ou **WhatsApp**.
-5. Olhe a **prévia** — ela mostra o e-mail e o balão do WhatsApp.
-6. Toque em **"Enviar teste para mim"**. O anúncio chega só para você.
-7. Gostou? **"Enviar para todos"**. A barra mostra o progresso
+2. Escreva o **título** — é ele que vira o assunto do e-mail.
+3. Escreva a **mensagem**, ou toque em **"✨ Escrever com IA"** (veja abaixo).
+   Uma linha em branco separa parágrafos.
+4. **Link do botão** — três jeitos, escolha nos botõezinhos:
+   - **Digitar** — você cola qualquer endereço na mão (como era antes);
+   - **Um livro** — escolhe na lista e o link daquele livro entra sozinho
+     (o mesmo endereço do botão "Compartilhar" da loja);
+   - **Uma categoria** — escolhe, por exemplo, *Mangás*, e o botão abre a
+     estante já filtrada nessa categoria.
+5. **Imagem de capa** — quatro jeitos:
+   - **Sem imagem** (padrão);
+   - **Capa de um livro** — escolhe o livro e usa a capa dele;
+   - **Enviar do meu aparelho** — pega uma foto do celular/computador. Ela é
+     reduzida no próprio navegador e publicada automaticamente;
+   - **Colar endereço** — se você já tem a imagem publicada em outro lugar.
+6. Escolha os canais: **E-mail** e/ou **WhatsApp**.
+7. Olhe a **prévia** — ela mostra o e-mail e o balão do WhatsApp.
+8. Toque em **"Enviar teste para mim"**. O anúncio chega só para você.
+9. Gostou? **"Enviar para todos"**. A barra mostra o progresso
    (*"Enviando… 34 clientes até agora"*).
 
 O envio vai em lotes por dois motivos: uma função tem 60 segundos para
-responder, e mandar tudo de uma vez de uma vez derrubaria o limite dos
-serviços de e-mail. Você não precisa fazer nada — o painel cuida disso.
+responder, e mandar tudo de uma vez derrubaria o limite dos serviços de
+e-mail. Você não precisa fazer nada — o painel cuida disso.
+
+#### ✨ Escrever a mensagem com IA
+
+Preencha o **título** e toque em **"Escrever com IA"**. A IA escreve o corpo
+da mensagem no tom da loja, e você ajusta o que quiser antes de enviar.
+
+Ela fica **muito melhor** se você escolher antes um **livro** ou uma
+**categoria** no *link do botão*: aí a IA recebe o título, o autor, o preço, o
+estado do exemplar e a sinopse, e escreve sobre aquilo de verdade em vez de
+falar no vazio.
+
+A IA é orientada a: não repetir o título, não cumprimentar nem assinar (o
+e-mail já faz as duas coisas), escrever 2 ou 3 parágrafos curtos e — o mais
+importante — **nunca inventar preço, desconto, prazo ou promoção**. Se você
+não informou, ela não fala.
+
+> Usa a **mesma chave gratuita do Gemini** que gera as sinopses
+> (`GEMINI_API_KEY`). Se ela não estiver cadastrada, o botão avisa e você
+> escreve à mão normalmente. As palavras que orientam a IA ficam no arquivo
+> `functions/api/gerar-novidade.js` — são texto comum, dá para editar.
+
+> 🖼️ **Por que a imagem enviada vira um endereço:** o Gmail bloqueia imagens
+> embutidas dentro do e-mail. Por isso a foto que você envia é guardada e
+> ganha um endereço `https://` de verdade (`/api/imagem-campanha`) — é assim
+> que ela aparece na caixa de entrada do cliente.
 
 > 📌 **Boas práticas de loja séria:** no máximo 1 ou 2 anúncios por semana,
 > sempre com algo de valor (livro novo, promoção de verdade). Base cansada

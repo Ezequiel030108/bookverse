@@ -284,26 +284,52 @@
           </div>
 
           <div class="campo">
-            <label for="camp-texto">Mensagem <span class="obrig">*</span></label>
+            <div class="campo-titulo-linha">
+              <label for="camp-texto">Mensagem <span class="obrig">*</span></label>
+              <button type="button" id="camp-btn-ia" class="botao-mini">✨ Escrever com IA</button>
+            </div>
             <textarea id="camp-texto" rows="6" maxlength="1200" placeholder="Escreva como você falaria com um cliente na loja.&#10;&#10;Deixe uma linha em branco para separar parágrafos." required></textarea>
-            <small class="campo-dica">Uma linha em branco separa parágrafos.</small>
+            <small class="campo-dica" id="camp-ia-dica" hidden></small>
+            <small class="campo-dica">Uma linha em branco separa parágrafos. A IA escreve a partir do título (e do livro ou categoria escolhidos abaixo) — depois é só ajustar.</small>
           </div>
 
-          <div class="campo-linha">
-            <div class="campo campo-cresce">
-              <label for="camp-link">Link do botão <span class="opcional">(opcional)</span></label>
-              <input type="url" id="camp-link" placeholder="https://bookverse.com.br" />
+          <div class="campo">
+            <label for="camp-link">Link do botão <span class="opcional">(opcional)</span></label>
+            <div class="camp-escolhas" id="camp-link-modos" role="group" aria-label="De onde vem o link">
+              <button type="button" class="camp-chip ativo" data-modo="manual">Digitar</button>
+              <button type="button" class="camp-chip" data-modo="livro">Um livro</button>
+              <button type="button" class="camp-chip" data-modo="categoria">Uma categoria</button>
             </div>
-            <div class="campo campo-cresce">
-              <label for="camp-botao">Texto do botão <span class="opcional">(opcional)</span></label>
-              <input type="text" id="camp-botao" maxlength="30" placeholder="Ver na loja" />
-            </div>
+            <input type="url" id="camp-link" placeholder="https://bookverse.com.br" />
+            <select id="camp-link-livro" class="camp-seletor" hidden aria-label="Livro do catálogo">
+              <option value="">Escolha um livro…</option>
+            </select>
+            <select id="camp-link-categoria" class="camp-seletor" hidden aria-label="Categoria da loja">
+              <option value="">Escolha uma categoria…</option>
+            </select>
+            <small class="campo-dica" id="camp-link-dica" hidden></small>
+          </div>
+
+          <div class="campo">
+            <label for="camp-botao">Texto do botão <span class="opcional">(opcional)</span></label>
+            <input type="text" id="camp-botao" maxlength="30" placeholder="Ver na loja" />
           </div>
 
           <div class="campo">
             <label for="camp-imagem">Imagem de capa <span class="opcional">(opcional)</span></label>
-            <input type="url" id="camp-imagem" placeholder="https://bookverse.com.br/img/capa.jpg" />
-            <small class="campo-dica">Endereço de uma imagem já publicada (a capa do livro, por exemplo).</small>
+            <div class="camp-escolhas" id="camp-img-modos" role="group" aria-label="De onde vem a imagem">
+              <button type="button" class="camp-chip ativo" data-modo="nenhuma">Sem imagem</button>
+              <button type="button" class="camp-chip" data-modo="livro">Capa de um livro</button>
+              <button type="button" class="camp-chip" data-modo="upload">Enviar do meu aparelho</button>
+              <button type="button" class="camp-chip" data-modo="link">Colar endereço</button>
+            </div>
+            <select id="camp-img-livro" class="camp-seletor" hidden aria-label="Livro cuja capa será usada">
+              <option value="">Escolha um livro…</option>
+            </select>
+            <input type="file" id="camp-img-arquivo" accept="image/*" hidden />
+            <input type="url" id="camp-imagem" placeholder="https://bookverse.com.br/img/capa.jpg" hidden />
+            <div id="camp-img-previa" class="camp-img-previa" hidden></div>
+            <small class="campo-dica" id="camp-img-dica" hidden></small>
           </div>
 
           <h3 class="conta-sub">Por onde enviar</h3>

@@ -66,7 +66,9 @@ const rotas = {
   // Avisos ao cliente e campanhas de novidades.
   "avisar": require("./api/avisar"),
   "campanha": require("./api/campanha"),
-  "descadastrar": require("./api/descadastrar")
+  "descadastrar": require("./api/descadastrar"),
+  "imagem-campanha": require("./api/imagem-campanha"),
+  "gerar-novidade": require("./api/gerar-novidade")
 };
 
 /* Define req.query de forma confiável. (No Express, req.query é um

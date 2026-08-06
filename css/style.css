@@ -1838,6 +1838,9 @@ main {
   border: 1px solid var(--vidro-borda);
   background: rgba(10,5,36,.45);
   color: var(--texto-claro);
+  /* Sem isto o navegador desenha o textarea em fonte de máquina de
+     escrever — a mensagem da novidade e a sinopse ficavam destoando. */
+  font-family: inherit;
   font-size: .98rem;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
@@ -3064,6 +3067,76 @@ main {
 }
 .camp-publico strong { color: var(--estrela); font-size: 1.05rem; }
 .camp-publico-detalhe { color: var(--texto-suave); font-size: .8rem; }
+
+/* Rótulo do campo com um botão no canto (ex.: "Mensagem  ✨ Escrever com IA") */
+.campo-titulo-linha {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 4px;
+}
+.campo-titulo-linha label { margin: 0; }
+.botao-mini {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 158, 255, .45);
+  background: rgba(74, 43, 181, .3);
+  color: var(--texto-claro);
+  font-size: .78rem; font-weight: 700;
+  cursor: pointer;
+  min-height: 34px;
+  transition: border-color .15s ease, background .15s ease;
+}
+.botao-mini:hover:not(:disabled) { border-color: var(--lavanda); background: rgba(74, 43, 181, .5); }
+.botao-mini:disabled { opacity: .6; cursor: default; }
+
+/* Chips de escolha ("Digitar / Um livro / Uma categoria") */
+.camp-escolhas { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
+.camp-chip {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--vidro-borda);
+  background: var(--vidro);
+  color: var(--texto-suave);
+  font-size: .78rem; font-weight: 600;
+  cursor: pointer;
+  min-height: 34px;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.camp-chip:hover { border-color: var(--lavanda); color: var(--texto-claro); }
+.camp-chip.ativo {
+  border-color: var(--lavanda);
+  background: rgba(74, 43, 181, .4);
+  color: var(--texto-claro);
+}
+
+/* Listas de livro/categoria — mesma cara dos campos de texto */
+.camp-seletor {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--vidro-borda);
+  background: rgba(10, 5, 36, .45);
+  color: var(--texto-claro);
+  font: inherit; font-size: .98rem;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.camp-seletor:focus {
+  outline: none;
+  border-color: var(--lavanda);
+  box-shadow: 0 0 0 3px rgba(184, 158, 255, .22);
+}
+/* A lista aberta é desenhada pelo sistema: fundo escuro para o texto
+   não sair branco-no-branco no Windows. */
+.camp-seletor option { background: #14093a; color: #f3edff; }
+
+/* Prévia da imagem escolhida/enviada */
+.camp-img-previa { margin-top: 10px; }
+.camp-img-previa img {
+  width: 100%; max-width: 320px;
+  border-radius: 11px;
+  border: 1px solid var(--vidro-borda);
+  display: block;
+}
 
 .camp-previa { margin-bottom: 6px; }
 .camp-cartao {
