@@ -9,6 +9,11 @@
    confirmado, o servidor (api/webhook-mp.js) tem tudo o que
    precisa para te enviar o e-mail — SÓ depois que o dinheiro cai.
 
+   Também guardamos o "uid_cliente" e o "codigo_pedido": é com
+   eles que o webhook acha o pedido no banco em uma tacada só,
+   marca como PAGO e manda para o cliente o aviso de "pagamento
+   confirmado" — sem ninguém precisar abrir o site.
+
    Segredos (cadastre com `firebase functions:secrets:set`,
    NUNCA no código):
      - MP_ACCESS_TOKEN  → Access Token do Mercado Pago (secreto)
@@ -45,6 +50,7 @@ module.exports = async (req, res) => {
     const descricao = String(body.descricao || "Pedido").slice(0, 250);
     const pagador = body.pagador || {};
     const emailPedido = body.emailPedido || null; // corpo do e-mail (sem access_key)
+    const uidCliente = String(body.uid || "").trim();   // conta do cliente (se estiver logado)
 
     if (!valor || valor <= 0 || !codigo) {
       res.status(400).json({ error: "Dados do pedido inválidos." });
@@ -69,7 +75,8 @@ module.exports = async (req, res) => {
       // total_esperado: o webhook compara com o valor REALMENTE pago e
       // avisa no e-mail se alguém tentar pagar menos que o pedido.
       metadata: Object.assign(
-        { total_esperado: Math.round(valor * 100) / 100 },
+        { total_esperado: Math.round(valor * 100) / 100, codigo_pedido: codigo },
+        uidCliente ? { uid_cliente: uidCliente } : {},
         emailPedido ? { pedido_json: JSON.stringify(emailPedido) } : {}
       )
     };

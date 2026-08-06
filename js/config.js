@@ -107,6 +107,55 @@ window.LOJA_CONFIG = {
     exigirConta: true
   },
 
+  /* ---------- AVISAR O CLIENTE (e-mail + WhatsApp) ----------
+     👉 É o que faz a loja parecer (e agir como) uma loja grande: o
+     CLIENTE recebe um e-mail bonito — e uma mensagem no WhatsApp —
+     quando o pedido é feito, quando o pagamento cai, quando sai
+     para entrega e quando é entregue. E você pode disparar
+     NOVIDADES para todo mundo pelo painel "Novidades".
+
+     ⚠️ Aqui você só liga e desliga. Para os avisos saírem de
+     verdade é preciso cadastrar as chaves no Firebase (uma vez
+     só) — o passo a passo completo, com prints, está no README,
+     seção "📣 Avisos automáticos para o cliente".
+
+     Resumo do que o README manda fazer:
+       • E-mail: criar conta no Resend (grátis) e rodar
+         `firebase functions:secrets:set RESEND_API_KEY`
+       • WhatsApp: ativar a API do WhatsApp Business na Meta e rodar
+         `firebase functions:secrets:set WHATSAPP_TOKEN`
+         `firebase functions:secrets:set WHATSAPP_PHONE_ID`
+
+     ENQUANTO NADA DISSO ESTIVER PRONTO a loja continua funcionando
+     igual: os avisos simplesmente não saem, e no painel "Pedidos da
+     loja" aparece o botão "Avisar pelo WhatsApp", que abre o SEU
+     WhatsApp Business com a mensagem já escrita — é só tocar em
+     enviar. */
+  avisos: {
+    // false desliga TODOS os avisos automáticos de uma vez.
+    ligado: true,
+
+    /* Quais momentos disparam aviso sozinhos. Deixe false no que
+       você preferir mandar na mão (pelo botão do painel).
+         recebido  → "recebemos seu pedido" (assim que ele finaliza)
+         pago      → "pagamento confirmado ✓"
+         enviado   → "saiu para entrega 🚚"
+         entregue  → "entregue, boa leitura 📚"
+         cancelado → "seu pedido foi cancelado" */
+    eventos: {
+      recebido: true,
+      pago: true,
+      enviado: true,
+      entregue: true,
+      cancelado: true
+    },
+
+    /* Mostrar ao cliente, em "Minha conta → Meus dados", as opções
+       de escolher o que quer receber. Deixe true: é exigência da
+       LGPD dar essa escolha (e evita cair no spam). */
+    preferencias: true
+  },
+
   /* ---------- EMBALAR PARA PRESENTE ----------
      Valor cobrado a mais quando o cliente marca "Embalar para presente"
      no checkout. Use 0 para deixar a opção gratuita. */

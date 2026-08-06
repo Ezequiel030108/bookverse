@@ -535,6 +535,10 @@
           codigo: codigoPedido,
           descricao: `Pedido ${codigoPedido} - ${CFG.nomeLoja || "BookVerse"}`,
           pagador: { email: cliente.email, nome: cliente.nome },
+          // Com o uid guardado na cobrança, o webhook do Mercado Pago
+          // acha o pedido no banco, marca como PAGO e manda ao cliente o
+          // aviso de "pagamento confirmado" — mesmo com o site fechado.
+          uid: uidLogado(),
           emailPedido: montarEmailBody()
         })
       });
@@ -552,7 +556,7 @@
       mostrarPixArea();
       marcarAguardando();
       salvarPerfilSeLogado();
-      salvarPedidoSeLogado("pendente");
+      salvarPedidoSeLogado("pendente").then(() => avisarCliente("recebido"));
       reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
       iniciarPolling();
     } catch (e) {
@@ -641,6 +645,11 @@
       }
     } catch (e) { /* não bloqueia a confirmação; "Minha conta" reenvia */ }
 
+    // Aviso ao CLIENTE. O webhook do Mercado Pago também dispara este
+    // mesmo aviso — o servidor guarda o que já saiu, então o cliente
+    // nunca recebe duas vezes.
+    avisarCliente("pago");
+
     sucesso(true);
   }
 
@@ -676,11 +685,27 @@
         }
       } catch (e) {}
 
+      // E avisa o CLIENTE de que o pedido está confirmado.
+      avisarCliente("recebido");
+
       sucesso(true);
     } finally {
       confirmandoDinheiro = false;
       if (btnDinheiro) { btnDinheiro.disabled = false; if (txtBtn) btnDinheiro.innerHTML = txtBtn; }
     }
+  }
+
+  /* ----- Avisos para o CLIENTE (e-mail + WhatsApp da loja) -----
+     Diferente do e-mail que avisa VOCÊ (Web3Forms), este vai para o
+     cliente e sai do servidor. Nunca trava a compra: se falhar, o
+     pedido segue igual e o painel da loja pode reenviar. */
+  function uidLogado() {
+    const u = window.Auth && window.Auth.usuario && window.Auth.usuario();
+    return (u && u.uid) || "";
+  }
+  function avisarCliente(evento) {
+    if (!window.Avisos || !codigoPedido || !uidLogado()) return Promise.resolve(null);
+    return window.Avisos.avisar(evento, { codigo: codigoPedido }).catch(() => null);
   }
 
   /* ----- Conta (Firebase): salvar perfil e pedido, se logado ----- */
@@ -894,6 +919,7 @@
     try { await enviarEmailManual(); } catch (e) { /* não bloqueia a conclusão do pedido */ }
     try { await salvarPedidoSeLogado("aguardando"); } catch (e) {}
     try { await salvarPerfilSeLogado(); } catch (e) {}
+    avisarCliente("recebido");
     if (btn) { btn.disabled = false; btn.textContent = original; }
     sucesso(false);
   }

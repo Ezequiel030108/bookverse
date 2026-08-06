@@ -30,11 +30,17 @@ projeto livros/
 ├── checkout.html      ← a página de finalizar compra (pagamento)
 ├── conta.html         ← a página "Minha conta" (login Google + pedidos)
 ├── finalizar.html     ← recebe o carrinho da Loja do Instagram/Facebook
-├── functions/         ← backend (Firebase) — Pix automático, IA, etc.
+├── functions/         ← backend (Firebase) — Pix automático, IA, avisos
 │   └── api/
 │       ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
 │       ├── status-pix.js  ← o checkout pergunta "já caiu?"
-│       ├── webhook-mp.js  ← envia o e-mail quando o Pix é confirmado
+│       ├── webhook-mp.js  ← confirma o Pix e avisa o cliente na hora
+│       ├── avisar.js      ← avisa o cliente (pedido pago, entregue…)
+│       ├── campanha.js    ← 👈 anuncia NOVIDADES para todos os clientes
+│       ├── descadastrar.js← o link "não quero mais novidades" do e-mail
+│       ├── _avisos.js     ← 👈 É AQUI QUE VOCÊ MUDA O TEXTO DOS AVISOS
+│       ├── _email.js      ← manda o e-mail (Resend / Brevo)
+│       ├── _whatsapp.js   ← manda pelo WhatsApp Business (API da Meta)
 │       └── feed.js        ← gera /feed.xml (Google) e /feed-meta.xml (Meta)
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
@@ -46,6 +52,7 @@ projeto livros/
 │   ├── pix.js         ← gera o "Pix Copia e Cola" (não precisa mexer)
 │   ├── auth.js        ← login com Google e contas (não precisa mexer)
 │   ├── conta.js       ← lógica da página "Minha conta" (não precisa mexer)
+│   ├── avisos.js      ← chama os avisos ao cliente (não precisa mexer)
 │   ├── main.js        ← lógica da vitrine (não precisa mexer)
 │   ├── loja.js        ← carrinho lateral da vitrine (não precisa mexer)
 │   ├── checkout.js    ← lógica do pagamento (não precisa mexer)
@@ -109,6 +116,11 @@ O Pix aqui é **confirmado manualmente** (jeito simples e sem custo):
 ---
 
 ## 📬 Como receber os pedidos por e-mail
+
+> 📣 **Esta seção é sobre o e-mail que avisa VOCÊ.** Para os e-mails e
+> mensagens de WhatsApp que vão para o **CLIENTE** (pedido recebido, pagamento
+> confirmado, saiu para entrega, entregue, novidades), veja a seção
+> **"📣 Avisos automáticos para o cliente"**.
 
 Cada pedido finalizado é enviado **automaticamente para o seu e-mail**, com:
 nome, e-mail e WhatsApp do cliente, forma de entrega, **endereço completo**
@@ -330,15 +342,279 @@ a aba **"Pedidos da loja"** com os pedidos de TODOS os clientes:
 
 - **Confirmar pagamento** — para quando o Pix caiu mas o status não atualizou
   sozinho (ex.: modo manual).
+- **Saiu para entrega** — quando você sai com o pedido na mochila. O cliente
+  passa a ver **A caminho 🚚**.
 - **Marcar como entregue** — a "baixa" do pedido. O cliente vê o status
   **Entregue ✓** na linha do tempo do pedido dele.
 - **Cancelar pedido** — libera o pedido sem entrega.
+
+**A cada um desses toques o CLIENTE é avisado automaticamente** por e-mail e
+pelo WhatsApp da loja (veja a seção **"📣 Avisos automáticos para o cliente"**).
+Embaixo de cada pedido aparece a linha *"Cliente avisado: pagamento, saiu para
+entrega…"*, e o botão **Avisar o cliente** reenvia o aviso quando você quiser.
 
 Ao confirmar o pagamento (ou entregar), o estoque dos itens é baixado
 automaticamente: um livro com 3 unidades continua na loja com 2.
 
 O cliente acompanha tudo em **Meus pedidos**, numa linha do tempo:
-**Pedido feito → Pagamento → Entrega**.
+**Pedido feito → Pagamento → Saiu para entrega → Entregue**.
+
+## 📣 Avisos automáticos para o cliente (e-mail + WhatsApp)
+
+É isto que separa uma loja amadora de uma **loja profissional**: o cliente não
+fica no escuro. Ele recebe uma mensagem em cada passo da compra — e você
+consegue anunciar novidades para todo mundo de uma vez.
+
+### O que o cliente recebe (sozinho, sem você fazer nada)
+
+| Momento | Quando dispara | O que chega |
+|---|---|---|
+| 🧾 **Pedido recebido** | assim que ele finaliza a compra | "Recebemos seu pedido, já reservamos os livros" + itens e total |
+| ✅ **Pagamento confirmado** | no segundo em que o Pix cai | "Seu pagamento caiu! Já estamos separando seus livros" |
+| 🚚 **Saiu para entrega** | quando você toca em *Saiu para entrega* | "Seu pedido está a caminho" |
+| 📚 **Entregue** | quando você toca em *Marcar como entregue* | "Entregue! Boa leitura" + pedido para marcar a loja no Insta |
+| ⚠️ **Cancelado** | quando você cancela o pedido | "Seu pedido foi cancelado" + como refazer |
+
+E, quando **você** quiser, o painel **Novidades** manda um anúncio (livro novo,
+promoção, recado) para **todos os clientes** de uma vez.
+
+O e-mail sai com a cara da loja: cabeçalho roxo, a lista de livros, o total, a
+forma de entrega e um botão para acompanhar o pedido. Nada de e-mail cru.
+
+### ⚠️ Antes de tudo: cadastre os segredos
+
+O Firebase **exige que todo segredo exista** para o deploy passar. Então rode
+os seis comandos abaixo **uma vez**, na pasta do projeto — mesmo os que você
+não for usar agora. Onde não quiser usar, digite só um traço (`-`), que
+significa *"desligado"*:
+
+```bash
+firebase functions:secrets:set RESEND_API_KEY      # e-mail (recomendado)
+firebase functions:secrets:set BREVO_API_KEY       # e-mail (alternativa; use "-" se usar o Resend)
+firebase functions:secrets:set EMAIL_REMETENTE     # "BookVerse <oi@bookverse.com.br>"
+firebase functions:secrets:set WHATSAPP_TOKEN      # WhatsApp automático
+firebase functions:secrets:set WHATSAPP_PHONE_ID   # WhatsApp automático
+firebase functions:secrets:set AVISOS_SECRET       # qualquer frase secreta sua
+```
+
+> 🚨 **Se você não rodar isso, o deploy das funções falha** com uma mensagem do
+> tipo `Secret RESEND_API_KEY does not exist`. É só rodar os comandos e mandar
+> o deploy de novo (aba **Actions** do GitHub → *Deploy Functions* → **Run
+> workflow**).
+
+Depois de cadastrar, publique o backend:
+
+```bash
+firebase deploy --only functions
+```
+
+---
+
+### Parte 1 — E-mail para o cliente (10 minutos)
+
+O Web3Forms que você já usa só sabe mandar e-mail **para você**. Para escrever
+**para o cliente** precisamos de um serviço de e-mail de verdade. Escolha um:
+
+#### Opção A — Resend (recomendado: 3.000 e-mails/mês grátis)
+
+1. Crie a conta em **https://resend.com** (dá para entrar com o Google).
+2. Vá em **Domains → Add Domain** e digite `bookverse.com.br`.
+3. O Resend mostra 3 registros (SPF, DKIM e DMARC). Copie e cole cada um no
+   painel de onde você comprou o domínio (Registro.br, Hostinger, Cloudflare…).
+   Depois clique em **Verify**. Costuma levar de 5 minutos a 1 hora.
+4. Vá em **API Keys → Create API Key**, copie a chave (começa com `re_`) e rode:
+
+   ```bash
+   firebase functions:secrets:set RESEND_API_KEY
+   firebase functions:secrets:set EMAIL_REMETENTE   # cole: BookVerse <oi@bookverse.com.br>
+   ```
+
+> 🧪 **Quer testar antes de mexer no domínio?** Deixe o `EMAIL_REMETENTE` com
+> `-`. O sistema usa o remetente de teste do Resend — só que ele **só entrega
+> no e-mail dono da conta Resend**. Serve para você ver como o e-mail ficou,
+> não para vender.
+
+#### Opção B — Brevo (300 e-mails/dia grátis, verificação mais simples)
+
+1. Crie a conta em **https://brevo.com**.
+2. **Senders & IP → Senders → Add a sender**: cadastre o e-mail que vai
+   aparecer como remetente e confirme pelo link que chega na caixa dele.
+3. **SMTP & API → API Keys → Generate a new API key**, copie e rode:
+
+   ```bash
+   firebase functions:secrets:set BREVO_API_KEY
+   firebase functions:secrets:set EMAIL_REMETENTE   # BookVerse <seu-email-verificado>
+   firebase functions:secrets:set RESEND_API_KEY    # digite "-"
+   ```
+
+Se os dois estiverem preenchidos, o **Resend** é usado.
+
+---
+
+### Parte 2 — WhatsApp pelo seu WhatsApp Business
+
+Aqui tem uma regra da Meta que é importante entender **antes** de começar:
+
+> Quando é a **loja** que começa a conversa, o WhatsApp **só aceita mensagens
+> de um "modelo" aprovado antes pela Meta**. Texto livre só vale nas 24 horas
+> seguintes a uma mensagem do cliente. Não é limitação nossa — é da Meta, e
+> vale para todas as lojas.
+
+Por isso existem **dois jeitos** de usar o WhatsApp aqui, e o primeiro
+**já funciona agora, sem configurar nada**:
+
+#### Jeito 1 — Semiautomático (funciona hoje, de graça)
+
+Não precisa fazer nada. No painel **Pedidos da loja**, quando o aviso pelo
+WhatsApp não puder sair sozinho, aparece o link **"Enviar pelo WhatsApp"**:
+ele abre o **seu** WhatsApp Business com a mensagem **já escrita** para aquele
+cliente. Você só confere e toca em enviar. Leva 3 segundos e não custa nada.
+
+#### Jeito 2 — Automático (WhatsApp Cloud API)
+
+1. Acesse **https://developers.facebook.com** → **Meus apps** → **Criar app** →
+   tipo **Empresa**.
+2. No app, adicione o produto **WhatsApp**. A Meta cria um número de teste e
+   mostra o **ID do número de telefone** (*Phone number ID*) — guarde.
+3. Em **Configuração da API**, conecte o número do **seu WhatsApp Business**
+   (o número precisa sair do app comum do WhatsApp para entrar na API).
+4. Crie um **token permanente**: **Configurações do negócio → Usuários →
+   Usuários do sistema → Adicionar** (função *Administrador*) → **Gerar novo
+   token** → marque `whatsapp_business_messaging` e
+   `whatsapp_business_management`. Copie o token (ele só aparece uma vez).
+5. Cadastre os dois segredos:
+
+   ```bash
+   firebase functions:secrets:set WHATSAPP_TOKEN
+   firebase functions:secrets:set WHATSAPP_PHONE_ID
+   ```
+
+6. **Cadastre os modelos.** Vá em **Gerenciador do WhatsApp → Modelos de
+   mensagem → Criar modelo** e crie os seis abaixo, com **exatamente** esses
+   nomes e o idioma **Português (BR)**. As `{{1}}`, `{{2}}`… são preenchidas
+   pelo site na ordem indicada:
+
+   | Nome do modelo | Categoria | Texto para colar |
+   |---|---|---|
+   | `pedido_recebido` | Utilidade | `Oi, {{1}}! Recebemos seu pedido {{2}} na BookVerse: {{4}}. Total: {{3}}. Assim que o pagamento cair a gente confirma por aqui. 💜` |
+   | `pedido_pago` | Utilidade | `{{1}}, seu pagamento foi confirmado! Pedido {{2}}, no valor de {{3}}. Já estamos separando seus livros e avisamos quando sair para entrega. 📚` |
+   | `pedido_enviado` | Utilidade | `{{1}}, seu pedido {{2}} saiu para entrega! Forma de entrega: {{3}}. Qualquer coisa é só responder esta mensagem. 🚚` |
+   | `pedido_entregue` | Utilidade | `{{1}}, seu pedido {{2}} foi entregue! Esperamos que você ame a leitura. Se puder, marque a gente numa foto do livro — ajuda demais! 💜` |
+   | `pedido_cancelado` | Utilidade | `{{1}}, seu pedido {{2}} na BookVerse foi cancelado. Se foi engano ou se quiser refazer, é só responder aqui que a gente resolve. 💜` |
+   | `novidades` | Marketing | `Oi, {{1}}! Novidade na BookVerse: {{2}}. {{3}}` |
+
+   **Exemplos para a Meta aprovar:** ao criar o modelo, a Meta pede um exemplo
+   de cada variável. Preencha com algo real, tipo `Ana`, `BV12AB34`,
+   `R$ 47,50`, `2x Vidas Secas`. Modelos de **Utilidade** costumam ser
+   aprovados em minutos.
+
+   > 💡 Usou outros nomes? Sem problema — dá para apontar cada um pelo arquivo
+   > `functions/.env` (ex.: `WHATSAPP_MODELO_PAGO=meu_nome_de_modelo`).
+
+7. **Custo:** a Meta cobra por conversa iniciada pela loja. As de **Utilidade**
+   (avisos de pedido) são baratas e, no Brasil, muitas vezes gratuitas quando
+   partem de uma conversa recente. As de **Marketing** (novidades) são pagas.
+   Confira o preço atual em *Gerenciador do WhatsApp → Preços* — a Meta muda
+   isso de tempos em tempos.
+
+**Se algo der errado no envio automático** (modelo reprovado, saldo, janela de
+24h), o sistema **não perde o aviso**: ele devolve o link "Enviar pelo
+WhatsApp" no painel, e você manda com um toque.
+
+---
+
+### Parte 3 — Anunciar novidades para todo mundo
+
+Entre em **Minha conta → Novidades** (só aparece para os e-mails de admin).
+
+1. No topo o painel mostra **quantos clientes vão receber**.
+2. Escreva o **título** (vira o assunto do e-mail) e a **mensagem**. Uma linha
+   em branco separa parágrafos.
+3. Opcional: **link do botão**, **texto do botão** e uma **imagem de capa**
+   (o endereço de uma imagem já publicada, ex.:
+   `https://bookverse.com.br/img/promo.jpg`).
+4. Escolha os canais: **E-mail** e/ou **WhatsApp**.
+5. Olhe a **prévia** — ela mostra o e-mail e o balão do WhatsApp.
+6. Toque em **"Enviar teste para mim"**. O anúncio chega só para você.
+7. Gostou? **"Enviar para todos"**. A barra mostra o progresso
+   (*"Enviando… 34 clientes até agora"*).
+
+O envio vai em lotes por dois motivos: uma função tem 60 segundos para
+responder, e mandar tudo de uma vez de uma vez derrubaria o limite dos
+serviços de e-mail. Você não precisa fazer nada — o painel cuida disso.
+
+> 📌 **Boas práticas de loja séria:** no máximo 1 ou 2 anúncios por semana,
+> sempre com algo de valor (livro novo, promoção de verdade). Base cansada
+> marca como spam, e aí nem os avisos de pedido chegam mais.
+
+---
+
+### Parte 4 — A escolha do cliente (LGPD)
+
+Em **Minha conta → Meus dados** o cliente vê o bloco **"Avisos e novidades"**
+com três chaves: avisos por e-mail, avisos por WhatsApp e novidades/promoções.
+Tudo começa **ligado** (quem compra espera ser avisado) e ele desliga o que
+quiser.
+
+Todo e-mail de **novidades** leva no rodapé o link **"Não quero mais receber
+novidades"**. Um clique e pronto — sem login, sem formulário. Isso é exigência
+da LGPD e das regras antispam do Gmail; loja que não dá saída fácil acaba na
+caixa de spam de todo mundo.
+
+**Sair das novidades não cancela os avisos de pedido.** "Pagamento confirmado"
+e "saiu para entrega" continuam chegando, porque fazem parte da compra.
+
+---
+
+### Parte 5 — Ligar e desligar (js/config.js)
+
+No bloco `avisos` do `js/config.js` você controla o que dispara sozinho:
+
+```js
+avisos: {
+  ligado: true,              // false desliga TODOS os avisos automáticos
+  eventos: {
+    recebido: true,          // "recebemos seu pedido"
+    pago: true,              // "pagamento confirmado ✓"
+    enviado: true,           // "saiu para entrega 🚚"
+    entregue: true,          // "entregue, boa leitura 📚"
+    cancelado: true          // "seu pedido foi cancelado"
+  },
+  preferencias: true         // mostra as opções de aviso na conta do cliente
+}
+```
+
+Deixe `false` no que você preferir mandar na mão — o botão **Avisar o cliente**
+continua funcionando no painel.
+
+---
+
+### Parte 6 — Um índice a mais no banco (opcional)
+
+O aviso de "pagamento confirmado" dispara sozinho porque o Mercado Pago avisa
+o nosso servidor quando o Pix cai. Para o servidor achar o pedido, ele usa o
+código guardado na própria cobrança — isso **já funciona sem configurar nada**.
+
+Existe um caminho reserva (procurar o pedido pelo id do pagamento) que precisa
+de um índice do Firestore. Se quiser ligar essa rede extra de segurança:
+
+```bash
+firebase deploy --only firestore:indexes
+```
+
+---
+
+### ❓ Se algum aviso não chegar
+
+| Sintoma | O que costuma ser |
+|---|---|
+| Nenhum e-mail sai | Os segredos não foram cadastrados, ou o deploy não rodou depois deles. |
+| E-mail só chega para você | O `EMAIL_REMETENTE` está com `-` (remetente de teste do Resend). Verifique o domínio e cadastre o remetente real. |
+| E-mail cai no spam | O domínio não está verificado (SPF/DKIM) no Resend/Brevo. |
+| WhatsApp não sai, mas aparece o link | Normal quando a API não está configurada, ou o modelo ainda não foi aprovado. Envie pelo link até resolver. |
+| "Modelo não existe" | O nome do modelo na Meta está diferente do esperado (veja a tabela da Parte 2) ou o idioma não é `pt_BR`. |
+| Cliente reclama que recebeu duas vezes | Não deveria acontecer: cada aviso fica marcado no pedido. Se acontecer, me mostre a linha *"Cliente avisado: …"* daquele pedido. |
+| Quero ver o que deu errado | Firebase Console → **Functions → Registros** e procure por `[avisar]`, `[campanha]` ou `[webhook-mp]`. |
 
 ## 🎁 Embalar para presente
 
