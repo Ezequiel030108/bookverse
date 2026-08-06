@@ -26,8 +26,7 @@ const PADRAO = {
   nome: "BookVerse",
   cidade: "Juazeirinho",
   whatsapp: "5514982241492",
-  instagram: "mybookverse.pb",
-  assinatura: "Livros que viajam até você"
+  instagram: "mybookverse.pb"
 };
 
 /* Endereço público do site. Preferimos o host da própria requisição
@@ -47,7 +46,6 @@ function dadosLoja(req) {
     cidade: String(process.env.LOJA_CIDADE || PADRAO.cidade),
     whatsapp: String(process.env.LOJA_WHATSAPP || PADRAO.whatsapp),
     instagram: String(process.env.LOJA_INSTAGRAM || PADRAO.instagram),
-    assinatura: String(process.env.LOJA_ASSINATURA || PADRAO.assinatura),
     site: siteDaRequisicao(req)
   };
 }

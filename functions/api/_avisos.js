@@ -201,10 +201,11 @@ function moldura(opcoes) {
   <tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:${COR.papel};border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(31,20,102,.10);">
 
-      <!-- Cabeçalho -->
-      <tr><td align="center" bgcolor="${COR.indigo}" style="padding:30px 24px 26px;background-image:linear-gradient(135deg,${COR.noite},${COR.violeta});">
-        <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;letter-spacing:.5px;color:#ffffff;">${esc(nomeLoja)}</p>
-        <p style="margin:6px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${COR.lavanda};">${esc(loja.assinatura || "Livros que viajam até você")}</p>
+      <!-- Cabeçalho: o mesmo letreiro "BookVerse" (PNG) usado no topo do site -->
+      <tr><td align="center" bgcolor="${COR.indigo}" style="padding:28px 24px;background-image:linear-gradient(135deg,${COR.noite},${COR.violeta});">
+        ${site
+          ? `<img src="${esc(site)}/img/bookverse-titulo.png" width="230" height="56" alt="${esc(nomeLoja)}" style="display:block;margin:0 auto;width:230px;max-width:65%;height:auto;border:0;">`
+          : `<p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;letter-spacing:.5px;color:#ffffff;">${esc(nomeLoja)}</p>`}
       </td></tr>
 
       <!-- Miolo -->
