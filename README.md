@@ -650,6 +650,37 @@ firebase deploy --only firestore:indexes
 
 ---
 
+### Parte 7 — A foto da loja na caixa de entrada do Gmail
+
+Aquela bolinha colorida com a letra **B** ao lado do remetente. Para virar a
+logo da loja, o caminho **não** é o Gravatar: o Gmail nunca leu o Gravatar
+(isso é coisa do WordPress). O Gmail decide a foto assim, nesta ordem:
+
+1. **A pessoa te salvou nos contatos** com foto — aí ela vê essa foto. Não
+   dá para controlar do nosso lado.
+2. **O endereço remetente tem uma Conta Google com foto de perfil.** É o
+   caminho barato: criar uma Conta Google *para o próprio endereço da loja*
+   (`contato@bookverse.com.br`, o mesmo do `EMAIL_REMETENTE`) e pôr a logo
+   como foto do perfil. Funciona em boa parte dos casos, mas não é garantido
+   — o Gmail não promete nada aqui.
+3. **BIMI** — o jeito oficial, o único que o Gmail garante. Precisa de:
+   - SPF e DKIM passando e **alinhados** com o domínio (o Resend/Brevo já
+     entrega isso quando o domínio está verificado);
+   - **DMARC valendo**: `p=quarantine` ou `p=reject` em
+     `_dmarc.bookverse.com.br` (com `p=none` o BIMI não conta);
+   - a logo em **SVG Tiny PS**, quadrada, hospedada em HTTPS;
+   - um registro TXT em `default._bimi.bookverse.com.br`:
+     `v=BIMI1; l=https://www.bookverse.com.br/img/bimi.svg; a=https://.../vmc.pem`
+   - e o caro: um **VMC** (ou CMC) da DigiCert/Entrust, na faixa de
+     **US$ 1.000 por ano**. Sem esse certificado o Gmail continua mostrando
+     a letra, mesmo com todo o resto certo.
+
+Resumo honesto: tente o caminho 2 (grátis) e deixe o BIMI para quando o
+volume de e-mail justificar a conta. O DMARC vale a pena de qualquer jeito —
+melhora a entrega e mantém o e-mail longe do spam.
+
+---
+
 ### ❓ Se algum aviso não chegar
 
 | Sintoma | O que costuma ser |

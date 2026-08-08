@@ -172,6 +172,7 @@ function moldura(opcoes) {
   const loja = o.loja || {};
   const nomeLoja = loja.nome || "BookVerse";
   const site = urlSegura(loja.site);
+  const estrelas = site ? site.replace(/\/+$/, "") + "/img/email-estrelas.png" : "";
   const insta = String(loja.instagram || "").replace(/^@/, "");
   const whats = String(loja.whatsapp || "").replace(/\D/g, "");
 
@@ -201,20 +202,28 @@ function moldura(opcoes) {
   <tr><td align="center">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:${COR.papel};border-radius:16px;overflow:hidden;box-shadow:0 6px 22px rgba(31,20,102,.10);">
 
-      <!-- Cabeçalho: o mesmo fantasminha + letreiro "BookVerse" do topo do site -->
-      <tr><td align="center" bgcolor="${COR.indigo}" style="padding:28px 24px;background-image:linear-gradient(135deg,${COR.noite},${COR.violeta});">
-        ${site
-          ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
-              <tr>
-                <td style="padding-right:10px;vertical-align:middle;">
-                  <img src="${esc(site)}/img/logo.png" width="42" height="42" alt="" style="display:block;width:42px;height:42px;border:0;">
-                </td>
-                <td style="vertical-align:middle;">
-                  <img src="${esc(site)}/img/bookverse-titulo.png" width="200" height="48" alt="${esc(nomeLoja)}" style="display:block;width:200px;max-width:100%;height:auto;border:0;">
-                </td>
-              </tr>
-            </table>`
-          : `<p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;letter-spacing:.5px;color:#ffffff;">${esc(nomeLoja)}</p>`}
+      <!-- Cabeçalho: o mesmo fantasminha + letreiro "BookVerse" do topo do site.
+           O céu estrelado do site é feito em CSS que e-mail nenhum entende, então
+           as estrelas vêm como PNG transparente (img/email-estrelas.png, gerado
+           por scripts/gerar-estrelas-email.js) por cima do roxo. Quem bloqueia
+           imagem continua vendo o roxo de sempre, só sem as estrelas. -->
+      <tr><td align="center" bgcolor="${COR.indigo}" style="background-color:${COR.indigo};background-image:linear-gradient(135deg,${COR.noite},${COR.violeta});">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center"${estrelas ? ` background="${esc(estrelas)}"` : ""} style="padding:28px 24px;${estrelas ? `background-image:url('${esc(estrelas)}');background-repeat:no-repeat;background-position:center top;` : ""}">
+            ${site
+              ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                  <tr>
+                    <td style="padding-right:10px;vertical-align:middle;">
+                      <img src="${esc(site)}/img/logo.png" width="42" height="42" alt="" style="display:block;width:42px;height:42px;border:0;">
+                    </td>
+                    <td style="vertical-align:middle;">
+                      <img src="${esc(site)}/img/bookverse-titulo.png" width="200" height="48" alt="${esc(nomeLoja)}" style="display:block;width:200px;max-width:100%;height:auto;border:0;">
+                    </td>
+                  </tr>
+                </table>`
+              : `<p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;letter-spacing:.5px;color:#ffffff;">${esc(nomeLoja)}</p>`}
+          </td></tr>
+        </table>
       </td></tr>
 
       <!-- Miolo -->
