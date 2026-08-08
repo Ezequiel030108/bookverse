@@ -617,12 +617,21 @@ avisos: {
     entregue: true,          // "entregue, boa leitura 📚"
     cancelado: true          // "seu pedido foi cancelado"
   },
-  preferencias: true         // mostra as opções de aviso na conta do cliente
+  preferencias: true,        // mostra as opções de aviso na conta do cliente
+  whatsapp: false            // avisos pelo WhatsApp: desligados por ora
 }
 ```
 
 Deixe `false` no que você preferir mandar na mão — o botão **Avisar o cliente**
 continua funcionando no painel.
+
+**`whatsapp: false` (situação de hoje).** Enquanto a API do WhatsApp Business
+não estiver ativa, toda a parte de WhatsApp some da tela: o cliente não vê
+"Avisos pelo WhatsApp" em *Meus dados* e o painel **Novidades** não oferece o
+canal WhatsApp — não faz sentido deixar ligar uma opção que ainda não envia
+nada. A preferência que o cliente já tinha salva continua guardada no banco.
+Quando o `WHATSAPP_TOKEN` e o `WHATSAPP_PHONE_ID` estiverem cadastrados
+(Parte 2 acima), troque para `true` e as opções voltam a aparecer.
 
 ---
 

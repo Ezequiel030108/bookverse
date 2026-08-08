@@ -142,6 +142,20 @@
   const blocoAvisos = document.getElementById("p-avisos-bloco");
   if (blocoAvisos) blocoAvisos.hidden = AVISOS_CFG.preferencias === false;
 
+  /* Avisos pelo WhatsApp: enquanto a integração não estiver no ar
+     (config.avisos.whatsapp), as opções somem da tela — do cliente e
+     do painel de novidades. O checkbox do cliente continua no HTML,
+     escondido, só para a preferência já salva ir e voltar intacta. */
+  const WHATS_LIGADO = AVISOS_CFG.whatsapp === true;
+  ["av-opcao-whats", "camp-opcao-whats"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !WHATS_LIGADO;
+  });
+  if (!WHATS_LIGADO) {
+    const canalWhats = document.getElementById("camp-canal-whats");
+    if (canalWhats) canalWhats.checked = false;   // campanha sai só por e-mail
+  }
+
   function marcado(id) {
     const el = document.getElementById(id);
     return el ? !!el.checked : true;
@@ -160,6 +174,35 @@
       whatsapp: marcado("p-av-whats"),
       novidades: marcado("p-av-novidades")
     };
+  }
+
+  /* ---------- Chegando pelo link do e-mail ----------
+     O rodapé dos e-mails de novidades traz "não quero mais receber",
+     que aponta para conta.html#avisos. Só que esta página monta
+     depois do login (JS), então quando o navegador procura a âncora
+     ela ainda não existe: a pessoa cai no topo de "Meus dados" e
+     tem que caçar a opção lá embaixo. Aqui rolamos até o bloco na
+     mão, assim que ele existe, e piscamos um destaque para o olho
+     achar na hora. */
+  const ANCORAS_AVISOS = ["#avisos", "#preferencias", "#novidades-email"];
+  function veioDoLinkDeAvisos() {
+    return ANCORAS_AVISOS.indexOf(String(location.hash || "").toLowerCase()) >= 0;
+  }
+  function rolarAteAvisos() {
+    if (!veioDoLinkDeAvisos()) return;
+    if (!blocoAvisos || blocoAvisos.hidden) return;
+    // Um quadro de espera: o painel acabou de ser exibido e o
+    // navegador ainda não sabe a posição final do bloco.
+    requestAnimationFrame(() => setTimeout(() => {
+      try { blocoAvisos.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      catch (e) { blocoAvisos.scrollIntoView(); }
+      blocoAvisos.classList.remove("avisos-destaque");
+      void blocoAvisos.offsetWidth;              // reinicia a animação
+      blocoAvisos.classList.add("avisos-destaque");
+      const alvo = document.getElementById("p-av-novidades");
+      if (alvo) { try { alvo.focus({ preventScroll: true }); } catch (e) { /* navegador antigo */ } }
+      setTimeout(() => blocoAvisos.classList.remove("avisos-destaque"), 2800);
+    }, 120));
   }
 
   /* ---------- Form do perfil ---------- */
@@ -290,6 +333,7 @@
     const pa = document.getElementById("painel-admin"); if (pa) pa.hidden = true;
     const pl = document.getElementById("painel-pedidos-loja"); if (pl) pl.hidden = true;
     const pn = document.getElementById("painel-novidades"); if (pn) pn.hidden = true;
+    rolarAteAvisos();
   }
   function entrarModoDashboard() {
     modo = "dashboard";
@@ -315,6 +359,7 @@
     else if (location.hash === "#admin" && admin) abaInicial = "admin";
     else if (location.hash === "#novidades" && admin) abaInicial = "novidades";
     abrirTab(abaInicial);
+    rolarAteAvisos();
   }
   function entrarModoOk() {
     if (onbIntro) onbIntro.hidden = true;

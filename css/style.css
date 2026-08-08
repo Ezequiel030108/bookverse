@@ -3050,6 +3050,19 @@ main {
   border-color: rgba(184, 158, 255, .5);
   background: rgba(74, 43, 181, .2);
 }
+/* Chegou pelo "não quero mais receber" do e-mail: a página rola até
+   aqui e o bloco pisca, para o olho achar a opção sem procurar. */
+#p-avisos-bloco { scroll-margin-top: 90px; border-radius: var(--raio); }
+.avisos-destaque { animation: avisos-piscar 2.6s ease-out 1; }
+@keyframes avisos-piscar {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 158, 255, 0); }
+  12%      { box-shadow: 0 0 0 6px rgba(184, 158, 255, .28); }
+  60%      { box-shadow: 0 0 0 6px rgba(184, 158, 255, .18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avisos-destaque { animation: none; box-shadow: 0 0 0 3px rgba(184, 158, 255, .3); }
+}
+
 .avisos-texto { display: flex; flex-direction: column; gap: 3px; }
 .avisos-titulo { font-size: .9rem; font-weight: 600; color: var(--texto-claro); }
 .avisos-desc { font-size: .78rem; color: var(--texto-suave); line-height: 1.45; }

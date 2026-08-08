@@ -153,7 +153,18 @@ window.LOJA_CONFIG = {
     /* Mostrar ao cliente, em "Minha conta → Meus dados", as opções
        de escolher o que quer receber. Deixe true: é exigência da
        LGPD dar essa escolha (e evita cair no spam). */
-    preferencias: true
+    preferencias: true,
+
+    /* Avisos pelo WhatsApp (API do WhatsApp Business).
+       Enquanto estiver false, TODA a parte de WhatsApp some da tela:
+       o cliente não vê a opção "Avisos pelo WhatsApp" em "Meus dados"
+       e o painel "Novidades" não oferece o canal WhatsApp — porque
+       não adianta deixar ligar uma coisa que ainda não envia nada.
+       A preferência que o cliente já tinha salva continua guardada.
+       Quando o WHATSAPP_TOKEN e o WHATSAPP_PHONE_ID estiverem
+       cadastrados no Firebase (README, seção "📣 Avisos automáticos"),
+       troque para true e as opções voltam a aparecer. */
+    whatsapp: false
   },
 
   /* ---------- EMBALAR PARA PRESENTE ----------

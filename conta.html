@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=novidades1" />
+  <link rel="stylesheet" href="css/style.css?v=avisos2" />
 </head>
 <body class="pagina-checkout pagina-conta">
 
@@ -200,7 +200,11 @@
                   </span>
                 </label>
               </li>
-              <li class="avisos-opcao">
+              <!-- Avisos pelo WhatsApp: escondido enquanto a integração com a
+                   API do WhatsApp Business não está no ar. O campo continua
+                   aqui só para guardar a preferência já salva do cliente —
+                   volta a aparecer com avisos.whatsapp: true em js/config.js. -->
+              <li class="avisos-opcao" id="av-opcao-whats" hidden>
                 <label for="p-av-whats">
                   <input type="checkbox" id="p-av-whats" checked />
                   <span class="avisos-texto">
@@ -249,7 +253,7 @@
       <!-- Painel: pedidos de TODOS os clientes (só admins) -->
       <section id="painel-pedidos-loja" class="checkout-bloco" hidden>
         <h2 class="checkout-subtitulo">Pedidos da loja</h2>
-        <p class="conta-ajuda">Todos os pedidos feitos pelos clientes. Confirme o pagamento quando o Pix cair, toque em <strong>saiu para entrega</strong> quando sair com o pedido e dê baixa como <strong>entregue</strong> quando ele chegar. <strong>A cada passo o cliente é avisado automaticamente</strong> por e-mail e WhatsApp.</p>
+        <p class="conta-ajuda">Todos os pedidos feitos pelos clientes. Confirme o pagamento quando o Pix cair, toque em <strong>saiu para entrega</strong> quando sair com o pedido e dê baixa como <strong>entregue</strong> quando ele chegar. <strong>A cada passo o cliente é avisado automaticamente</strong> por e-mail.</p>
 
         <div class="admin-ferramentas">
           <div class="admin-busca-wrap">
@@ -272,7 +276,7 @@
       <!-- Painel: novidades / campanhas (só admins) -->
       <section id="painel-novidades" class="checkout-bloco" hidden>
         <h2 class="checkout-subtitulo">Anunciar novidades</h2>
-        <p class="conta-ajuda">Escreva uma vez e a mensagem vai para todos os clientes que aceitam receber novidades — por e-mail e/ou pelo WhatsApp da loja. Bom para livro novo na estante, promoção da semana ou recado importante.</p>
+        <p class="conta-ajuda">Escreva uma vez e a mensagem vai para todos os clientes que aceitam receber novidades, por e-mail. Bom para livro novo na estante, promoção da semana ou recado importante.</p>
 
         <div id="camp-publico" class="camp-publico" aria-live="polite">Contando quantas pessoas vão receber…</div>
 
@@ -343,7 +347,9 @@
                 </span>
               </label>
             </li>
-            <li class="avisos-opcao">
+            <!-- Canal WhatsApp: escondido junto com o resto dos avisos por
+                 WhatsApp (js/config.js → avisos.whatsapp). -->
+            <li class="avisos-opcao" id="camp-opcao-whats" hidden>
               <label for="camp-canal-whats">
                 <input type="checkbox" id="camp-canal-whats" />
                 <span class="avisos-texto">
@@ -520,12 +526,12 @@
 
   <script src="js/util.js"></script>
   <script src="js/livros.js?v=vitrine1"></script>
-  <script src="js/config.js?v=meta2"></script>
+  <script src="js/config.js?v=avisos2"></script>
   <script src="js/analytics.js?v=meta2"></script>
   <script src="js/auth.js?v=vitrine1"></script>
   <script src="js/avisos.js?v=avisos1"></script>
   <script src="js/precos.js?v=promo2"></script>
   <script src="js/cart.js"></script>
-  <script src="js/conta.js?v=novidades1"></script>
+  <script src="js/conta.js?v=avisos2"></script>
 </body>
 </html>
