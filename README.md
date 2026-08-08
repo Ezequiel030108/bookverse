@@ -658,11 +658,14 @@ logo da loja, o caminho **não** é o Gravatar: o Gmail nunca leu o Gravatar
 
 1. **A pessoa te salvou nos contatos** com foto — aí ela vê essa foto. Não
    dá para controlar do nosso lado.
-2. **O endereço remetente tem uma Conta Google com foto de perfil.** É o
-   caminho barato: criar uma Conta Google *para o próprio endereço da loja*
-   (`contato@bookverse.com.br`, o mesmo do `EMAIL_REMETENTE`) e pôr a logo
-   como foto do perfil. Funciona em boa parte dos casos, mas não é garantido
-   — o Gmail não promete nada aqui.
+2. **O endereço remetente tem uma Conta Google com foto de perfil.** Era o
+   caminho barato, mas hoje ele está fechado: o Google **tirou do cadastro**
+   a opção "usar meu endereço de e-mail atual", então não dá mais para
+   criar uma Conta Google grátis com `contato@bookverse.com.br`. Sobra o
+   **Google Workspace**, que é pago (algo em torno de R$ 30 por usuário/mês —
+   confira o preço do dia). Com ele o endereço da loja vira uma Conta Google
+   de verdade e a foto do perfil é a logo. Mesmo assim não é garantia: o
+   Gmail não promete mostrar essa foto para quem recebe.
 3. **BIMI** — o jeito oficial, o único que o Gmail garante. Precisa de:
    - SPF e DKIM passando e **alinhados** com o domínio (o Resend/Brevo já
      entrega isso quando o domínio está verificado);
@@ -675,9 +678,12 @@ logo da loja, o caminho **não** é o Gravatar: o Gmail nunca leu o Gravatar
      **US$ 1.000 por ano**. Sem esse certificado o Gmail continua mostrando
      a letra, mesmo com todo o resto certo.
 
-Resumo honesto: tente o caminho 2 (grátis) e deixe o BIMI para quando o
-volume de e-mail justificar a conta. O DMARC vale a pena de qualquer jeito —
-melhora a entrega e mantém o e-mail longe do spam.
+Resumo honesto: nenhum caminho é grátis hoje. A bolinha com a letra é o
+normal para loja pequena e não atrapalha venda nenhuma — quem abre o e-mail
+vê o cabeçalho com a logo do mesmo jeito. Deixe a foto para quando o volume
+justificar o Workspace ou o VMC. O **DMARC**, esse sim, vale a pena agora:
+é grátis, melhora a entrega, mantém o e-mail longe do spam e já deixa meio
+caminho andado se um dia você quiser o BIMI.
 
 ---
 
