@@ -30,7 +30,7 @@ const dados = require("./_dados");
    preferências de aviso (#avisos) — a página rola até elas
    sozinha — em vez de largar a pessoa na home procurando. */
 function pagina(titulo, mensagem, loja, sucesso, destino) {
-  const base = loja.site || "";
+  const base = String(loja.site || "").replace(/\/+$/, "");   // sem barra sobrando
   const site = base ? (destino ? base + destino : base) : "";
   const rotulo = destino ? "Desligar na minha conta" : "Voltar para a loja";
   return `<!doctype html>
