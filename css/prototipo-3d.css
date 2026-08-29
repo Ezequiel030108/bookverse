@@ -1,0 +1,331 @@
+/* ============================================================
+   BOOKVERSE — PROTÓTIPO: ESTANTE EM 3D (livros flutuando)
+   ------------------------------------------------------------
+   Este arquivo é SÓ do protótipo (prototipo-3d.html). A loja de
+   verdade (index.html) não carrega ele — dá para testar à
+   vontade sem risco nenhum para o site que está no ar.
+
+   A ideia em três camadas, uma por cima da outra:
+
+   1. PROFUNDIDADE — o trilho ganha "perspective". Os cards do
+      meio ficam de frente; os das pontas viram de lado e
+      afundam no fundo, como se a estante fosse uma órbita.
+      Quem manda nisso é o js/prototipo-3d.js, que escreve as
+      variáveis --p3d-ry / --p3d-tz / --p3d-sc a cada rolagem.
+
+   2. CORPO — cada capa ganha uma lombada e um miolo de páginas
+      em 3D de verdade. É isso que faz o livro parecer um
+      OBJETO, e não uma figurinha inclinada.
+
+   3. FLUTUAÇÃO — cada livro balança devagar, sozinho, com tempo
+      e amplitude diferentes. É o que dá a sensação de que eles
+      estão soltos no espaço, e não pendurados numa parede.
+
+   Tudo respeita "reduzir movimento" (ver o fim do arquivo).
+   ============================================================ */
+
+/* ---------- 1. O palco ----------
+   O trilho vira uma janela com fundo. O ponto de fuga fica um
+   pouco acima do centro: dá a sensação de estar olhando os
+   livros de baixo, flutuando. */
+.p3d-palco {
+  --p3d-perspectiva: 1150px;
+  --p3d-inclina-x: 0deg;   /* parallax do mouse (eixo vertical)  */
+  --p3d-inclina-y: 0deg;   /* parallax do mouse (eixo horizontal)*/
+  position: relative;
+}
+
+.p3d-trilho {
+  perspective: var(--p3d-perspectiva);
+  perspective-origin: 50% 42%;
+  /* Folga em cima e embaixo: sem isso a rolagem horizontal corta
+     o livro na hora que ele sobe na flutuação. */
+  padding-top: 34px;
+  padding-bottom: 30px;
+
+  /* O livro para NO CENTRO, e não encostado na esquerda como na
+     estante normal. É o centro que manda no efeito: é lá que o
+     livro fica de frente, grande e aceso. A folga dos lados deixa
+     o primeiro e o último também alcançarem o meio. */
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0;
+  padding-left:  max(16px, calc(50% - var(--card-largura) / 2));
+  padding-right: max(16px, calc(50% - var(--card-largura) / 2));
+}
+
+.p3d-card { scroll-snap-align: center; }
+
+/* ---------- 2. O card ----------
+   O card em si só recebe a pose (girar/afundar). A flutuação
+   fica no filho, senão as duas animações brigariam pelo mesmo
+   "transform". */
+.p3d-card {
+  --p3d-ry: 0deg;    /* quanto o livro está virado            */
+  --p3d-tz: 0px;     /* quanto ele afundou para o fundo        */
+  --p3d-sc: 1;       /* tamanho (perto = maior)               */
+  --p3d-luz: 1;      /* brilho (longe = mais apagado)         */
+  --p3d-foco: 0;     /* 1 = está no centro do trilho          */
+
+  animation: none;                  /* desliga o "surgir" da loja */
+  transition: none;                 /* a pose acompanha o dedo    */
+  transform-style: preserve-3d;
+  transform:
+    translate3d(0, 0, var(--p3d-tz))
+    rotateY(calc(var(--p3d-ry) + var(--p3d-inclina-y)))
+    rotateX(var(--p3d-inclina-x))
+    scale(var(--p3d-sc));
+  /* Sem "will-change" aqui: um transform 3D já manda o card para a
+     placa de vídeo sozinho, e reservar memória para cada livro de
+     uma estante grande pesa mais do que ajuda no celular. */
+}
+
+/* Halo atrás do livro: a "poeira de estrela" que ele levanta.
+   Só acende no livro que está no centro. */
+.p3d-card::before {
+  content: "";
+  position: absolute;
+  left: -28%; right: -28%;
+  top: -12%; height: 78%;
+  border-radius: 50%;
+  /* Fica ATRÁS do livro empurrando para o fundo. Dentro de um
+     contexto 3D (preserve-3d) quem manda na ordem é o Z, não o
+     z-index — por isso o translateZ negativo. */
+  transform: translateZ(-40px);
+  background: radial-gradient(ellipse at 50% 50%,
+              rgba(184, 158, 255, .38), rgba(255, 122, 217, .16) 45%, transparent 72%);
+  filter: blur(14px);
+  opacity: calc(var(--p3d-foco) * .9);
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+
+/* ---------- 3. A flutuação ----------
+   Cada livro recebe do JS um tempo, um atraso e uma amplitude
+   próprios — por isso eles nunca sobem todos juntos. */
+.p3d-flutua {
+  /* Precisa repassar o 3D adiante: sem isso o navegador ACHATA
+     tudo o que vem abaixo e a lombada some (foi exatamente o
+     que aconteceu no primeiro teste). */
+  transform-style: preserve-3d;
+  animation:
+    p3dFlutuar var(--p3d-dur, 7s) ease-in-out var(--p3d-atraso, 0s) infinite alternate,
+    p3dEntrar .6s ease both;
+  transform-origin: 50% 62%;
+}
+
+@keyframes p3dFlutuar {
+  from {
+    transform:
+      translate3d(0, calc(var(--p3d-amp, 8px) * -1), 0)
+      rotate(calc(var(--p3d-giro, 1.4deg) * -1));
+  }
+  to {
+    transform:
+      translate3d(0, var(--p3d-amp, 8px), 0)
+      rotate(var(--p3d-giro, 1.4deg));
+  }
+}
+@keyframes p3dEntrar { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- 4. O corpo do livro (lombada + páginas) ----------
+   .p3d-corpo é o único lugar com "preserve-3d": a .capa tem
+   overflow:hidden e achataria tudo se as peças ficassem dentro
+   dela. Por isso a lombada e as páginas são IRMÃS da capa. */
+.p3d-corpo {
+  --p3d-espessura: 15px;
+  position: relative;
+  transform-style: preserve-3d;
+  /* ATENÇÃO: nada de "filter" aqui dentro.
+     Pelas regras do CSS, um filtro (brightness, blur…) ACHATA o
+     3D de tudo que está dentro do elemento — a lombada e as
+     páginas simplesmente somem. Por isso o escurecimento dos
+     livros das pontas é feito com um véu (.p3d-veu), que é só
+     uma camada escura por cima da capa. */
+}
+
+/* O véu: escurece o livro conforme ele se afasta do centro. */
+.p3d-veu {
+  position: absolute;
+  inset: 0;
+  background: #06021a;
+  opacity: calc(1 - var(--p3d-luz, 1));
+  pointer-events: none;
+  transition: opacity .2s linear;
+}
+
+.p3d-corpo .capa {
+  /* a capa é a face da frente do bloco */
+  transform: translate3d(0, 0, calc(var(--p3d-espessura) / 2));
+  box-shadow:
+    0 22px 34px rgba(0, 0, 0, .6),
+    0 6px 14px rgba(74, 43, 181, .4);
+}
+
+/* Lombada: sai da borda esquerda para dentro da tela.
+   Aparece quando o livro está virado para a direita. */
+.p3d-lombada,
+.p3d-paginas {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: var(--p3d-espessura);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.p3d-lombada {
+  left: 0;
+  transform-origin: left center;
+  /* A ORDEM importa: primeiro traz para a frente (para casar com a
+     capa), depois gira. Ao contrário, a lombada nasce descolada do
+     livro — dá para ver o vão entre as duas peças. */
+  transform: translate3d(0, 0, calc(var(--p3d-espessura) / 2)) rotateY(90deg);
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.55), rgba(255,255,255,.1) 40%, rgba(0,0,0,.45)),
+    linear-gradient(180deg, var(--violeta), var(--noite));
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
+}
+
+/* Miolo de páginas: a borda de papel do outro lado. */
+.p3d-paginas {
+  right: 0;
+  transform-origin: right center;
+  transform: translate3d(0, 0, calc(var(--p3d-espessura) / 2)) rotateY(-90deg);
+  background:
+    repeating-linear-gradient(90deg,
+      #efe6d2 0 1px, #cfc2a6 1px 2px),
+    linear-gradient(180deg, #f6efdd, #c9bda2);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, .35);
+}
+
+/* Sombra projetada no "chão" — só que aqui não há chão: é um
+   borrão escuro que encolhe conforme o livro sobe. Dá peso. */
+.p3d-sombra {
+  position: absolute;
+  left: 12%; right: 12%;
+  bottom: -14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(5, 2, 18, .75), transparent 70%);
+  filter: blur(6px);
+  opacity: calc(.5 * var(--p3d-luz));
+  pointer-events: none;
+  transform: translateZ(-1px);
+}
+
+/* O texto do card não gira junto com o corpo: fica legível. */
+.p3d-card .info-livro {
+  transform: translateZ(6px);
+  transition: opacity .25s ease;
+  opacity: calc(.55 + var(--p3d-foco) * .45);
+}
+
+/* ---------- 5. Painel de ajustes do protótipo ---------- */
+.p3d-painel {
+  max-width: 1320px;
+  margin: 18px auto 6px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(46, 31, 138, .38), rgba(20, 9, 58, .38));
+  border: 1px solid var(--vidro-borda);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.p3d-painel > summary {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.05rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.p3d-painel > summary::-webkit-details-marker { display: none; }
+.p3d-painel > summary::before {
+  content: "▸";
+  color: var(--aurora-rosa);
+  font-size: .9em;
+  transition: transform .2s ease;
+}
+.p3d-painel[open] > summary::before { transform: rotate(90deg); }
+.p3d-painel > summary + .p3d-dica { margin-top: 10px; }
+.p3d-painel .p3d-dica {
+  margin: 0 0 14px;
+  font-size: .8rem;
+  color: var(--texto-suave);
+}
+.p3d-controles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px 18px;
+}
+.p3d-controle { display: flex; flex-direction: column; gap: 4px; }
+.p3d-controle label {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--lavanda);
+}
+.p3d-controle output {
+  font-size: .72rem;
+  color: var(--estrela-clara);
+  font-variant-numeric: tabular-nums;
+}
+.p3d-controle input[type="range"] { width: 100%; accent-color: var(--aurora-rosa); }
+.p3d-chaves { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
+.p3d-chave {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .82rem;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.p3d-chave input { accent-color: var(--aurora-rosa); width: 17px; height: 17px; }
+
+.p3d-topo {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 26px 16px 0;
+}
+.p3d-topo h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+  margin: 6px 0 8px;
+}
+.p3d-topo p { margin: 0 0 6px; color: var(--texto-suave); font-size: .92rem; }
+.p3d-voltar {
+  display: inline-block;
+  font-size: .8rem;
+  color: var(--lavanda);
+  text-decoration: none;
+}
+.p3d-nota {
+  max-width: 1320px;
+  margin: 8px auto 60px;
+  padding: 16px;
+  font-size: .86rem;
+  color: var(--texto-suave);
+  border-left: 2px solid var(--aurora-rosa);
+}
+.p3d-nota code {
+  font-size: .82em;
+  background: rgba(8, 4, 26, .6);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+
+/* ---------- 6. Acessibilidade e aparelhos fracos ----------
+   Quem pede "reduzir movimento" no celular recebe a estante
+   normal: sem flutuar, sem girar, sem parallax. */
+@media (prefers-reduced-motion: reduce) {
+  .p3d-card {
+    transform: none !important;
+  }
+  .p3d-card::before { opacity: 0; }
+  .p3d-flutua { animation: none; }
+  .p3d-card .info-livro { opacity: 1; }
+  /* Sem giro não há lado do livro para mostrar. */
+  .p3d-lombada, .p3d-paginas, .p3d-sombra { display: none; }
+}
