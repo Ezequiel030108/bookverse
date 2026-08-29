@@ -132,7 +132,6 @@
    overflow:hidden e achataria tudo se as peças ficassem dentro
    dela. Por isso a lombada e as páginas são IRMÃS da capa. */
 .p3d-corpo {
-  --p3d-espessura: 15px;
   position: relative;
   transform-style: preserve-3d;
   /* ATENÇÃO: nada de "filter" aqui dentro.
@@ -153,49 +152,15 @@
   transition: opacity .2s linear;
 }
 
-.p3d-corpo .capa {
-  /* a capa é a face da frente do bloco */
-  transform: translate3d(0, 0, calc(var(--p3d-espessura) / 2));
+/* A sombra fica na FACE DA FRENTE, e não no bloco.
+   Tentar um "filter: drop-shadow" no bloco parece a solução mais
+   bonita — e quebra tudo: filtro achata o 3D e o livro volta a
+   ser uma capa chapada. Regra da casa: nenhum filter em elemento
+   que tenha filhos em 3D. */
+.p3d-corpo .l3d-frente {
   box-shadow:
     0 22px 34px rgba(0, 0, 0, .6),
     0 6px 14px rgba(74, 43, 181, .4);
-}
-
-/* Lombada: sai da borda esquerda para dentro da tela.
-   Aparece quando o livro está virado para a direita. */
-.p3d-lombada,
-.p3d-paginas {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  width: var(--p3d-espessura);
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-.p3d-lombada {
-  left: 0;
-  transform-origin: left center;
-  /* A ORDEM importa: primeiro traz para a frente (para casar com a
-     capa), depois gira. Ao contrário, a lombada nasce descolada do
-     livro — dá para ver o vão entre as duas peças. */
-  transform: translate3d(0, 0, calc(var(--p3d-espessura) / 2)) rotateY(90deg);
-  background:
-    linear-gradient(90deg, rgba(0,0,0,.55), rgba(255,255,255,.1) 40%, rgba(0,0,0,.45)),
-    linear-gradient(180deg, var(--violeta), var(--noite));
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
-}
-
-/* Miolo de páginas: a borda de papel do outro lado. */
-.p3d-paginas {
-  right: 0;
-  transform-origin: right center;
-  transform: translate3d(0, 0, calc(var(--p3d-espessura) / 2)) rotateY(-90deg);
-  background:
-    repeating-linear-gradient(90deg,
-      #efe6d2 0 1px, #cfc2a6 1px 2px),
-    linear-gradient(180deg, #f6efdd, #c9bda2);
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, .35);
 }
 
 /* Sombra projetada no "chão" — só que aqui não há chão: é um
@@ -327,5 +292,7 @@
   .p3d-flutua { animation: none; }
   .p3d-card .info-livro { opacity: 1; }
   /* Sem giro não há lado do livro para mostrar. */
-  .p3d-lombada, .p3d-paginas, .p3d-sombra { display: none; }
+  .p3d-sombra { display: none; }
+  /* Sem giro, o bloco vira só a capa de frente. */
+  .l3d-lombada, .l3d-corte, .l3d-topo, .l3d-base, .l3d-verso { display: none; }
 }

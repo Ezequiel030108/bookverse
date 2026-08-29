@@ -1,0 +1,281 @@
+/* ============================================================
+   BOOKVERSE — LIVRO 3D (o paralelepípedo de verdade)
+   ------------------------------------------------------------
+   Antes o livro era uma capa chapada com uma lombada colada do
+   lado. Aqui ele vira um BLOCO com as seis faces de um livro
+   real, cada uma com sua textura:
+
+        frente   -> a foto da capa
+        verso    -> a contracapa
+        lombada  -> o lado que fica virado pra fora na estante,
+                    com o título escrito de cima pra baixo
+        corte    -> o miolo de papel (a "boca" do livro)
+        topo     -> as folhas vistas de cima
+        base     -> as folhas vistas de baixo
+
+   Três medidas mandam em tudo, e vêm do js/livro3d.js:
+        --l3d-l  largura do livro (px)
+        --l3d-a  altura  do livro (px)
+        --l3d-e  espessura, ou seja, a GROSSURA (px)
+
+   Como cada face é montada: ela nasce no centro do bloco e é
+   girada para o seu lado; o "translateZ" no fim empurra ela até
+   a superfície. Ex.: a lombada gira -90° e anda meia largura.
+   ============================================================ */
+
+.livro3d {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  transform-style: preserve-3d;
+  --l3d-l: 140px;
+  --l3d-a: 210px;
+  --l3d-e: 22px;
+  /* Cor do papel e da lombada — combinam com o tema do site. */
+  --l3d-papel: #efe6d2;
+  --l3d-papel-fundo: #bdb094;
+}
+
+.l3d-face {
+  position: absolute;
+  overflow: hidden;
+  /* Sem isso o navegador deixa ver a face de trás atravessando
+     o bloco quando o livro gira. */
+  backface-visibility: hidden;
+}
+
+/* ---------- Frente e verso (largura x altura) ---------- */
+.l3d-frente,
+.l3d-verso {
+  inset: 0;
+  border-radius: 3px;
+}
+.l3d-frente { transform: translateZ(calc(var(--l3d-e) / 2)); }
+.l3d-verso  { transform: rotateY(180deg) translateZ(calc(var(--l3d-e) / 2)); }
+
+/* Brilho do papel plastificado da capa: uma faixa clara na
+   diagonal. É o que faz a capa parecer impressa, e não um
+   adesivo colado. */
+.l3d-frente::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg,
+    rgba(255, 255, 255, .20) 0%,
+    rgba(255, 255, 255, .05) 26%,
+    transparent 52%);
+  pointer-events: none;
+}
+
+/* Contracapa: sem foto (a loja só tem a foto da frente), então
+   ela é desenhada com o céu do BookVerse. */
+.l3d-verso {
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 0%, rgba(255, 122, 217, .22), transparent 60%),
+    linear-gradient(165deg, var(--indigo-claro), var(--noite-profunda));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.l3d-verso-marca {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: .8rem;
+  letter-spacing: 1px;
+  color: rgba(243, 237, 255, .5);
+  text-align: center;
+  line-height: 1.5;
+}
+.l3d-verso-marca::before {
+  content: "✦";
+  display: block;
+  color: var(--estrela);
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  opacity: .85;
+}
+
+/* ---------- Lombada e corte (espessura x altura) ---------- */
+.l3d-lombada,
+.l3d-corte {
+  top: 0;
+  height: 100%;
+  width: var(--l3d-e);
+  left: calc(50% - var(--l3d-e) / 2);
+}
+.l3d-lombada { transform: rotateY(-90deg) translateZ(calc(var(--l3d-l) / 2)); }
+.l3d-corte   { transform: rotateY(90deg)  translateZ(calc(var(--l3d-l) / 2)); }
+
+/* A lombada é a parte mais escura do livro: fica na sombra entre
+   um exemplar e outro. As duas listras claras nas pontas são o
+   vinco da capa dobrada. */
+.l3d-lombada {
+  background:
+    linear-gradient(90deg,
+      rgba(255, 255, 255, .16) 0 1px,
+      rgba(0, 0, 0, .45) 1px 3px,
+      rgba(0, 0, 0, .05) 50%,
+      rgba(0, 0, 0, .45) calc(100% - 3px),
+      rgba(255, 255, 255, .16) calc(100% - 1px)),
+    linear-gradient(180deg, var(--violeta), var(--indigo) 60%, var(--noite));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Título escrito na lombada, de cima para baixo, como num livro
+   de verdade. Some quando o livro é fino demais para caber. */
+.l3d-lombada-titulo {
+  writing-mode: vertical-rl;
+  max-height: 88%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(6px, calc(var(--l3d-e) * .42), 11px);
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: rgba(255, 243, 168, .92);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+}
+
+/* O corte: as folhas vistas de lado. As listras finas são as
+   páginas; a sombra na base dá o ar de bloco de papel. */
+.l3d-corte,
+.l3d-topo,
+.l3d-base {
+  background-color: var(--l3d-papel);
+}
+.l3d-corte {
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(0, 0, 0, .16) 0 .5px,
+      rgba(255, 255, 255, .5) .5px 1.6px),
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(0, 0, 0, .3));
+}
+
+/* ---------- Topo e base (largura x espessura) ---------- */
+.l3d-topo,
+.l3d-base {
+  left: 0;
+  width: 100%;
+  height: var(--l3d-e);
+  top: calc(50% - var(--l3d-e) / 2);
+}
+.l3d-topo { transform: rotateX(90deg)  translateZ(calc(var(--l3d-a) / 2)); }
+.l3d-base { transform: rotateX(-90deg) translateZ(calc(var(--l3d-a) / 2)); }
+
+/* Aqui as páginas empilham no outro sentido: as listras viram
+   deitadas. */
+.l3d-topo,
+.l3d-base {
+  background-image:
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, .16) 0 .5px,
+      rgba(255, 255, 255, .5) .5px 1.6px),
+    linear-gradient(90deg, rgba(0,0,0,.25), rgba(255,255,255,.3));
+}
+/* O topo pega mais luz (vem de cima); a base fica na sombra. */
+.l3d-topo::after,
+.l3d-base::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.l3d-topo::after { background: rgba(255, 255, 255, .12); }
+.l3d-base::after { background: rgba(5, 2, 20, .45); }
+
+/* ============================================================
+   BANCADA — um livro só, para girar e olhar de todos os lados
+   ============================================================ */
+.l3d-bancada {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  padding: 30px 16px;
+  perspective: 1000px;
+  touch-action: none;      /* o arrasto gira o livro, não rola a página */
+  cursor: grab;
+}
+.l3d-bancada:active { cursor: grabbing; }
+
+.l3d-bancada .livro3d {
+  width: min(230px, 56vw);
+  transform:
+    rotateX(var(--l3d-girox, -14deg))
+    rotateY(var(--l3d-giroy, -32deg));
+}
+/* Enquanto ninguém mexe, o livro gira sozinho, devagar. */
+.l3d-bancada.girando .livro3d { animation: l3dGirar 18s linear infinite; }
+@keyframes l3dGirar {
+  from { transform: rotateX(-14deg) rotateY(0deg); }
+  to   { transform: rotateX(-14deg) rotateY(360deg); }
+}
+
+/* Sombra no "chão" da bancada, para o livro não parecer colado
+   no fundo. */
+.l3d-bancada-piso {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.l3d-bancada-piso::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -34px;
+  width: 210px;
+  height: 26px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 50%, rgba(4, 1, 16, .85), transparent 70%);
+  filter: blur(9px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l3d-bancada.girando .livro3d { animation: none; }
+}
+
+/* ============================================================
+   OFICINA — a bancada e seus controles (só do protótipo)
+   ============================================================ */
+.l3d-oficina {
+  max-width: 1320px;
+  margin: 10px auto 30px;
+  padding: 0 16px;
+}
+.l3d-ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 52px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(46, 31, 138, .38), rgba(20, 9, 58, .38));
+  border: 1px solid var(--vidro-borda);
+}
+.l3d-ferramentas .p3d-controle { min-width: 190px; flex: 1 1 190px; }
+
+.l3d-select {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  color: var(--texto-claro);
+  background: rgba(8, 4, 26, .7);
+  border: 1px solid var(--vidro-borda);
+  font: inherit;
+  font-size: .88rem;
+}
+.l3d-select option { background: #14093a; }
+
+.l3d-botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.l3d-btn {
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--texto-claro);
+  background: rgba(184, 158, 255, .12);
+  border: 1px solid var(--vidro-borda);
+  transition: background .15s ease, transform .12s ease;
+}
+.l3d-btn:hover { background: rgba(184, 158, 255, .24); }
+.l3d-btn:active { transform: scale(.96); }

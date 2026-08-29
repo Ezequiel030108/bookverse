@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0524" />
+  <title>Protótipo · Livro 3D — BookVerse</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/livro3d.css" />
+  <link rel="stylesheet" href="css/prototipo-3d.css" />
+</head>
+<body>
+
+  <div class="ceu-global" aria-hidden="true">
+    <span class="meteoro meteoro-1"></span>
+    <span class="meteoro meteoro-2"></span>
+  </div>
+
+  <div class="p3d-topo">
+    <a class="p3d-voltar" href="prototipo-3d.html">&#8249; ver a estante 3D</a>
+    <h1>Livro 3D — o bloco por dentro</h1>
+    <p>
+      Cada livro virou um <strong>paralelepípedo de seis faces</strong>:
+      capa, contracapa, lombada com o título, o corte de papel e as folhas
+      vistas de cima e de baixo. <strong>Arraste o livro</strong> para girar
+      e olhar de qualquer lado.
+    </p>
+  </div>
+
+  <!-- ===== BANCADA: um livro só, para inspecionar ===== -->
+  <section class="l3d-oficina" aria-label="Livro em 3D para girar">
+    <div class="l3d-bancada-piso">
+      <div class="l3d-bancada girando" id="bancada">
+        <!-- o bloco é montado pelo JS -->
+      </div>
+    </div>
+
+    <div class="l3d-ferramentas">
+      <div class="p3d-controle">
+        <label for="l3d-livro">Livro</label>
+        <select id="l3d-livro" class="l3d-select"></select>
+      </div>
+      <div class="p3d-controle">
+        <label for="l3d-grossura">Grossura <output id="l3d-grossura-valor"></output></label>
+        <input type="range" id="l3d-grossura" min="8" max="46" step="1" value="24">
+      </div>
+      <div class="l3d-botoes">
+        <button type="button" class="l3d-btn" data-vista="capa">Capa</button>
+        <button type="button" class="l3d-btn" data-vista="lombada">Lombada</button>
+        <button type="button" class="l3d-btn" data-vista="verso">Verso</button>
+        <button type="button" class="l3d-btn" data-vista="tresquartos">3/4</button>
+        <button type="button" class="l3d-btn" data-vista="girar">Girar sozinho</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== A MESMA ESTANTE, AGORA COM OS BLOCOS ===== -->
+  <div class="p3d-topo">
+    <h2 class="fileira-titulo" style="margin-top:26px">Na estante</h2>
+    <p>É o mesmo bloco, em tamanho de vitrine. Repare que cada livro tem uma
+      grossura diferente — é isso que tira a cara de "estante de livros
+      clonados".</p>
+  </div>
+
+  <main>
+    <div id="p3d-catalogo"></div>
+  </main>
+
+  <p class="p3d-nota">
+    <strong>De onde vem a grossura de cada livro:</strong> a loja não guarda o
+    número de páginas, então ela é calculada a partir do título — sempre a
+    mesma para o mesmo livro. Se quiser a grossura real de algum, é só
+    acrescentar <code>paginas: 320</code> no cadastro dele, dentro do
+    <code>js/livros.js</code>.
+    <br><br>
+    <strong>A contracapa é desenhada, não fotografada:</strong> o catálogo só
+    tem a foto da frente. Se um dia você fotografar o verso, dá para usar a
+    foto de verdade no lugar.
+    <br><br>
+    <strong>O ponto fraco, e ele é real:</strong> as fotos do catálogo são de
+    alguém segurando o livro, com a mão e a parede no quadro. O bloco 3D veste
+    a foto INTEIRA — então o que gira é a fotografia, não o livro. Em tamanho
+    de estante quase não se nota; girando de perto aqui na bancada, se nota
+    bastante. A solução é uma foto reta só da capa, recortada. Já deixei
+    pronto: é só acrescentar <code>imagemCapa: "img/nome-da-capa.jpg"</code> no
+    cadastro do livro, que o bloco passa a usar essa foto e a loja continua
+    mostrando a foto de sempre na estante.
+  </p>
+
+  <script src="js/util.js"></script>
+  <script src="js/livros.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/precos.js"></script>
+  <script src="js/livro3d.js"></script>
+  <script src="js/prototipo-3d.js"></script>
+  <script src="js/prototipo-bancada.js"></script>
+</body>
+</html>

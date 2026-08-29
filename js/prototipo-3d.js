@@ -40,7 +40,7 @@ window.Vitrine3D = (function () {
     escala:       0.12,  // quanto encolhe nas pontas (0.12 = 12%)
     sombra:       0.42,  // quanto escurece nas pontas
     alcance:      1.25,  // até onde o efeito vai (1 = borda do trilho)
-    espessura:    15,    // px de lombada (a "grossura" do livro)
+    grossura:     1,     // multiplica a grossura de cada livro
     flutuar:      true,  // o balanço parado no espaço
     parallax:     true   // a estante acompanha o mouse
   };
@@ -91,9 +91,17 @@ window.Vitrine3D = (function () {
       corpo.className = "p3d-corpo";
       capa.parentNode.insertBefore(corpo, capa);
       corpo.appendChild(capa);
+
+      /* O título sai do próprio card (e não de um parâmetro), para
+         o motor continuar funcionando com os cards que a loja de
+         verdade cria, sem precisar mudar o criarCard(). */
+      var h = card.querySelector(".info-titulo");
+      card.__titulo = h ? h.textContent : "";
+
+      /* A capa vira a face da frente de um paralelepípedo. */
+      Livro3D.montar(capa, { titulo: card.__titulo });
+
       corpo.insertAdjacentHTML("beforeend",
-        '<span class="p3d-lombada" aria-hidden="true"></span>' +
-        '<span class="p3d-paginas" aria-hidden="true"></span>' +
         '<span class="p3d-sombra" aria-hidden="true"></span>');
       /* O véu vai DENTRO da capa (que já corta nos cantos
          arredondados). É ele que escurece o livro das pontas. */
@@ -127,16 +135,32 @@ window.Vitrine3D = (function () {
     var pendente = false;   // já tem um quadro agendado?
     var visivel  = true;    // a fileira está na tela?
 
+    /* Mede o card UMA vez e repassa as medidas para todos os
+       blocos da fileira (eles têm todos o mesmo tamanho).
+       offsetWidth/offsetHeight de propósito: eles dão o tamanho do
+       layout, sem contar o giro 3D — getBoundingClientRect daria a
+       sombra achatada do card virado, e o livro nasceria torto. */
     function aplicarEstaticos() {
-      trilho.style.setProperty("--p3d-espessura", cfg.espessura + "px");
+      var primeiro = cards[0] && cards[0].querySelector(".livro3d");
+      var larg = primeiro ? primeiro.offsetWidth : 0;
+      var alt  = primeiro ? primeiro.offsetHeight : 0;
+
       cards.forEach(function (card) {
-        card.style.setProperty("--p3d-espessura", cfg.espessura + "px");
-        card.querySelectorAll(".p3d-corpo").forEach(function (c) {
-          c.style.setProperty("--p3d-espessura", cfg.espessura + "px");
-        });
+        var bloco = card.querySelector(".livro3d");
+        if (bloco && larg) {
+          Livro3D.medir(bloco, larg, alt);
+          /* Cada livro tem a SUA grossura (ver js/livro3d.js). O
+             controle do painel só multiplica todas de uma vez. */
+          var esp = Livro3D.espessuraDe(
+            { titulo: card.__titulo, paginas: card.dataset.paginas },
+            larg
+          );
+          bloco.style.setProperty("--l3d-e", (esp * cfg.grossura).toFixed(1) + "px");
+        }
         var flutua = card.querySelector(".p3d-flutua");
         if (flutua) flutua.style.animationPlayState = cfg.flutuar ? "running" : "paused";
       });
+
       if (!cfg.parallax) {
         palco.style.setProperty("--p3d-inclina-x", "0deg");
         palco.style.setProperty("--p3d-inclina-y", "0deg");
@@ -219,7 +243,8 @@ window.Vitrine3D = (function () {
     }
 
     trilho.addEventListener("scroll", agendar, { passive: true });
-    window.addEventListener("resize", agendar);
+    function aoRedimensionar() { aplicarEstaticos(); agendar(); }
+    window.addEventListener("resize", aoRedimensionar);
     var finoPonteiro = window.matchMedia && window.matchMedia("(hover: hover)").matches;
     if (finoPonteiro) {
       palco.addEventListener("pointermove", aoMover);
@@ -251,7 +276,7 @@ window.Vitrine3D = (function () {
       atualizar: agendar,
       desligar: function () {
         trilho.removeEventListener("scroll", agendar);
-        window.removeEventListener("resize", agendar);
+        window.removeEventListener("resize", aoRedimensionar);
         palco.removeEventListener("pointermove", aoMover);
         palco.removeEventListener("pointerleave", aoSair);
         if (observador) observador.disconnect();
@@ -286,7 +311,12 @@ window.Vitrine3D = (function () {
   }
 
   function capaDe(livro) {
-    var src = window.Util ? Util.imagemSrcSegura(livro.imagem) : livro.imagem;
+    /* "imagemCapa" é a foto SÓ da capa, reta e sem fundo. Quando
+       existe, é ela que veste o bloco 3D: a foto normal da loja
+       costuma ter a mão e a parede, e vira um pôster da foto em
+       vez do livro. Sem ela, usa a de sempre. */
+    var bruta = livro.imagemCapa || livro.imagem;
+    var src = window.Util ? Util.imagemSrcSegura(bruta) : bruta;
     if (src) {
       return '<img src="' + esc(src) + '" alt="Capa de ' + esc(livro.titulo) + '" loading="lazy">';
     }
@@ -377,7 +407,7 @@ window.Vitrine3D = (function () {
 
   ligarControle("p3d-rotacao",      "rotacao",      "°");
   ligarControle("p3d-profundidade", "profundidade", "px");
-  ligarControle("p3d-espessura",    "espessura",    "px");
+  ligarControle("p3d-espessura",    "grossura",     "%", 100);
   ligarControle("p3d-sombra",       "sombra",       "%", 100);
   ligarChave("p3d-flutuar",  "flutuar");
   ligarChave("p3d-parallax", "parallax");
