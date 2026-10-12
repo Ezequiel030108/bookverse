@@ -1540,6 +1540,52 @@ main {
   .vitrine-baloes, .vitrine-promo.destacar .vitrine-card { animation: none; }
 }
 
+/* ---- O fundo do site em festa (discreto) ----
+   O céu continua o mesmo, só que:
+   • parte das estrelas vira confete colorido (mesmas posições do céu
+     normal, um pouco maiores para a cor aparecer);
+   • os meteoros viram serpentinas rosa, ciano e dourada. */
+body.promo-tema-criancas::before {
+  background-image:
+    radial-gradient(3.2px 3.2px at 12% 18%, var(--aurora-rosa), transparent 55%),
+    radial-gradient(2.9px 2.9px at 78% 8%,  var(--estrela), transparent 55%),
+    radial-gradient(3.2px 3.2px at 42% 88%, var(--aurora-ciano), transparent 55%),
+    radial-gradient(2.9px 2.9px at 25% 50%, #8ff0b0, transparent 55%),
+    radial-gradient(1.3px 1.3px at 60% 35%, #fff, transparent 55%),
+    radial-gradient(2.9px 2.9px at 88% 62%, var(--aurora-rosa), transparent 55%),
+    radial-gradient(1.3px 1.3px at 33% 73%, #fff, transparent 55%),
+    radial-gradient(2.9px 2.9px at 7%  82%, var(--lavanda), transparent 55%),
+    radial-gradient(2.9px 2.9px at 95% 28%, var(--aurora-ciano), transparent 55%),
+    radial-gradient(1.3px 1.3px at 53% 60%, #fff, transparent 55%),
+    radial-gradient(2.9px 2.9px at 70% 78%, var(--estrela), transparent 55%),
+    radial-gradient(.8px .8px at 18% 30%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 50% 12%, rgba(255,255,255,.75), transparent 55%),
+    radial-gradient(.8px .8px at 67% 95%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 82% 45%, rgba(255,255,255,.75), transparent 55%),
+    radial-gradient(.8px .8px at 3%  62%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 38% 5%,  rgba(255,255,255,.75), transparent 55%);
+}
+body.promo-tema-criancas::after {
+  background-image:
+    radial-gradient(1.3px 1.3px at 20% 22%, #fff, transparent 55%),
+    radial-gradient(2.7px 2.7px at 55% 80%, var(--aurora-rosa), transparent 55%),
+    radial-gradient(2.7px 2.7px at 75% 40%, var(--aurora-ciano), transparent 55%),
+    radial-gradient(1px 1px at 40% 60%, #fff, transparent 55%),
+    radial-gradient(2.7px 2.7px at 88% 15%, var(--estrela), transparent 55%),
+    radial-gradient(.8px .8px at 10% 45%, #fff, transparent 55%);
+}
+
+.promo-tema-criancas .meteoro {
+  background: linear-gradient(90deg, #fff 0%, rgb(var(--cor-meteoro) / .8) 22%, rgb(var(--cor-meteoro) / 0) 80%);
+  filter: drop-shadow(0 0 6px rgb(var(--cor-meteoro) / .9));
+}
+.promo-tema-criancas .meteoro::after {
+  box-shadow: 0 0 12px 3px rgb(var(--cor-meteoro) / .9), 0 0 5px 1px #fff;
+}
+.promo-tema-criancas .meteoro-1 { --cor-meteoro: 255 122 217; } /* rosa */
+.promo-tema-criancas .meteoro-2 { --cor-meteoro: 122 223 255; } /* ciano */
+.promo-tema-criancas .meteoro-3 { --cor-meteoro: 255 217 102; } /* dourado */
+
 /* ============================================================
    SELO FLUTUANTE DA PROMOÇÃO — o "botton" do canto da tela
    Um broche redondo: aro branco, faixa com o nome da promoção
