@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
   }
 
   let livro = null;
-  try { livro = await acharLivro(base, id); } catch (e) {}
+  try { livro = await acharLivro(id); } catch (e) {}
 
   // Imagem da prévia: a MOLDURA da BookVerse com a foto do livro no
   // meio (gerada por /api/capa). Sem foto (ou livro não achado), a logo.

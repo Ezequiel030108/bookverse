@@ -8,7 +8,15 @@
      2. + livros/edições do admin (coleção "catalogo", leitura
         pública no Firestore).
    Arquivos com "_" não viram rotas (functions/index.js).
+
+   O js/livros.js vem SEMPRE do endereço oficial do site
+   (siteInterno, em _seguranca.js) — nunca de um endereço que a
+   requisição informa — e roda isolado (módulo vm), sem acesso aos
+   segredos do servidor.
    ============================================================ */
+
+const vm = require("vm");
+const { siteInterno, baseConfiavel } = require("./_seguranca");
 
 const PROJETO = process.env.FIREBASE_PROJECT_ID || "bookverse-69878";
 
@@ -45,22 +53,32 @@ let ocultosEstaticos = [];   // a lista LIVROS_OCULTOS lida do js/livros.js
 const TEMPO_CACHE = 5 * 60 * 1000;   // idade máxima do cache em memória
 const TEMPO_LIMITE_MS = 4000;        // espera máxima por CADA busca externa
 
+/* Roda o js/livros.js num contexto separado (sem process, require ou
+   qualquer variável do servidor) e devolve só os DADOS dele, já
+   convertidos em objetos comuns. O limite de tempo impede que um erro
+   no arquivo (um laço infinito, por exemplo) trave a função. */
+function dadosDoLivrosJs(codigo) {
+  const contexto = vm.createContext(Object.create(null));
+  const script = new vm.Script(
+    "var window = globalThis;\n" + codigo +
+    "\n;JSON.stringify({" +
+    "  livros: (typeof LIVROS !== 'undefined') ? LIVROS : []," +
+    "  promocao: (typeof PROMOCAO !== 'undefined') ? PROMOCAO : null," +
+    "  ocultos: (typeof LIVROS_OCULTOS !== 'undefined') ? LIVROS_OCULTOS : []" +
+    "});",
+    { filename: "livros.js" });
+  return JSON.parse(script.runInContext(contexto, { timeout: 1000 }));
+}
+
 /* 1) js/livros.js do site publicado. Devolve null se a busca falhar
    (null ≠ lista vazia: falha permite cair no cache antigo).
    De quebra, guarda a constante PROMOCAO (para o feed do Google Shopping
    refletir o preço promocional, igual ao que o cliente vê no site). */
-async function livrosEstaticos(base) {
+async function livrosEstaticos() {
   try {
-    const r = await fetch(base + "/js/livros.js", { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
+    const r = await fetch(siteInterno() + "/js/livros.js", { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
     if (!r.ok) return null;
-    const codigo = await r.text();
-    const fn = new Function("window", codigo +
-      "\n;return {" +
-      "  livros: (typeof LIVROS !== 'undefined') ? LIVROS : []," +
-      "  promocao: (typeof PROMOCAO !== 'undefined') ? PROMOCAO : null," +
-      "  ocultos: (typeof LIVROS_OCULTOS !== 'undefined') ? LIVROS_OCULTOS : []" +
-      "};");
-    const out = fn({}) || {};
+    const out = dadosDoLivrosJs(await r.text()) || {};
     promoEstatica = out.promocao || null;
     ocultosEstaticos = Array.isArray(out.ocultos) ? out.ocultos : [];
     return Array.isArray(out.livros) ? out.livros.slice() : null;
@@ -72,16 +90,33 @@ async function livrosEstaticos(base) {
    carregarLivros() antes. */
 function promocaoAtual() { return promoEstatica; }
 
+/* Lê uma coleção pública do Firestore INTEIRA, página por página.
+   O Firestore corta a resposta em páginas (as fotos embutidas deixam
+   cada página grande): com 83 cadastros, a primeira página trazia só 76
+   — e os outros sumiam do feed do Google/Meta e das prévias de link.
+   Devolve null se qualquer página falhar (lista pela metade não serve). */
+async function lerColecaoPublica(colecao) {
+  const docs = [];
+  let token = "";
+  for (let pagina = 0; pagina < 50; pagina++) {
+    const url = "https://firestore.googleapis.com/v1/projects/" + PROJETO +
+      "/databases/(default)/documents/" + colecao + "?pageSize=300" +
+      (token ? "&pageToken=" + encodeURIComponent(token) : "");
+    const r = await fetch(url, { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    (data.documents || []).forEach(d => docs.push(d));
+    token = data.nextPageToken || "";
+    if (!token) return docs;
+  }
+  return null;
+}
+
 /* 2) livros/edições do admin (Firestore, leitura pública). */
 async function livrosDoAdmin() {
   try {
-    const r = await fetch(
-      "https://firestore.googleapis.com/v1/projects/" + PROJETO +
-      "/databases/(default)/documents/catalogo?pageSize=300",
-      { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
-    if (!r.ok) return null;
-    const data = await r.json();
-    return (data.documents || []).map(converterDoc);
+    const docs = await lerColecaoPublica("catalogo");
+    return docs ? docs.map(converterDoc) : null;
   } catch (e) { return null; }
 }
 
@@ -122,10 +157,10 @@ function quandoEntrou(l) {
    As duas buscas correm em paralelo e têm limite de tempo; se alguma
    falhar, a última lista completa continua valendo — assim o link de
    um livro nunca "some" por causa de uma instabilidade momentânea. */
-async function carregarLivros(base) {
+async function carregarLivros() {
   if (cache.lista.length && Date.now() - cache.t < TEMPO_CACHE) return cache.lista;
 
-  const [estaticos, extras] = await Promise.all([livrosEstaticos(base), livrosDoAdmin()]);
+  const [estaticos, extras] = await Promise.all([livrosEstaticos(), livrosDoAdmin()]);
 
   // Busca incompleta: melhor servir a lista antiga inteira do que gravar
   // uma pela metade (o livro do link poderia desaparecer da prévia).
@@ -147,9 +182,9 @@ async function carregarLivros(base) {
   return lista;
 }
 
-async function acharLivro(base, id) {
+async function acharLivro(id) {
   if (!id) return null;
-  const lista = await carregarLivros(base);
+  const lista = await carregarLivros();
   return lista.find(l => idLivro(l) === id) || null;
 }
 
@@ -163,14 +198,10 @@ async function acharLivro(base, id) {
 async function carregarDisponibilidade() {
   const bloq = new Map();
   try {
-    const r = await fetch(
-      "https://firestore.googleapis.com/v1/projects/" + PROJETO +
-      "/databases/(default)/documents/disponibilidade?pageSize=300",
-      { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
-    if (!r.ok) return bloq;
-    const data = await r.json();
+    const docs = await lerColecaoPublica("disponibilidade");
+    if (!docs) return bloq;
     const agora = Date.now();
-    (data.documents || []).forEach(doc => {
+    docs.forEach(doc => {
       const d = converterDoc(doc);
       let q = 0;
       if (d.estado === "vendido") q = (d.qtd > 0) ? Number(d.qtd) : Infinity;
@@ -181,12 +212,10 @@ async function carregarDisponibilidade() {
   return bloq;
 }
 
+/* Endereço do site para LINKS (feed, prévias). Só confia no domínio da
+   requisição se for um domínio da loja — veja _seguranca.js. */
 function baseDoRequest(req) {
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "";
-  // Atrás do Firebase Hosting o protocolo vem em x-forwarded-proto
-  // (no emulador local é "http"; em produção, "https").
-  const proto = String(req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
-  return proto + "://" + host;
+  return baseConfiavel(req);
 }
 
 module.exports = { slug, idLivro, carregarLivros, carregarDisponibilidade, acharLivro, baseDoRequest, promocaoAtual };

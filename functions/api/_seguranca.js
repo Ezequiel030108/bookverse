@@ -6,6 +6,61 @@
    só para reaproveitar código entre as funções.
    ============================================================ */
 
+/* ------------------------------------------------------------
+   ENDEREÇOS DO SITE — nunca a partir do que a requisição diz.
+
+   Os cabeçalhos Host e X-Forwarded-Host são escritos por QUEM
+   CHAMA: qualquer pessoa pode chamar a função direto (pelo
+   endereço *.cloudfunctions.net / *.run.app) dizendo que o site
+   é "site-do-atacante.com". Por isso:
+
+   • siteInterno(): de onde o SERVIDOR busca arquivos do site
+     (js/livros.js, imagens). É SEMPRE o endereço oficial do
+     Firebase Hosting — o js/livros.js é executado aqui dentro,
+     então buscá-lo de um endereço vindo da requisição deixava
+     qualquer um rodar código no servidor (e ler os segredos).
+     Só o dono do projeto troca, pelo functions/.env (SITE_URL).
+
+   • baseConfiavel(req): endereço para LINKS (e-mails, feed,
+     prévias). Usa o domínio da requisição só se for um domínio
+     conhecido da loja; senão, o endereço público oficial.
+   ------------------------------------------------------------ */
+const PROJETO = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || "bookverse-69878";
+
+function semBarraFinal(url) { return String(url || "").trim().replace(/\/+$/, ""); }
+
+function siteInterno() {
+  return semBarraFinal(process.env.SITE_URL || `https://${PROJETO}.web.app`);
+}
+
+function sitePublico() {
+  return semBarraFinal(process.env.LOJA_SITE || "https://www.bookverse.com.br");
+}
+
+function escapeRegex(t) { return String(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+/* Domínios que servem a loja: o domínio próprio (e subdomínios), os
+   endereços do Firebase Hosting (inclusive os de prévia dos PRs) e o
+   emulador local. */
+const HOSTS_DA_LOJA = [
+  /^([a-z0-9-]+\.)*bookverse\.com\.br$/,
+  new RegExp("^" + escapeRegex(PROJETO) + "(--[a-z0-9-]+)?\\.(web\\.app|firebaseapp\\.com)$"),
+  /^(localhost|127\.0\.0\.1)(:\d{1,5})?$/
+];
+
+function hostDaLoja(host) {
+  const h = String(host || "").trim().toLowerCase();
+  return !!h && HOSTS_DA_LOJA.some(re => re.test(h));
+}
+
+function baseConfiavel(req) {
+  const cab = (req && req.headers) || {};
+  const host = String(cab["x-forwarded-host"] || cab.host || "").split(",")[0].trim().toLowerCase();
+  if (!hostDaLoja(host)) return sitePublico();
+  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+  return (local ? "http" : "https") + "://" + host;
+}
+
 // Cabeçalhos de segurança aplicados em todas as respostas das APIs.
 function aplicarHeaders(res) {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -93,4 +148,7 @@ async function exigirAdmin(req, res) {
   return false;
 }
 
-module.exports = { aplicarHeaders, exigirAdmin, emailDoToken, usuarioDoToken, ehAdmin, listaAdmins };
+module.exports = {
+  aplicarHeaders, exigirAdmin, emailDoToken, usuarioDoToken, ehAdmin, listaAdmins,
+  siteInterno, sitePublico, baseConfiavel, hostDaLoja
+};

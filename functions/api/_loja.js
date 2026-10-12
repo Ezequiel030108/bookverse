@@ -10,7 +10,7 @@
      LOJA_CIDADE=Juazeirinho
      LOJA_WHATSAPP=5514982241492
      LOJA_INSTAGRAM=mybookverse.pb
-     LOJA_SITE=https://bookverse.com.br
+     LOJA_SITE=https://www.bookverse.com.br
 
    MODELOS DO WHATSAPP: são os nomes cadastrados no Gerenciador do
    WhatsApp (Meta). Os padrões seguem a convenção documentada no
@@ -22,6 +22,8 @@
    Arquivos com "_" no início NÃO viram rotas (functions/index.js).
    ============================================================ */
 
+const { baseConfiavel } = require("./_seguranca");
+
 const PADRAO = {
   nome: "BookVerse",
   cidade: "Juazeirinho",
@@ -29,15 +31,15 @@ const PADRAO = {
   instagram: "mybookverse.pb"
 };
 
-/* Endereço público do site. Preferimos o host da própria requisição
-   (funciona em qualquer domínio, inclusive no emulador). */
+/* Endereço público do site (links dos e-mails e das campanhas).
+   Com LOJA_SITE definido, vale ele. Senão, o domínio da própria
+   requisição — mas só se for um domínio da loja (veja _seguranca.js):
+   o cabeçalho Host é escrito por quem chama, e um link de e-mail nunca
+   pode apontar para um site de fora. */
 function siteDaRequisicao(req) {
   const env = String(process.env.LOJA_SITE || "").trim();
   if (env) return env.replace(/\/+$/, "");
-  const host = (req && (req.headers["x-forwarded-host"] || req.headers.host)) || "";
-  if (!host) return "";
-  const proto = /^localhost|^127\./.test(host) ? "http" : "https";
-  return `${proto}://${host}`;
+  return baseConfiavel(req);
 }
 
 function dadosLoja(req) {
