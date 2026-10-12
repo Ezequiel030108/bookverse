@@ -35,7 +35,9 @@ projeto livros/
 │       ├── pedido.js      ← FECHA O PEDIDO: calcula o total, reserva e cobra
 │       ├── _pedidos.js    ← as regras do pedido (preço, estoque, confirmação)
 │       ├── _site.js       ← o servidor lê livros.js/config.js/precos.js do site
-│       ├── _mercadopago.js← conversa com o Mercado Pago (cobrança e consulta)
+│       ├── _mercadopago.js← conversa com o Mercado Pago (cobrar, consultar, cancelar)
+│       ├── catalogo.js    ← livros do painel para a vitrine, SEM as fotos dentro (leve)
+│       ├── img-livro.js   ← a foto de um livro do painel (fica guardada no CDN)
 │       ├── status-pix.js  ← o checkout pergunta "já caiu?" (e confirma)
 │       ├── webhook-mp.js  ← confirma o Pix e avisa o cliente na hora
 │       ├── avisar.js      ← avisa o cliente (pedido pago, entregue…)

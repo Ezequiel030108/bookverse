@@ -86,6 +86,18 @@ function simularMercadoPago() {
       }
       const m = req.url.match(/^\/v1\/payments\/(\d+)$/);
       if (req.method === "GET" && m && pagamentos.has(m[1])) { res.end(JSON.stringify(pagamentos.get(m[1]))); return; }
+      // Cancelar: como o de verdade, só vale para o que ainda não foi pago.
+      if (req.method === "PUT" && m && pagamentos.has(m[1])) {
+        const pg = pagamentos.get(m[1]);
+        const pedido = JSON.parse(corpo || "{}");
+        if (pedido.status === "cancelled" && pg.status === "pending") {
+          pg.status = "cancelled";
+          res.end(JSON.stringify(pg));
+        } else {
+          res.statusCode = 400; res.end('{"message":"não dá para cancelar"}');
+        }
+        return;
+      }
       res.statusCode = 404; res.end("{}");
     });
   });
@@ -167,11 +179,12 @@ function chamar(handler, { metodo, corpo, token, query, headers }) {
     };
     const res = {
       statusCode: 200,
+      headers: {},
       status(c) { this.statusCode = c; return this; },
-      setHeader() {},
-      json(b) { resolve({ status: this.statusCode, corpo: b }); return this; },
-      send(b) { resolve({ status: this.statusCode, corpo: b }); return this; },
-      end(b) { resolve({ status: this.statusCode, corpo: b }); return this; }
+      setHeader(nome, valor) { this.headers[String(nome).toLowerCase()] = valor; },
+      json(b) { resolve({ status: this.statusCode, corpo: b, headers: this.headers }); return this; },
+      send(b) { resolve({ status: this.statusCode, corpo: b, headers: this.headers }); return this; },
+      end(b) { resolve({ status: this.statusCode, corpo: b, headers: this.headers }); return this; }
     };
     Promise.resolve(handler(req, res)).catch(reject);
   });

@@ -17,6 +17,12 @@
       "Livros/**",
       "Livros novos 2/**",
       "LOGO.jpg",
+      "vidas secas.jpg",
+      "o morro dos ventos uivantes.jpg",
+      "noites brancas.jpg",
+      "fahrenheint.jpg",
+      "BookVerse_texto_transparente.png",
+      "Gemini_Generated_Image_*.png",
       "package.json",
       "package-lock.json"
     ],

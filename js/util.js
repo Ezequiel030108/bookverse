@@ -28,6 +28,8 @@
     if (!u) return "";
     if (/^(https?:\/\/|data:image\/)/i.test(u)) return u;
     if (/^[a-z0-9_\-./]+$/i.test(u) && u.indexOf("..") < 0) return u; // caminho relativo (img/...)
+    // Foto de um livro do painel, servida pela API (veja api/catalogo.js).
+    if (/^\/api\/img-livro\?id=[a-z0-9._%-]+(&v=[a-f0-9]+)?$/i.test(u)) return u;
     return "";
   }
 

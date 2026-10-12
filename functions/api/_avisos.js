@@ -214,7 +214,7 @@ function moldura(opcoes) {
               ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                   <tr>
                     <td style="padding-right:10px;vertical-align:middle;">
-                      <img src="${esc(site)}/img/logo.png" width="42" height="42" alt="" style="display:block;width:42px;height:42px;border:0;">
+                      <img src="${esc(site)}/img/logo-96.png" width="42" height="42" alt="" style="display:block;width:42px;height:42px;border:0;">
                     </td>
                     <td style="vertical-align:middle;">
                       <img src="${esc(site)}/img/bookverse-titulo.png" width="200" height="48" alt="${esc(nomeLoja)}" style="display:block;width:200px;max-width:100%;height:auto;border:0;">
