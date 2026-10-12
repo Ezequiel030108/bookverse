@@ -389,8 +389,29 @@
     aguardando: { texto: "Aguardando confirmação", classe: "pedido-pendente" },
     enviado:    { texto: "A caminho 🚚",           classe: "pedido-pago" },
     entregue:   { texto: "Entregue ✓",             classe: "pedido-entregue" },
-    cancelado:  { texto: "Cancelado",              classe: "pedido-cancelado" }
+    cancelado:  { texto: "Cancelado",              classe: "pedido-cancelado" },
+    substituido: { texto: "Substituído: o cliente refez o pedido", classe: "pedido-cancelado" }
   };
+
+  /* ---------- Tentativas repetidas ----------
+     Quando o cliente gera o Pix de novo (trocou a entrega, recarregou a
+     página...), o pedido anterior, sem pagamento, fica para trás. O
+     servidor marca esses como "substituido"; os de antes disso são
+     reconhecidos aqui: pedido esperando o Pix de um cliente que depois
+     fez OUTRO pedido com algum livro em comum. Eles saem das listas —
+     eram os "pedidos duplicados" do painel. */
+  function tempoDoPedido(p) {
+    const c = p && p.criadoEm;
+    return c && typeof c.toMillis === "function" ? c.toMillis() : 0;
+  }
+  function tentativaRepetida(p, doMesmoCliente) {
+    if (p.status === "substituido") return true;
+    if (p.status !== "pendente") return false;
+    const ids = (p.itens || []).map(i => i && i.id).filter(Boolean);
+    const t = tempoDoPedido(p);
+    return doMesmoCliente.some(q => q !== p && tempoDoPedido(q) > t &&
+      (q.itens || []).some(i => i && ids.indexOf(i.id) >= 0));
+  }
 
   /* Linha do tempo do pedido:
        Pedido feito → Pagamento → A caminho → Entregue
@@ -429,10 +450,11 @@
       `<li>${esc(i.qty)}× ${esc(i.titulo)}${i.condicao ? ` <span class="ci-condicao">${i.condicao === "novo" ? "Novo" : "Usado"}</span>` : ""}</li>`).join("");
   }
 
-  function renderPedidos(pedidos) {
+  function renderPedidos(todos) {
     const lista = document.getElementById("lista-pedidos");
     const vazio = document.getElementById("sem-pedidos");
     if (!lista) return;
+    const pedidos = todos.filter(p => !tentativaRepetida(p, todos));
     if (!pedidos.length) {
       lista.innerHTML = "";
       if (vazio) { vazio.hidden = false; vazio.textContent = "Você ainda não fez nenhum pedido por aqui."; }
@@ -583,6 +605,7 @@
   let plojaCarregado = false;
   let plojaFiltro = "";
   let plojaFiltroStatus = "todos";   // todos | apagar | pago | entregue
+  let plojaMostrarRepetidos = false; // mostrar as tentativas repetidas (ocultas por padrão)
 
   /* De onde veio o pedido (campo "origem", gravado pelo checkout). */
   const ORIGENS_PEDIDO = { meta: "Instagram / Facebook" };
@@ -594,6 +617,7 @@
     if (p.status === "enviado") return "enviado";
     if (p.status === "entregue") return "entregue";
     if (p.status === "cancelado") return "cancelado";
+    if (p.status === "substituido") return "substituido";
     return "apagar";   // pendente / aguardando
   }
 
@@ -619,7 +643,26 @@
     if (!lista) return;
     const termo = plojaFiltro.toLowerCase();
 
+    // Tentativas repetidas: fora da lista (a busca ainda acha, e dá para
+    // mostrar todas — ex.: o cliente pagou o Pix antigo).
+    const porCliente = new Map();
+    plojaPedidos.forEach(p => {
+      const uid = uidDoCaminho(p._caminho);
+      if (!porCliente.has(uid)) porCliente.set(uid, []);
+      porCliente.get(uid).push(p);
+    });
+    plojaPedidos.forEach(p => { p._repetido = tentativaRepetida(p, porCliente.get(uidDoCaminho(p._caminho)) || []); });
+    const ocultarRepetidos = !plojaMostrarRepetidos && !termo;
+    const repetidos = plojaPedidos.filter(p => p._repetido).length;
+    const notaRepetidos = repetidos
+      ? `<p class="conta-ajuda ploja-repetidos">${ocultarRepetidos
+          ? `${repetidos === 1 ? "1 tentativa repetida oculta" : repetidos + " tentativas repetidas ocultas"} (o cliente refez o pedido e vale o mais novo).`
+          : `Mostrando ${repetidos === 1 ? "1 tentativa repetida" : repetidos + " tentativas repetidas"}.`}
+          ${termo ? "" : `<button type="button" class="ploja-repetidos-btn">${ocultarRepetidos ? "Mostrar" : "Ocultar"}</button>`}</p>`
+      : "";
+
     const pedidos = plojaPedidos.filter(p => {
+      if (ocultarRepetidos && p._repetido) return false;
       if (plojaFiltroStatus !== "todos" && plojaStatusGrupo(p) !== plojaFiltroStatus) return false;
       if (!termo) return true;
       const texto = [
@@ -630,12 +673,14 @@
     });
 
     if (!pedidos.length) {
-      lista.innerHTML = `<p class="conta-ajuda">${plojaPedidos.length ? "Nenhum pedido com esse filtro." : "Nenhum pedido registrado ainda."}</p>`;
+      lista.innerHTML = `<p class="conta-ajuda">${plojaPedidos.length ? "Nenhum pedido com esse filtro." : "Nenhum pedido registrado ainda."}</p>` + notaRepetidos;
       return;
     }
 
     lista.innerHTML = pedidos.map(p => {
-      const st = STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" };
+      const st = p._repetido && p.status === "pendente"
+        ? STATUS.substituido
+        : (STATUS[p.status] || { texto: p.status || "—", classe: "pedido-pendente" });
       const dataObj = p.criadoEm && p.criadoEm.toDate ? p.criadoEm.toDate() : null;
       const data = dataObj ? dataObj.toLocaleDateString("pt-BR") + " " + dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
       const c = p.cliente || {};
@@ -650,6 +695,9 @@
       if (ORIGENS_PEDIDO[p.origem]) selos.push(`<span class="ploja-selo">${esc(ORIGENS_PEDIDO[p.origem])}</span>`);
 
       const acoes = [];
+      // Tentativa que ficou para trás: se o Pix antigo foi pago mesmo assim,
+      // a loja confirma por aqui.
+      if (grupo === "substituido") acoes.push(`<button type="button" class="botao-loja botao-loja-secundario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Confirmar pagamento</button>`);
       if (grupo === "apagar") acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="pago" data-caminho="${esc(p._caminho)}">Confirmar pagamento</button>`);
       if (grupo === "pago")   acoes.push(`<button type="button" class="botao-loja botao-loja-primario ploja-btn" data-acao="enviado" data-caminho="${esc(p._caminho)}">Saiu para entrega</button>`);
       if (grupo === "pago" || grupo === "enviado")
@@ -697,7 +745,7 @@
           <p class="ploja-aviso-status" data-caminho="${esc(p._caminho)}">${esc(statusAviso)}</p>
           <div class="ploja-acoes">${acoes.join("")}</div>
         </article>`;
-    }).join("");
+    }).join("") + notaRepetidos;
   }
 
   /* Baixa de estoque dos itens de um pedido (com quantidade). */
@@ -752,6 +800,11 @@
   // Ações (confirmar pagamento / entregar / cancelar) — delegação
   const plojaListaEl = document.getElementById("ploja-lista");
   if (plojaListaEl) plojaListaEl.addEventListener("click", async (e) => {
+    if (e.target.closest(".ploja-repetidos-btn")) {
+      plojaMostrarRepetidos = !plojaMostrarRepetidos;
+      renderPedidosLoja();
+      return;
+    }
     // Reenviar o e-mail do pedido (pelo navegador do admin, que passa no
     // desafio anti-bot do Cloudflare que barra o servidor).
     const emailBtn = e.target.closest(".ploja-email-btn");

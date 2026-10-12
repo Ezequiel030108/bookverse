@@ -147,6 +147,65 @@ test("o próprio cliente pode refazer o Pix do mesmo livro", async () => {
   assert.equal(b.status, 200, JSON.stringify(b.corpo));
 });
 
+test("refez o Pix: o pedido anterior é substituído (sem pedido duplicado no painel)", async () => {
+  const a = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) });
+  const b = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30, entrega: "combinar" }) });
+  assert.equal(b.status, 200, JSON.stringify(b.corpo));
+
+  const pa = await lerPedido(ana.uid, a.corpo.codigo);
+  const pb = await lerPedido(ana.uid, b.corpo.codigo);
+  assert.equal(pa.status, "substituido", "o anterior sai da lista de pedidos a pagar");
+  assert.equal(pa.substituidoPor, b.corpo.codigo);
+  assert.equal(pb.status, "pendente", "o novo é o que vale");
+  assert.deepEqual(pb.substitui, [a.corpo.codigo]);
+  // O Pix antigo é cancelado no Mercado Pago: o cliente não paga duas vezes.
+  assert.equal(mp.pagamentos.get(a.corpo.pagamentoId).status, "cancelled");
+  assert.equal(mp.pagamentos.get(b.corpo.pagamentoId).status, "pending");
+  // "Recebemos seu pedido" sai uma vez só.
+  assert.equal(emailsDo("recebido").length, 1);
+});
+
+test("pedido de OUTRO livro não substitui o que está esperando o Pix", async () => {
+  const a = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) });
+  const b = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ itens: [{ id: LIVRO_14, qty: 1 }], totalVisto: 14 }) });
+  assert.equal(b.status, 200, JSON.stringify(b.corpo));
+  assert.equal((await lerPedido(ana.uid, a.corpo.codigo)).status, "pendente");
+  assert.equal(mp.pagamentos.get(a.corpo.pagamentoId).status, "pending");
+});
+
+test("trocou o Pix por dinheiro: o Pix em aberto é substituído", async () => {
+  const a = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) });
+  const b = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ pagamento: "dinheiro", totalVisto: 30 }) });
+  assert.equal(b.status, 200, JSON.stringify(b.corpo));
+  assert.equal((await lerPedido(ana.uid, b.corpo.codigo)).status, "aprovado");
+  assert.equal((await lerPedido(ana.uid, a.corpo.codigo)).status, "substituido");
+  assert.equal(mp.pagamentos.get(a.corpo.pagamentoId).status, "cancelled");
+});
+
+test("o Pix antigo foi pago mesmo assim: o pedido vira pago", async () => {
+  const a = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) });
+  const pgA = mp.pagamentos.get(a.corpo.pagamentoId);
+  // Ana paga o Pix antigo antes do cancelamento chegar ao banco dela.
+  pgA.status = "approved";
+  const b = await T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) });
+  assert.equal(b.status, 200);
+  assert.equal((await lerPedido(ana.uid, a.corpo.codigo)).status, "substituido");
+  await T.chamar(webhook, { metodo: "POST", corpo: { type: "payment", data: { id: a.corpo.pagamentoId } } });
+  const pa = await lerPedido(ana.uid, a.corpo.codigo);
+  assert.equal(pa.status, "pago", "dinheiro recebido vale, mesmo de uma tentativa antiga");
+  assert.equal(pa.estoqueBaixado, true);
+});
+
+test("dois pedidos do mesmo cliente ao mesmo tempo não se anulam", async () => {
+  const [a, b] = await Promise.all([
+    T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) }),
+    T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) })
+  ]);
+  assert.equal(a.status, 200); assert.equal(b.status, 200);
+  const status = [(await lerPedido(ana.uid, a.corpo.codigo)).status, (await lerPedido(ana.uid, b.corpo.codigo)).status];
+  assert.ok(status.indexOf("pendente") >= 0, "pelo menos um continua valendo: " + status);
+});
+
 test("duas pessoas pela ÚLTIMA unidade ao mesmo tempo: só uma leva", async () => {
   const [a, b] = await Promise.all([
     T.chamar(pedido, { token: ana.token, corpo: corpoPedido({ totalVisto: 30 }) }),

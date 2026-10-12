@@ -1,10 +1,12 @@
 /* ============================================================
    BOOKVERSE — CONVERSA COM O MERCADO PAGO
    ------------------------------------------------------------
-   As duas únicas chamadas que a loja faz ao Mercado Pago, num
-   lugar só (antes estavam copiadas em três arquivos):
+   As chamadas que a loja faz ao Mercado Pago, num lugar só (antes
+   estavam copiadas em três arquivos):
      • criar a cobrança Pix de um pedido;
-     • consultar um pagamento (a fonte da verdade do "já caiu?").
+     • consultar um pagamento (a fonte da verdade do "já caiu?");
+     • cancelar uma cobrança que ficou para trás (o cliente gerou
+       outro Pix para o mesmo pedido).
 
    Segredo (firebase functions:secrets:set MP_ACCESS_TOKEN).
    MP_API_URL só existe para os testes locais (simulador).
@@ -82,4 +84,24 @@ async function consultarPagamento(id) {
   return r.json();
 }
 
-module.exports = { configurado, criarCobrancaPix, consultarPagamento };
+/* Cancela uma cobrança Pix que ainda não foi paga — o cliente gerou
+   outro Pix e este ficou para trás: assim ele não paga duas vezes.
+   Melhor esforço: devolve true/false e nunca lança erro (cobrança já
+   paga não é cancelada; o Mercado Pago recusa). */
+async function cancelarCobranca(id) {
+  const limpo = String(id || "").trim();
+  if (!/^\d{1,20}$/.test(limpo) || !configurado()) return false;
+  try {
+    const r = await fetch(apiBase() + "/v1/payments/" + limpo, {
+      method: "PUT",
+      headers: { "Authorization": "Bearer " + token(), "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled" }),
+      signal: AbortSignal.timeout(5000)
+    });
+    return r.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+module.exports = { configurado, criarCobrancaPix, consultarPagamento, cancelarCobranca };

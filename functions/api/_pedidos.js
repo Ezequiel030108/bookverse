@@ -186,7 +186,9 @@ async function conferirLimite(uid) {
   const abertos = snap.docs.filter(doc => {
     const p = doc.data();
     const t = p.criadoEm && typeof p.criadoEm.toMillis === "function" ? p.criadoEm.toMillis() : 0;
-    return t > desde && (p.status === "pendente" || p.status === "aguardando");
+    // As tentativas substituídas (o cliente gerou o Pix de novo) também
+    // contam: o freio continua o mesmo de antes delas existirem.
+    return t > desde && ["pendente", "aguardando", "substituido"].indexOf(p.status) >= 0;
   }).length;
   if (abertos >= LIMITE_ABERTOS) {
     throw new ErroPedido(429, "Você já tem vários pedidos esperando pagamento. Pague um deles ou espere alguns minutos para fazer outro.");
@@ -386,6 +388,44 @@ async function gravarPedido({ uid, pedido, linhas }) {
   });
 }
 
+/* ---------- Tentativas repetidas do mesmo cliente ----------
+   Gerar o Pix de novo (trocou a entrega ou a forma de pagamento,
+   recarregou a página) cria outro pedido. O anterior, que nunca foi
+   pago, ficava "pendente" para sempre — e "Pedidos da loja" mostrava
+   dois pedidos iguais. Com o pedido novo já completo, os ANTERIORES
+   deste cliente que ainda esperam o Pix e têm algum livro em comum
+   viram "substituido" (com o código do novo). Se mesmo assim o Pix
+   antigo for pago, a confirmação vale normalmente (vira "pago").
+   Devolve os substituídos: [{ codigo, pagamentoId, avisado }]. */
+function quandoCriado(p) {
+  return p && p.criadoEm && typeof p.criadoEm.toMillis === "function" ? p.criadoEm.toMillis() : 0;
+}
+async function substituirAnteriores({ uid, pedido }) {
+  const db = dados.banco();
+  const pedidos = db.collection("users").doc(uid).collection("pedidos");
+  const ids = new Set((pedido.itens || []).map(i => String(i.id)));
+  return db.runTransaction(async tx => {
+    const novo = await tx.get(pedidos.doc(pedido.codigo));
+    if (!novo.exists) return [];
+    const criado = quandoCriado(novo.data());
+    const abertos = await tx.get(pedidos.where("status", "==", "pendente"));
+    const anteriores = abertos.docs.filter(doc => {
+      const p = doc.data();
+      // Só os MAIS ANTIGOS que este: dois pedidos feitos ao mesmo tempo
+      // não se anulam um ao outro.
+      return doc.id !== pedido.codigo && quandoCriado(p) < criado &&
+        (p.itens || []).some(i => i && ids.has(String(i.id)));
+    });
+    anteriores.forEach(doc => tx.set(doc.ref,
+      { status: "substituido", substituidoPor: pedido.codigo, substituidoEm: Date.now() }, { merge: true }));
+    if (anteriores.length) tx.set(novo.ref, { substitui: anteriores.map(doc => doc.id) }, { merge: true });
+    return anteriores.map(doc => {
+      const p = doc.data();
+      return { codigo: doc.id, pagamentoId: String(p.pagamentoId || ""), avisado: !!(p.avisos && p.avisos.recebido) };
+    });
+  });
+}
+
 /* Pix manual: o cliente avisa que já pagou. O pedido passa de
    "pendente" para "aguardando" (a loja confere no banco e confirma no
    painel). Só o dono do pedido, e só nesse caso. */
@@ -523,7 +563,7 @@ async function processarPagamentoAprovado(pagamento, req) {
 
 module.exports = {
   processarPagamentoAprovado,
-  ErroPedido, prepararPedido, gravarPedido, desfazerPedido, confirmarPagamento, declararPagamento,
+  ErroPedido, prepararPedido, gravarPedido, desfazerPedido, substituirAnteriores, confirmarPagamento, declararPagamento,
   acharPedidoDoPagamento, avisoLigado,
   // expostos para os testes
   lerItens, lerCliente, calcularTotais, unidadesBloqueadas, aposReserva, aposBaixa, montarEmailLojista
