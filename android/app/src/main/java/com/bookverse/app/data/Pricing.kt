@@ -10,7 +10,7 @@ import kotlin.math.floor
 object Promocao {
     const val nome = "Dia das Crianças"
     const val inicio = "2026-10-12"
-    const val fim = "2026-10-18"
+    const val fim = "2026-10-31"
     const val descontoUm = 15       // % off em qualquer livro
     const val descontoDupla = 15    // igual ao de cima: 15% em tudo, sem "levando 2"
 }

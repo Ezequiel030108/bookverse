@@ -134,7 +134,7 @@ const PROMOCAO = {
   nome: "Dia das Crianças",
   tema: "criancas",
   inicio: "2026-10-12",  // primeiro dia da promoção (Dia das Crianças)
-  fim: "2026-10-18",     // último dia da promoção (domingo)
+  fim: "2026-10-31",     // último dia da promoção (sábado, fim do mês)
   descontoUm: 15,        // % off em qualquer livro
   descontoDupla: 15      // igual ao de cima: 15% em tudo, sem "levando 2"
 };
