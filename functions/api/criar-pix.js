@@ -20,7 +20,7 @@
    ============================================================ */
 
 const MP_API = "https://api.mercadopago.com";
-const { aplicarHeaders } = require("./_seguranca");
+const { aplicarHeaders, baseConfiavel } = require("./_seguranca");
 
 function lerBody(req) {
   let b = req.body;
@@ -57,9 +57,9 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // URL pública para o Mercado Pago avisar quando o Pix cair.
-    const host = req.headers["x-forwarded-host"] || req.headers.host;
-    const notificationUrl = `https://${host}/api/webhook-mp`;
+    // URL pública para o Mercado Pago avisar quando o Pix cair (só de um
+    // domínio da loja — nunca o que a requisição disser).
+    const notificationUrl = baseConfiavel(req) + "/api/webhook-mp";
 
     const pagamento = {
       transaction_amount: Math.round(valor * 100) / 100,

@@ -156,7 +156,7 @@ module.exports = async (req, res) => {
   const paraMeta = String((req.query && req.query.destino) || "").toLowerCase() === "meta";
 
   let lista = [];
-  try { lista = await carregarLivros(base); } catch (e) { lista = []; }
+  try { lista = await carregarLivros(); } catch (e) { lista = []; }
   // Quem já foi vendido/reservado (mesma fonte que a loja usa para esconder).
   let bloqueados = new Map();
   try { bloqueados = await carregarDisponibilidade(); } catch (e) { bloqueados = new Map(); }

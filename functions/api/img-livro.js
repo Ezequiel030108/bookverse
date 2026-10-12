@@ -15,10 +15,9 @@
    aponta para cá e a foto é aceita normalmente.
    ============================================================ */
 
-const { acharLivro, baseDoRequest } = require("./_catalogo");
+const { acharLivro } = require("./_catalogo");
 
 module.exports = async (req, res) => {
-  const base = baseDoRequest(req);
   const id = String((req.query && req.query.id) || "").slice(0, 120);
   if (!id) {
     res.status(400).json({ error: "id é obrigatório." });
@@ -26,7 +25,7 @@ module.exports = async (req, res) => {
   }
 
   let livro = null;
-  try { livro = await acharLivro(base, id); } catch (e) { /* segue como não achado */ }
+  try { livro = await acharLivro(id); } catch (e) { /* segue como não achado */ }
 
   const src = livro ? String(livro.imagem || "").trim() : "";
   if (!src) {
@@ -53,7 +52,9 @@ module.exports = async (req, res) => {
   }
 
   // Já é um endereço/arquivo: apenas redireciona para a foto de verdade.
-  const destino = /^https?:\/\//i.test(src) ? src : base + "/" + src.replace(/^\/+/, "");
+  // Arquivo do próprio site vira caminho relativo (/img/...): o navegador
+  // fica no mesmo domínio em que já está.
+  const destino = /^https?:\/\//i.test(src) ? src : "/" + src.replace(/^\/+/, "");
   res.statusCode = 302;
   res.setHeader("Cache-Control", "public, max-age=86400");
   res.setHeader("Location", destino);

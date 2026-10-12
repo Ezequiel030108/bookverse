@@ -12,7 +12,8 @@
      continua funcionando.
    ============================================================ */
 
-const { acharLivro, baseDoRequest } = require("./_catalogo");
+const { acharLivro } = require("./_catalogo");
+const { siteInterno } = require("./_seguranca");
 const jpeg = require("jpeg-js");
 
 /* Posição da "janela" da capa dentro da moldura (definida no design). */
@@ -20,9 +21,12 @@ const SLOT = { x: 427, y: 55, w: 347, h: 520, raio: 14 };
 
 let molduraCache = null;   // decodificada uma vez por instância
 
-async function obterMoldura(base) {
+/* A moldura e as capas estáticas vêm SEMPRE do endereço oficial do site
+   (siteInterno) — nunca de um endereço informado pela requisição, senão
+   qualquer um trocaria a moldura guardada em cache por outra imagem. */
+async function obterMoldura() {
   if (molduraCache) return molduraCache;
-  const r = await fetch(base + "/img/og-moldura.jpg");
+  const r = await fetch(siteInterno() + "/img/og-moldura.jpg");
   if (!r.ok) throw new Error("moldura-indisponivel");
   const buf = Buffer.from(await r.arrayBuffer());
   molduraCache = jpeg.decode(buf, { useTArray: true, maxMemoryUsageInMB: 128 });
@@ -30,9 +34,9 @@ async function obterMoldura(base) {
 }
 
 /* Bytes JPEG da foto do livro (estática ou base64 do admin). */
-async function obterFotoBytes(base, img) {
+async function obterFotoBytes(img) {
   if (/^img\/.*\.jpe?g$/i.test(img)) {
-    const r = await fetch(base + "/" + img.split("/").map(encodeURIComponent).join("/"));
+    const r = await fetch(siteInterno() + "/" + img.split("/").map(encodeURIComponent).join("/"));
     if (!r.ok) return null;
     return Buffer.from(await r.arrayBuffer());
   }
@@ -85,18 +89,17 @@ function compor(moldura, foto) {
 }
 
 module.exports = async (req, res) => {
-  const base = baseDoRequest(req);
   const id = String((req.query && req.query.id) || "").slice(0, 120);
 
   let livro = null;
-  try { livro = await acharLivro(base, id); } catch (e) {}
+  try { livro = await acharLivro(id); } catch (e) {}
   const img = String((livro && livro.imagem) || "");
 
   // Com moldura: foto do livro encaixada no design da BookVerse.
   try {
-    const bytes = await obterFotoBytes(base, img);
+    const bytes = await obterFotoBytes(img);
     if (bytes) {
-      const [moldura, foto] = [await obterMoldura(base), jpeg.decode(bytes, { useTArray: true, maxMemoryUsageInMB: 128 })];
+      const [moldura, foto] = [await obterMoldura(), jpeg.decode(bytes, { useTArray: true, maxMemoryUsageInMB: 128 })];
       const saida = compor(moldura, foto);
       res.statusCode = 200;
       res.setHeader("Content-Type", "image/jpeg");
