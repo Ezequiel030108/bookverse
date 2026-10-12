@@ -105,7 +105,21 @@ module.exports = async (req, res) => {
       });
     }
 
-    await avisarRecebido(uid, pedido.codigo, loja, req);
+    // 3) O cliente gerou o Pix de novo? As tentativas anteriores para os
+    //    mesmos livros saem da lista ("substituido") e o Pix antigo é
+    //    cancelado — assim não aparecem dois pedidos iguais no painel e
+    //    ninguém paga duas vezes.
+    let substituidos = [];
+    try {
+      substituidos = await P.substituirAnteriores({ uid, pedido });
+    } catch (e) {
+      console.warn("[pedido] Não deu para marcar as tentativas anteriores de " + pedido.codigo + ":", e && e.message);
+    }
+    const cancelamentos = substituidos.filter(s => s.pagamentoId).map(s => mp.cancelarCobranca(s.pagamentoId));
+
+    // O "recebemos seu pedido" já saiu na tentativa anterior: não repete.
+    const jaAvisado = substituidos.some(s => s.avisado);
+    await Promise.all(cancelamentos.concat(jaAvisado ? [] : [avisarRecebido(uid, pedido.codigo, loja, req)]));
 
     res.status(200).json({
       codigo: pedido.codigo,

@@ -1021,16 +1021,13 @@
   }
 
   function carregarCatalogo() {
+    if (!window.CatalogoLoja) return;
     // 1) Cache local gravado pela vitrine: aplica na hora, sem esperar a rede.
-    try {
-      aplicarCatalogo(JSON.parse(localStorage.getItem("bookverse_cache_catalogo_v1") || "null"), false);
-    } catch (e) {}
-    // 2) Resposta fresca do Firestore: se mudar algo, refaz a página.
-    if (window.Auth && window.Auth.configurado && window.Auth.lerCatalogo) {
-      window.Auth.lerCatalogo().then(extras => {
-        if (aplicarCatalogo(extras, true)) initLoja();
-      }).catch(() => {});
-    }
+    aplicarCatalogo(window.CatalogoLoja.catalogoGuardado(), false);
+    // 2) Resposta fresca (caminho leve, sem as fotos): se mudar algo, refaz a página.
+    window.CatalogoLoja.lerCatalogoLeve().then(extras => {
+      if (Array.isArray(extras) && aplicarCatalogo(extras, true)) initLoja();
+    }).catch(() => {});
   }
 
   let inicializado = false;

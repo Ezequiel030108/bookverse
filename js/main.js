@@ -174,7 +174,6 @@ function disponivel(livro) {
    ANTES da primeira renderização; quando a resposta fresca chega, só
    re-renderizamos se algo realmente mudou. */
 const CACHE_DISP = "bookverse_cache_disp_v1";
-const CACHE_CAT  = "bookverse_cache_catalogo_v1";
 
 /* A estante já foi desenhada pelo menos uma vez? A primeira vez espera
    a lista de vendidos/reservados (veja "Inicialização", no fim do
@@ -210,10 +209,13 @@ function bloqueadosIguais(a, b) {
   return true;
 }
 
+let disponibilidadeLidaEm = 0;   // quando chegou a última resposta do banco
+
 /* Guarda o que já foi vendido/reservado e redesenha a estante se mudou.
    Devolve true quando alguma coisa mudou de verdade. */
 function aplicarDisponibilidade(mapa) {
   if (!mapa) return false;
+  disponibilidadeLidaEm = Date.now();
   gravarCacheLoja(CACHE_DISP, mapa);
   const bloq = montarBloqueados(mapa);
   if (bloqueadosIguais(window.__bloqueados, bloq)) return false;   // nada mudou: sem "pisca"
@@ -221,10 +223,15 @@ function aplicarDisponibilidade(mapa) {
   return true;
 }
 
-/* Carrega a disponibilidade (reservados/vendidos) e re-renderiza a loja. */
+/* Carrega a disponibilidade (reservados/vendidos) e re-renderiza a loja.
+   Pela leitura leve (uma requisição à API do Firestore, sem o SDK): quem
+   só olha a vitrine sem entrar na conta não precisa baixar o banco.
+   Se a lista acabou de chegar (a abertura da estante já leu), não lê de
+   novo: cada leitura conta um acesso por livro na cota do Firestore. */
 function carregarDisponibilidade() {
-  if (!(window.Auth && window.Auth.configurado && window.Auth.lerDisponibilidade)) return;
-  window.Auth.lerDisponibilidade().then(mapa => {
+  if (!window.CatalogoLoja) return;
+  if (Date.now() - disponibilidadeLidaEm < 15000) return;
+  window.CatalogoLoja.disponibilidadeRapida(8000).then(mapa => {
     // mapa null = a leitura falhou: mantém o que a loja já sabia.
     if (!aplicarDisponibilidade(mapa)) return;
     if (!vitrineDesenhada) return;   // ainda não desenhou: a estreia usa o mapa novo
@@ -1308,12 +1315,12 @@ function aplicarCatalogoExtras(extras, autoritativo) {
     : false;
 }
 
-/* Carrega os livros cadastrados pelo admin (Firestore) e os junta ao catálogo. */
+/* Carrega os livros cadastrados pelo admin e os junta ao catálogo
+   (caminho leve, sem as fotos embutidas — veja js/catalogo.js). */
 function carregarCatalogo() {
-  if (!(window.Auth && window.Auth.configurado && window.Auth.lerCatalogo)) return;
-  window.Auth.lerCatalogo().then(extras => {
+  if (!window.CatalogoLoja) return;
+  window.CatalogoLoja.lerCatalogoLeve().then(extras => {
     if (!Array.isArray(extras)) return;
-    gravarCacheLoja(CACHE_CAT, extras);
     const mudou = aplicarCatalogoExtras(extras, true);
     if (mudou) {
       const termo = (campoBusca && campoBusca.value) || "";
@@ -1496,7 +1503,7 @@ function abrirLivroDaURL() {
 // Quando a resposta do Firebase chega, ela substitui os dois.
 window.__bloqueados = montarBloqueados(
   lerCacheLoja(CACHE_DISP) || window.VENDIDOS_FOTO || {});
-aplicarCatalogoExtras(lerCacheLoja(CACHE_CAT) || []);
+aplicarCatalogoExtras((window.CatalogoLoja && window.CatalogoLoja.catalogoGuardado()) || []);
 
 // Contatos: Instagram (barra no desktop + faixa) e WhatsApp (faixa).
 (function () {

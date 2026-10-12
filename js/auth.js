@@ -216,7 +216,12 @@
     return;
   }
 
-  /* -------- Carrega o SDK do Firebase (compat) sob demanda -------- */
+  /* -------- Carrega o SDK do Firebase (compat) sob demanda --------
+     Login (app + auth) carrega logo ao abrir a página. O BANCO
+     (firestore, o maior pedaço: ~330 KB) só carrega na primeira vez
+     que alguma coisa precisa dele — perfil, carrinho, pedidos, painel.
+     Quem só olha a vitrine sem entrar na conta nunca baixa esse pedaço:
+     o catálogo e os vendidos chegam por endereços leves (js/catalogo.js). */
   const VER = "10.12.2";
   const BASE = `https://www.gstatic.com/firebasejs/${VER}/`;
 
@@ -234,7 +239,6 @@
     try {
       await carregarScript(BASE + "firebase-app-compat.js");
       await carregarScript(BASE + "firebase-auth-compat.js");
-      await carregarScript(BASE + "firebase-firestore-compat.js");
     } catch (e) {
       console.warn("[BookVerse] Não foi possível carregar o Firebase:", e);
       impl = {
@@ -262,7 +266,16 @@
       appId: CFG.appId
     });
     const auth = fb.auth();
-    const db = fb.firestore();
+    let db = null;   // o banco: preenchido por obterDb() na primeira vez que for preciso
+    let dbPromessa = null;
+    function obterDb() {
+      if (!dbPromessa) {
+        dbPromessa = carregarScript(BASE + "firebase-firestore-compat.js")
+          .then(() => { db = fb.firestore(); return db; })
+          .catch(e => { dbPromessa = null; throw e; });   // falhou: tenta de novo na próxima
+      }
+      return dbPromessa;
+    }
     const stamp = () => fb.firestore.FieldValue.serverTimestamp();
 
     function semUndefined(obj) {
@@ -550,6 +563,18 @@
         await auth.signOut();
       }
     };
+
+    // Toda função que usa o banco espera o SDK do Firestore carregar antes
+    // (na primeira vez). Login, sair e o token não precisam dele.
+    const SEM_BANCO = ["entrarComGoogle", "sair", "idToken"];
+    Object.keys(impl).forEach(nome => {
+      if (SEM_BANCO.indexOf(nome) >= 0 || typeof impl[nome] !== "function") return;
+      const original = impl[nome];
+      impl[nome] = async function () {
+        if (!db) await obterDb();
+        return original.apply(this, arguments);
+      };
+    });
 
     // Conclui o login iniciado por redirecionamento (o fallback do popup acima).
     // O usuário em si é aplicado pelo onAuthStateChanged logo abaixo; aqui só

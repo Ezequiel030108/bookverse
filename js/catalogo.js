@@ -79,6 +79,9 @@ window.CatalogoLoja = (function () {
      únicas de cada cadastro. Capas do /img/ podem se repetir de propósito
      (ex.: versão nova e usada do mesmo livro) e ficam de fora da regra. */
   function chaveFoto(livro) {
+    // Vindo de /api/catalogo, a foto chega como endereço + impressão
+    // digital (fotoHash): mesma impressão = mesma foto.
+    if (livro && livro.fotoHash) return "#" + livro.fotoHash;
     const img = String((livro && livro.imagem) || "");
     return img.slice(0, 5).toLowerCase() === "data:" ? img : "";
   }
@@ -188,10 +191,12 @@ window.CatalogoLoja = (function () {
   }
 
   /* ---------- Disponibilidade (vendidos/reservados), caminho rápido ----------
-     Uma única requisição à API do Firestore — sem baixar o SDK do Firebase.
+     Leitura direta da API do Firestore — sem baixar o SDK do Firebase.
      Devolve o mapa { id: {estado, qtd, ate} } no MESMO formato que o
      Auth.lerDisponibilidade() entrega, ou null se a leitura falhar
-     (null ≠ mapa vazio: vazio significa "não há nada vendido"). */
+     (null ≠ mapa vazio: vazio significa "não há nada vendido").
+     Segue as páginas da resposta até o fim: um mapa pela metade
+     devolveria livros vendidos para a estante. */
   function valorDoCampo(v) {
     if (!v) return undefined;
     if (v.stringValue !== undefined) return v.stringValue;
@@ -210,25 +215,62 @@ window.CatalogoLoja = (function () {
                 "/databases/(default)/documents/disponibilidade?pageSize=300";
     let opcoes = {};
     try { opcoes = { signal: AbortSignal.timeout(msLimite || 6000) }; } catch (e) {}
-    return fetch(url, opcoes)
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => {
-        if (!data) return null;
-        const mapa = {};
-        (data.documents || []).forEach(doc => {
-          const id = String(doc.name || "").split("/").pop();
-          const campos = doc.fields || {};
-          const item = {};
-          Object.keys(campos).forEach(k => {
-            const v = valorDoCampo(campos[k]);
-            if (v !== undefined) item[k] = v;
+    const mapa = {};
+    function pagina(token, n) {
+      if (n >= 20) return null;
+      return fetch(url + (token ? "&pageToken=" + encodeURIComponent(token) : ""), opcoes)
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => {
+          if (!data) return null;
+          (data.documents || []).forEach(doc => {
+            const id = String(doc.name || "").split("/").pop();
+            const campos = doc.fields || {};
+            const item = {};
+            Object.keys(campos).forEach(k => {
+              const v = valorDoCampo(campos[k]);
+              if (v !== undefined) item[k] = v;
+            });
+            if (id) mapa[id] = item;
           });
-          if (id) mapa[id] = item;
+          return data.nextPageToken ? pagina(data.nextPageToken, n + 1) : mapa;
         });
-        return mapa;
-      })
-      .catch(() => null);
+    }
+    return pagina("", 0).catch(() => null);
   }
 
-  return { idDe, oculto, arrumar, aplicarExtras, disponibilidadeRapida };
+  /* ---------- Catálogo do painel, caminho LEVE ----------
+     /api/catalogo traz os livros do painel SEM as fotos embutidas: cada
+     foto vira um endereço que o navegador só baixa quando o livro aparece
+     na tela, e que fica guardado no CDN. Antes, toda visita baixava o
+     catálogo do Firestore com as fotos dentro (~2 MB) — e ainda guardava
+     tudo no navegador. Se a API falhar, cai no caminho antigo (SDK do
+     Firebase). Devolve a lista, ou null se tudo falhar. */
+  const CHAVE_CACHE = "bookverse_cache_catalogo_v2";
+  // O cache antigo guardava as fotos (~2 MB do armazenamento do navegador).
+  try { localStorage.removeItem("bookverse_cache_catalogo_v1"); } catch (e) {}
+
+  function catalogoGuardado() {
+    try { const s = localStorage.getItem(CHAVE_CACHE); return s ? JSON.parse(s) : null; }
+    catch (e) { return null; }
+  }
+
+  function lerCatalogoLeve(msLimite) {
+    let opcoes = {};
+    try { opcoes = { signal: AbortSignal.timeout(msLimite || 8000) }; } catch (e) {}
+    return fetch("/api/catalogo", opcoes)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => (d && Array.isArray(d.livros) ? d.livros : null))
+      .catch(() => null)
+      .then(lista => {
+        if (lista) {
+          try { localStorage.setItem(CHAVE_CACHE, JSON.stringify(lista)); } catch (e) {}
+          return lista;
+        }
+        // Plano B: o caminho antigo, direto do Firestore (com as fotos).
+        const A = window.Auth;
+        return (A && A.configurado && A.lerCatalogo) ? A.lerCatalogo() : null;
+      });
+  }
+
+  return { idDe, oculto, arrumar, aplicarExtras, disponibilidadeRapida, lerCatalogoLeve, catalogoGuardado };
 })();

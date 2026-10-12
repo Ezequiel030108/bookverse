@@ -18,7 +18,15 @@
 const vm = require("vm");
 const { siteInterno, baseConfiavel } = require("./_seguranca");
 
-const PROJETO = process.env.FIREBASE_PROJECT_ID || "bookverse-69878";
+const PROJETO = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || "bookverse-69878";
+
+/* Endereço de leitura pública do Firestore (API REST). Nos testes, o
+   do emulador (FIRESTORE_EMULATOR_HOST), como o resto do servidor. */
+function urlFirestore(caminho) {
+  const emulador = process.env.FIRESTORE_EMULATOR_HOST;
+  return (emulador ? "http://" + emulador : "https://firestore.googleapis.com") +
+    "/v1/projects/" + PROJETO + "/databases/(default)/documents/" + caminho;
+}
 
 function slug(texto) {
   return String(texto || "")
@@ -99,8 +107,7 @@ async function lerColecaoPublica(colecao) {
   const docs = [];
   let token = "";
   for (let pagina = 0; pagina < 50; pagina++) {
-    const url = "https://firestore.googleapis.com/v1/projects/" + PROJETO +
-      "/databases/(default)/documents/" + colecao + "?pageSize=300" +
+    const url = urlFirestore(colecao) + "?pageSize=300" +
       (token ? "&pageToken=" + encodeURIComponent(token) : "");
     const r = await fetch(url, { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
     if (!r.ok) return null;
@@ -218,4 +225,19 @@ function baseDoRequest(req) {
   return baseConfiavel(req);
 }
 
-module.exports = { slug, idLivro, carregarLivros, carregarDisponibilidade, acharLivro, baseDoRequest, promocaoAtual };
+/* Um livro do painel, lido direto do Firestore (só ele, sempre fresco).
+   Usado pela foto (/api/img-livro): não precisa do catálogo inteiro. */
+async function livroDoAdmin(id) {
+  if (!id || !/^[A-Za-z0-9._-]{1,150}$/.test(id)) return null;
+  try {
+    const r = await fetch(urlFirestore("catalogo/" + encodeURIComponent(id)),
+      { signal: AbortSignal.timeout(TEMPO_LIMITE_MS) });
+    if (!r.ok) return null;
+    return converterDoc(await r.json());
+  } catch (e) { return null; }
+}
+
+module.exports = {
+  slug, idLivro, carregarLivros, carregarDisponibilidade, acharLivro, baseDoRequest, promocaoAtual,
+  livrosDoAdmin, livroDoAdmin
+};

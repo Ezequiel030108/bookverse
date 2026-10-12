@@ -3188,6 +3188,12 @@ body.tem-botton .rodape-site { padding-bottom: calc(120px + var(--safe-bottom));
 /* -------- Status extras dos pedidos -------- */
 .pedido-status.pedido-entregue { background: rgba(122, 223, 255, .16); color: var(--aurora-ciano); }
 .pedido-status.pedido-cancelado { background: rgba(255, 122, 122, .14); color: #ffb3b3; }
+/* Pedidos da loja: aviso das tentativas repetidas (ocultas por padrão) */
+.ploja-repetidos { margin: 14px 0 0; text-align: center; }
+.ploja-repetidos-btn {
+  background: none; border: 0; padding: 4px 2px; font: inherit; cursor: pointer;
+  color: var(--estrela); text-decoration: underline; text-underline-offset: 2px;
+}
 .pedido-presente { margin: 8px 0 0; font-size: .82rem; color: var(--estrela-clara); }
 .pedido-aviso-entregue { color: #b6f0bd; }
 

@@ -12,20 +12,27 @@
    → devolve a foto daquele livro como imagem de verdade.
 
    Assim, no feed do Google Shopping, o image_link desses livros
-   aponta para cá e a foto é aceita normalmente.
+   aponta para cá e a foto é aceita normalmente. A VITRINE também
+   mostra as fotos por aqui (veja api/catalogo.js): o navegador só
+   baixa a foto do livro que aparece na tela, e ela fica no CDN.
    ============================================================ */
 
-const { acharLivro } = require("./_catalogo");
+const { acharLivro, livroDoAdmin } = require("./_catalogo");
+const { impressaoDigital } = require("./catalogo");
 
 module.exports = async (req, res) => {
-  const id = String((req.query && req.query.id) || "").slice(0, 120);
+  const id = String((req.query && req.query.id) || "").slice(0, 150);
   if (!id) {
     res.status(400).json({ error: "id é obrigatório." });
     return;
   }
 
-  let livro = null;
-  try { livro = await acharLivro(id); } catch (e) { /* segue como não achado */ }
+  // Primeiro o livro do painel, lido sozinho (rápido e sempre atual —
+  // um livro recém-cadastrado já tem foto). Depois, os do js/livros.js.
+  let livro = await livroDoAdmin(id);
+  if (!livro || !livro.imagem) {
+    try { livro = await acharLivro(id); } catch (e) { livro = null; }
+  }
 
   const src = livro ? String(livro.imagem || "").trim() : "";
   if (!src) {
@@ -44,9 +51,14 @@ module.exports = async (req, res) => {
     }
     res.statusCode = 200;
     res.setHeader("Content-Type", m[1]);
-    // A foto de um livro praticamente não muda: cache generoso alivia o
-    // servidor e faz o Google buscar menos vezes.
-    res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800");
+    // Endereço com a impressão digital da foto ATUAL (?v=, vindo de
+    // /api/catalogo): esta foto nunca muda neste endereço — o navegador e
+    // o CDN guardam por 1 ano. Sem ela (o feed do Google, links antigos),
+    // 1 dia, como antes.
+    const versaoCerta = String(req.query.v || "") === impressaoDigital(src);
+    res.setHeader("Cache-Control", versaoCerta
+      ? "public, max-age=31536000, s-maxage=31536000, immutable"
+      : "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800");
     res.end(buf);
     return;
   }

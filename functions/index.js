@@ -75,6 +75,7 @@ const rotas = {
   "livro": require("./api/livro"),
   "feed": require("./api/feed"),
   "img-livro": require("./api/img-livro"),
+  "catalogo": require("./api/catalogo"),
   // Avisos ao cliente e campanhas de novidades.
   "avisar": require("./api/avisar"),
   "campanha": require("./api/campanha"),
