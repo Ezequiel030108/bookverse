@@ -119,17 +119,24 @@ const LIVROS_OCULTOS = [
 
    descontoUm    -> % off em QUALQUER livro, levando 1.
    descontoDupla -> % off em CADA livro, levando 2 ou mais.
+                    Com o MESMO número dos dois lados, o desconto é
+                    um só (ex.: 15% em tudo) e a faixa mostra uma
+                    oferta só, sem o "levando 2".
+   tema          -> (opcional) visual da faixa e do selo flutuante.
+                    "criancas" = balões e confete do Dia das Crianças.
+                    Deixe "" para o visual normal do site.
 
    O desconto vale para todos os livros. Se algum dia você quiser
    limitar o desconto de um livro específico, é só pôr o campo
    "descontoMaximo" nele (explicado lá em cima).
    ============================================================ */
 const PROMOCAO = {
-  nome: "Promoção da Semana",
-  inicio: "2026-08-02",  // primeiro dia da promoção
-  fim: "2026-08-07",     // último dia da promoção (sexta-feira)
-  descontoUm: 10,        // % off em qualquer livro
-  descontoDupla: 20      // % off em cada um, levando 2 ou mais
+  nome: "Dia das Crianças",
+  tema: "criancas",
+  inicio: "2026-10-12",  // primeiro dia da promoção (Dia das Crianças)
+  fim: "2026-10-18",     // último dia da promoção (domingo)
+  descontoUm: 15,        // % off em qualquer livro
+  descontoDupla: 15      // igual ao de cima: 15% em tudo, sem "levando 2"
 };
 
 const LIVROS = [

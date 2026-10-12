@@ -69,7 +69,7 @@ fun BookPrice(
                 color = if (centralizado) EstrelaClara else Estrela,
             )
         }
-        if (mostrarDupla && !promo.limitado) {
+        if (mostrarDupla && !promo.limitado && Pricing.temDupla()) {
             Text(
                 text = "levando 2 livros: ${Pricing.formatarReal(promo.dupla)}",
                 fontSize = 11.sp,
