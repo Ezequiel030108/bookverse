@@ -31,7 +31,19 @@
    PROTEÇÃO DE CUSTO: maxInstances limita quantas cópias desta
    função podem rodar ao mesmo tempo — é o freio que impede um
    bug ou ataque de gerar conta surpresa no plano Blaze.
+
+   CAPACIDADE: com cpu 1, cada cópia atende até 80 requisições ao
+   mesmo tempo (concurrency). Antes, com a CPU padrão de 512 MiB
+   (1/3 de CPU), cada cópia atendia UMA por vez: 10 pedidos de
+   imagem simultâneos (o Google lendo o feed, por exemplo) já
+   ocupavam todas as cópias — e um cliente gerando o Pix naquele
+   momento ficava na fila.
    ============================================================ */
+
+/* Horário de Brasília para tudo o que é "dia": a promoção começa e
+   termina à meia-noite DAQUI (o servidor fica nos EUA, em UTC — sem
+   isto, o desconto virava 3 horas antes no feed e nas cobranças). */
+process.env.TZ = "America/Sao_Paulo";
 
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
@@ -52,7 +64,7 @@ const AVISOS_SECRET = defineSecret("AVISOS_SECRET");
 
 /* As mesmas rotas que existiam na Vercel (/api/<nome>). */
 const rotas = {
-  "criar-pix": require("./api/criar-pix"),
+  "pedido": require("./api/pedido"),
   "status-pix": require("./api/status-pix"),
   "webhook-mp": require("./api/webhook-mp"),
   "gerar-sinopse": require("./api/gerar-sinopse"),
@@ -85,6 +97,8 @@ exports.api = onRequest(
   {
     region: "us-central1",
     memory: "512MiB",
+    cpu: 1,
+    concurrency: 80,
     timeoutSeconds: 60,
     maxInstances: 10,
     secrets: [

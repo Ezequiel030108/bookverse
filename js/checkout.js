@@ -375,7 +375,7 @@
     if (btnGerar)    btnGerar.disabled = !(ok && configurado && carregado);
     if (btnDinheiro) btnDinheiro.disabled = !(ok && carregado);
 
-    const { total } = montarPedido();
+    const total = totalParaEnviar(montarPedido().total);
     const bv = document.getElementById("btn-pix-valor");
     if (bv) bv.textContent = Precos.formatarBRL(total);
     const bd = document.getElementById("btn-dinheiro-valor");
@@ -433,6 +433,7 @@
     if (pixArea) pixArea.hidden = true;
     codigoPedido = null;
     pagamentoId = null;
+    pedidoServidor = null;
     const st = document.getElementById("pix-status");
     if (st) st.hidden = true;
     if (erroPag) erroPag.hidden = true;
@@ -485,87 +486,132 @@
     }
   }
 
-  /* ----- Modo manual: Pix gerado no navegador (sem backend) ----- */
-  function gerarPixManual() {
-    if (!pixConfigurado()) return;
+  /* ---------- O pedido é fechado NO SERVIDOR ----------
+     O navegador manda só O QUE o cliente quer (livros e quantidades,
+     entrega, presente, contato). O preço, o total e o valor do Pix são
+     calculados pelo servidor (api/pedido.js), que também separa os
+     livros e grava o pedido. Antes era tudo feito aqui — e quem soubesse
+     mexer no navegador conseguia mudar o valor do Pix. */
+  let pedidoServidor = null;   // resposta do servidor: código e valores oficiais
+  let ajusteTotal = null;      // { cliente, servidor }: o servidor corrigiu o total desta tela
 
-    const { total } = montarPedido();
-    codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
-
-    const payload = window.Pix.gerarPayload({
-      chave: CFG.pix.chave,
-      nome:  CFG.pix.nomeRecebedor,
-      cidade: CFG.pix.cidade,
-      valor: total,
-      txid: codigoPedido
-    });
-
-    if (!window.Pix.validar(payload)) {
-      erroPag.hidden = false;
-      erroPag.textContent = "Não foi possível gerar o Pix. Confira a chave Pix em js/config.js.";
-      return;
-    }
-    erroPag.hidden = true;
-
-    pixCopiaCola = payload;
-    pixTicketUrl = "";
-    document.getElementById("pix-codigo").value = payload;
-    document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
-    renderQR(payload);
-    mostrarPixArea();
-    reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
+  function totalParaEnviar(totalCliente) {
+    return ajusteTotal && Math.abs(ajusteTotal.cliente - totalCliente) < 0.01 ? ajusteTotal.servidor : totalCliente;
   }
 
-  /* ----- Modo Mercado Pago: cobrança + confirmação automática ----- */
-  async function gerarPixMercadoPago() {
-    const { total } = montarPedido();
-    const cliente = dadosCliente();
-    codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
+  async function chamarApiPedido(corpo) {
+    const token = window.Auth && window.Auth.idToken ? await window.Auth.idToken() : null;
+    if (!token) throw Object.assign(new Error("Entre na sua conta para finalizar o pedido."), { status: 401 });
+    const resp = await fetch("/api/pedido", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify(corpo)
+    });
+    let data = null;
+    try { data = await resp.json(); } catch (e) { /* resposta sem JSON */ }
+    if (!resp.ok) {
+      throw Object.assign(new Error((data && data.error) || "Não foi possível concluir o pedido agora. Tente novamente."),
+        { status: resp.status, dados: data || {} });
+    }
+    return data || {};
+  }
 
+  async function fecharPedido(pagamento) {
+    const { dados, total } = montarPedido();
+    const cliente = dadosCliente();
+    try {
+      const pedido = await chamarApiPedido({
+        itens: dados.itens.filter(i => i.id).map(i => ({ id: i.id, qty: i.qty || 1 })),
+        pagamento: pagamento,
+        entrega: opcaoSelecionada().id,
+        presente: presenteMarcado(),
+        presenteMsg: cliente.presenteMsg || "",
+        cliente: { nome: cliente.nome, email: cliente.email, telefone: cliente.telefone, instagram: cliente.instagram },
+        endereco: cliente.endereco || "",
+        observacoes: cliente.observacoes || "",
+        origem: origemPedido || "",
+        totalVisto: totalParaEnviar(total)
+      });
+      pedidoServidor = pedido;
+      ajusteTotal = null;
+      codigoPedido = pedido.codigo;
+      return pedido;
+    } catch (e) {
+      // O total mudou (a promoção acabou, um preço foi atualizado): a tela
+      // passa a mostrar o valor certo e o próximo toque confirma com ele.
+      if (e.status === 409 && e.dados && typeof e.dados.totalAtualizado === "number") {
+        ajusteTotal = { cliente: total, servidor: e.dados.totalAtualizado };
+      }
+      throw e;
+    }
+  }
+
+  function mostrarErroPedido(e) {
+    if (!erroPag) return;
+    let msg = e && e.status
+      ? e.message
+      : "Não foi possível falar com a loja agora. Confira a sua internet e tente de novo.";
+    const ids = e && e.dados && Array.isArray(e.dados.indisponiveis) ? e.dados.indisponiveis : [];
+    if (ids.length) {
+      const titulos = dadosPedido().itens.filter(i => ids.indexOf(i.id) >= 0).map(i => "“" + i.livro.titulo + "”");
+      if (titulos.length) msg += " " + titulos.join(", ") + ".";
+      msg += " Volte ao carrinho para ajustar o pedido.";
+    }
+    erroPag.hidden = false;
+    erroPag.textContent = msg;
+    erroPag.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  /* ----- Pix manual: o código sai da chave da loja, com o total do servidor ----- */
+  async function gerarPixManual() {
+    if (!pixConfigurado()) return;
     if (erroPag) erroPag.hidden = true;
     let txtBtn;
     if (btnGerar) { txtBtn = btnGerar.innerHTML; btnGerar.disabled = true; btnGerar.textContent = "Gerando Pix…"; }
-
     try {
-      const resp = await fetch("/api/criar-pix", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          valor: total,
-          codigo: codigoPedido,
-          descricao: `Pedido ${codigoPedido} - ${CFG.nomeLoja || "BookVerse"}`,
-          pagador: { email: cliente.email, nome: cliente.nome },
-          // Com o uid guardado na cobrança, o webhook do Mercado Pago
-          // acha o pedido no banco, marca como PAGO e manda ao cliente o
-          // aviso de "pagamento confirmado" — mesmo com o site fechado.
-          uid: uidLogado(),
-          emailPedido: montarEmailBody()
-        })
-      });
-      const data = await resp.json();
-      if (!resp.ok || !data.qr_code) {
-        throw new Error((data && data.error) || "Falha ao gerar o Pix.");
+      salvarPerfilSeLogado();
+      const pedido = await fecharPedido("pix");
+      const payload = String(pedido.pix || "");
+      if (!payload || !window.Pix.validar(payload)) {
+        throw Object.assign(new Error("Não foi possível gerar o Pix. Confira a chave Pix em js/config.js."), { status: 500 });
       }
+      pixCopiaCola = payload;
+      pixTicketUrl = "";
+      document.getElementById("pix-codigo").value = payload;
+      document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(pedido.total);
+      renderQR(payload);
+      mostrarPixArea();
+    } catch (e) {
+      mostrarErroPedido(e);
+    } finally {
+      if (btnGerar && txtBtn) btnGerar.innerHTML = txtBtn;
+      atualizarEstadoPagamento();
+    }
+  }
 
-      pagamentoId = data.id;
-      pixCopiaCola = data.qr_code || "";
-      pixTicketUrl = data.ticket_url || "";
-      document.getElementById("pix-codigo").value = data.qr_code;
-      document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(total);
-      renderQRImagem(data.qr_code_base64);
+  /* ----- Pix pelo Mercado Pago: cobrança + confirmação automática ----- */
+  async function gerarPixMercadoPago() {
+    if (erroPag) erroPag.hidden = true;
+    let txtBtn;
+    if (btnGerar) { txtBtn = btnGerar.innerHTML; btnGerar.disabled = true; btnGerar.textContent = "Gerando Pix…"; }
+    try {
+      salvarPerfilSeLogado();
+      const pedido = await fecharPedido("pix");
+      if (!pedido.qr_code) throw Object.assign(new Error("Não foi possível gerar o Pix agora. Tente novamente em instantes."), { status: 502 });
+      pagamentoId = pedido.pagamentoId;
+      pixCopiaCola = pedido.qr_code;
+      pixTicketUrl = pedido.ticket_url || "";
+      document.getElementById("pix-codigo").value = pedido.qr_code;
+      document.getElementById("pix-valor-total").textContent = Precos.formatarBRL(pedido.total);
+      renderQRImagem(pedido.qr_code_base64);
       mostrarPixArea();
       marcarAguardando();
-      salvarPerfilSeLogado();
-      salvarPedidoSeLogado("pendente").then(() => avisarCliente("recebido"));
-      reservarSeLogado();   // tira o livro da loja enquanto o Pix está em aberto
       iniciarPolling();
     } catch (e) {
-      if (erroPag) {
-        erroPag.hidden = false;
-        erroPag.textContent = "Não foi possível gerar o Pix agora. Tente novamente em instantes.";
-      }
+      mostrarErroPedido(e);
     } finally {
-      if (btnGerar) { btnGerar.disabled = false; if (txtBtn) btnGerar.innerHTML = txtBtn; }
+      if (btnGerar && txtBtn) btnGerar.innerHTML = txtBtn;
+      atualizarEstadoPagamento();
     }
   }
 
@@ -629,27 +675,10 @@
   async function aoConfirmarPagamento() {
     const st = document.getElementById("pix-status");
     if (st) { st.className = "pix-status confirmado"; st.textContent = "Pagamento confirmado ✓"; }
-    try { await salvarPedidoSeLogado("pago"); } catch (e) {}
-    marcarVendidoSeLogado();   // vendido: sai da loja de vez
-
-    // Aviso ao lojista pelo NAVEGADOR. O envio pelo servidor (webhook /
-    // status-pix) é barrado pelo desafio anti-bot do Cloudflare que
-    // protege o Web3Forms — só o navegador do cliente passa. Enviamos
-    // aqui, no momento em que o Pix confirma, e marcamos o pedido para a
-    // página "Minha conta" não reenviar. (Se o cliente fechar antes de
-    // confirmar, a reconciliação de "Minha conta" reenvia depois.)
-    try {
-      await enviarEmailManual();
-      if (window.Auth && window.Auth.usuario && window.Auth.usuario()) {
-        window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
-      }
-    } catch (e) { /* não bloqueia a confirmação; "Minha conta" reenvia */ }
-
-    // Aviso ao CLIENTE. O webhook do Mercado Pago também dispara este
-    // mesmo aviso — o servidor guarda o que já saiu, então o cliente
-    // nunca recebe duas vezes.
-    avisarCliente("pago");
-
+    // O pedido já foi marcado como PAGO pelo servidor (api/status-pix e o
+    // webhook do Mercado Pago), que também dá baixa no estoque e avisa o
+    // cliente. Daqui só sai o aviso para a LOJA.
+    await enviarEmailLoja();
     sucesso(true);
   }
 
@@ -666,49 +695,25 @@
     let txtBtn;
     if (btnDinheiro) { txtBtn = btnDinheiro.innerHTML; btnDinheiro.disabled = true; btnDinheiro.textContent = "Confirmando pedido…"; }
     try {
-      codigoPedido = "BV" + Date.now().toString(36).toUpperCase();
       pagamentoId = null;
       pixCopiaCola = "";
       pixTicketUrl = "";
       if (erroPag) erroPag.hidden = true;
-
-      // Pagamento acontece na entrega: o pedido já nasce APROVADO.
-      try { await salvarPerfilSeLogado(); } catch (e) {}
-      try { await salvarPedidoSeLogado("aprovado"); } catch (e) {}
-      marcarVendidoSeLogado();   // segura o livro: a venda está fechada
-
-      // Avisa o lojista por e-mail imediatamente.
-      try {
-        await enviarEmailManual();
-        if (window.Auth && window.Auth.usuario && window.Auth.usuario()) {
-          window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
-        }
-      } catch (e) {}
-
-      // E avisa o CLIENTE de que o pedido está confirmado.
-      avisarCliente("recebido");
-
+      salvarPerfilSeLogado();
+      // O servidor aprova o pedido, tira os livros da loja e avisa o cliente.
+      await fecharPedido("dinheiro");
+      await enviarEmailLoja();
       sucesso(true);
+    } catch (e) {
+      mostrarErroPedido(e);
     } finally {
       confirmandoDinheiro = false;
-      if (btnDinheiro) { btnDinheiro.disabled = false; if (txtBtn) btnDinheiro.innerHTML = txtBtn; }
+      if (btnDinheiro && txtBtn) btnDinheiro.innerHTML = txtBtn;
+      atualizarEstadoPagamento();
     }
   }
 
-  /* ----- Avisos para o CLIENTE (e-mail + WhatsApp da loja) -----
-     Diferente do e-mail que avisa VOCÊ (Web3Forms), este vai para o
-     cliente e sai do servidor. Nunca trava a compra: se falhar, o
-     pedido segue igual e o painel da loja pode reenviar. */
-  function uidLogado() {
-    const u = window.Auth && window.Auth.usuario && window.Auth.usuario();
-    return (u && u.uid) || "";
-  }
-  function avisarCliente(evento) {
-    if (!window.Avisos || !codigoPedido || !uidLogado()) return Promise.resolve(null);
-    return window.Avisos.avisar(evento, { codigo: codigoPedido }).catch(() => null);
-  }
-
-  /* ----- Conta (Firebase): salvar perfil e pedido, se logado ----- */
+  /* ----- Conta (Firebase): salvar o perfil, se logado ----- */
   function salvarPerfilSeLogado() {
     if (!window.Auth || !window.Auth.usuario || !window.Auth.usuario()) return Promise.resolve();
     const op = opcaoSelecionada();
@@ -731,63 +736,12 @@
     return window.Auth.salvarPerfil(perfil).catch(() => {});
   }
 
-  function salvarPedidoSeLogado(status) {
-    if (!window.Auth || !window.Auth.usuario || !window.Auth.usuario()) return Promise.resolve();
-    const { dados, frete, presente, total } = montarPedido();
-    const cliente = dadosCliente();
-    const pedido = {
-      codigo: codigoPedido,
-      status: status,
-      pagamento: metodoPagamento === "dinheiro" ? "dinheiro" : "pix",
-      total: total,
-      subtotal: dados.subtotal,
-      frete: frete,
-      presenteValor: presente,
-      entrega: cliente.entrega,
-      endereco: cliente.endereco || "",
-      // Dados de contato: o painel "Pedidos da loja" (admin) usa isto
-      // para falar com o cliente sem precisar abrir o e-mail.
-      cliente: {
-        nome: cliente.nome || "",
-        email: cliente.email || "",
-        telefone: cliente.telefone || "",
-        whatsappLink: cliente.whatsappLink || "",
-        instagram: cliente.instagram || ""
-      },
-      presente: !!cliente.presente,
-      presenteMsg: cliente.presenteMsg || "",
-      observacoes: cliente.observacoes || "",
-      origem: origemPedido || "",
-      pagamentoId: pagamentoId || "",
-      pix: pixCopiaCola || "",
-      pixUrl: pixTicketUrl || "",
-      emailBody: montarEmailBody(),   // usado para avisar o lojista quando confirmar
-      emailEnviado: false,
-      itens: dados.itens.map(i => ({
-        id: i.id, titulo: i.livro.titulo, autor: i.livro.autor, qty: i.qty,
-        preco: i.precoLinha, condicao: i.livro.condicao || ""
-      }))
-    };
-    return window.Auth.salvarPedido(pedido).catch(() => {});
-  }
-
-  /* Itens do pedido com quantidade: [{id, qty}]. Assim um livro com
-     3 unidades em que se vendeu 1 continua na loja com 2. */
-  function itensDoPedido() {
-    return dadosPedido().itens
-      .filter(i => i.id)
-      .map(i => ({ id: i.id, qty: i.qty || 1 }));
-  }
-  function reservarSeLogado() {
-    if (window.Auth && window.Auth.usuario && window.Auth.usuario()) window.Auth.reservarLivros(itensDoPedido());
-  }
-  function marcarVendidoSeLogado() {
-    if (!(window.Auth && window.Auth.usuario && window.Auth.usuario())) return;
-    // Dar baixa no estoque é ação de admin (regras do Firestore); para
-    // clientes comuns a chamada falha em silêncio e quem dá baixa é o
-    // painel "Pedidos da loja". A reserva abaixo segura o livro até lá.
-    window.Auth.marcarVendidos(itensDoPedido());
-    window.Auth.reservarLivros(itensDoPedido());
+  /* O e-mail do pedido para a LOJA já saiu: marca no pedido, para a
+     página "Minha conta" não reenviar. É o único campo do pedido que o
+     navegador pode mudar (regras do Firestore). */
+  function marcarEmailEnviado() {
+    if (!codigoPedido || !(window.Auth && window.Auth.usuario && window.Auth.usuario())) return;
+    window.Auth.atualizarPedido(codigoPedido, { emailEnviado: true }).catch(() => {});
   }
 
   function copiarPix() {
@@ -808,91 +762,25 @@
     }
   }
 
-  /* ---------- Pedido por e-mail (Web3Forms) ----------
-     montarEmailBody() devolve o corpo do e-mail SEM a access_key.
-       - Modo manual: enviado direto pelo navegador (enviarEmailManual).
-       - Modo Mercado Pago: enviado para o backend, que o guarda na
-         cobrança e dispara o e-mail só quando o Pix é confirmado. */
-  function montarEmailBody() {
-    const { dados, frete, presente, total } = montarPedido();
-    const cliente = dadosCliente();
-    const loja = CFG.nomeLoja || "BookVerse";
-    const emDinheiro = metodoPagamento === "dinheiro";
-    const pagamentoTxt = emDinheiro
-      ? "DINHEIRO EM ESPÉCIE na entrega. Pedido APROVADO (receber o valor ao entregar)."
-      : `Pix, código ${codigoPedido}.`;
-
-    const itensTxt = dados.itens
-      .map(i => `${i.qty}x ${i.livro.titulo}${i.livro.condicao ? " [" + (i.livro.condicao === "novo" ? "NOVO" : "USADO") + "]" : ""} (${i.livro.autor}): ${Precos.formatarBRL(i.precoLinha)}`)
-      .join("\n");
-
-    const presenteTxt = cliente.presente
-      ? `EMBALAR PARA PRESENTE (+ ${Precos.formatarBRL(presente)})${cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : ""}`
-      : "";
-
-    const mensagem = [
-      `NOVO PEDIDO - ${loja}`,
-      `Código: ${codigoPedido}`,
-      ``,
-      `Cliente: ${cliente.nome}`,
-      `E-mail: ${cliente.email}`,
-      `WhatsApp: ${cliente.telefone}  (abrir: ${cliente.whatsappLink})`,
-      cliente.instagram ? `Instagram: ${cliente.instagram}` : "",
-      ``,
-      origemTexto() ? `Origem do pedido: ${origemTexto()}` : "",
-      `Entrega: ${cliente.entrega}`,
-      `Endereço: ${cliente.endereco || "Entrega a combinar (retirada local)"}`,
-      presenteTxt,
-      ``,
-      `Itens:`,
-      itensTxt,
-      ``,
-      `Subtotal: ${Precos.formatarBRL(dados.subtotal)}`,
-      `Frete: ${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}`,
-      presente ? `Embalar para presente: ${Precos.formatarBRL(presente)}` : "",
-      `Total: ${Precos.formatarBRL(total)}`,
-      cliente.observacoes ? `\nObservações: ${cliente.observacoes}` : "",
-      ``,
-      `Pagamento: ${pagamentoTxt}`
-    ].join("\n");
-
-    return {
-      subject: `Novo pedido ${codigoPedido} - ${loja}`,
-      from_name: `${loja} (Loja)`,
-      replyto: cliente.email || "",
-      "Código do pedido": codigoPedido,
-      "Cliente": cliente.nome,
-      "E-mail do cliente": cliente.email,
-      "WhatsApp": cliente.telefone,
-      "Abrir no WhatsApp": cliente.whatsappLink,
-      "Instagram": cliente.instagram || "—",
-      "Origem do pedido": origemTexto() || "Site",
-      "Entrega": cliente.entrega,
-      "Endereço": cliente.endereco || "Entrega a combinar (retirada local)",
-      "Embalar para presente": cliente.presente ? (`SIM (+ ${Precos.formatarBRL(presente)})` + (cliente.presenteMsg ? ` (cartão: "${cliente.presenteMsg}")` : "")) : "Não",
-      "Forma de pagamento": emDinheiro ? "Dinheiro em espécie (na entrega)" : "Pix",
-      "Total": Precos.formatarBRL(total),
-      "message": mensagem
-    };
-  }
-
-  async function enviarEmailManual() {
+  /* ----- Aviso do pedido para a LOJA (Web3Forms) -----
+     Sai do NAVEGADOR: o Web3Forms barra chamadas de servidor (desafio
+     anti-bot do Cloudflare). O texto vem pronto do servidor, com os
+     valores que ELE calculou. Se falhar, a página "Minha conta" reenvia
+     depois (o pedido continua sem a marca emailEnviado). */
+  async function enviarEmailLoja() {
     const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
-    if (!key) return;                            // e-mail desligado
-    const body = Object.assign({ access_key: key }, montarEmailBody());
-    const resp = await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify(body)
-    });
-    // O Web3Forms responde {success:true} quando aceita. Qualquer outra
-    // coisa é falha de verdade: lançamos o erro para o pedido NÃO ficar
-    // marcado como "e-mail enviado" — a página "Minha conta" reenvia depois.
-    let dados = null;
-    try { dados = await resp.json(); } catch (e) { /* resposta sem JSON */ }
-    if (!resp.ok || !dados || dados.success !== true) {
-      throw new Error("Web3Forms recusou o envio do pedido.");
-    }
+    const corpo = pedidoServidor && pedidoServidor.emailBody;
+    if (!key || !corpo) return;
+    try {
+      const resp = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(Object.assign({ access_key: key }, corpo))
+      });
+      let dados = null;
+      try { dados = await resp.json(); } catch (e) { /* resposta sem JSON */ }
+      if (resp.ok && dados && dados.success === true) marcarEmailEnviado();
+    } catch (e) { /* não bloqueia a conclusão do pedido */ }
   }
 
   /* ---------- Confirmação ---------- */
@@ -914,19 +802,25 @@
       return;
     }
 
-    // Modo manual: envia o e-mail (declaração do cliente) e conclui.
+    // Pix manual: avisa a loja e registra que o cliente diz ter pago
+    // (o pedido passa a "aguardando"; a loja confere no banco).
     if (btn) { original = btn.textContent; btn.disabled = true; btn.textContent = "Enviando pedido…"; }
-    try { await enviarEmailManual(); } catch (e) { /* não bloqueia a conclusão do pedido */ }
-    try { await salvarPedidoSeLogado("aguardando"); } catch (e) {}
-    try { await salvarPerfilSeLogado(); } catch (e) {}
-    avisarCliente("recebido");
+    await enviarEmailLoja();
+    try { await chamarApiPedido({ acao: "ja-paguei", codigo: codigoPedido }); } catch (e) { /* a loja confere no banco do mesmo jeito */ }
     if (btn) { btn.disabled = false; btn.textContent = original; }
     sucesso(false);
   }
 
   function sucesso(confirmado) {
     pararPolling();
-    const { dados, frete, presente, total } = montarPedido();
+    // Valores oficiais: os do servidor (a conta desta tela é só a prévia).
+    const calc = montarPedido();
+    const oficial = pedidoServidor || {};
+    const dados = calc.dados;
+    const total = typeof oficial.total === "number" ? oficial.total : calc.total;
+    const subtotal = typeof oficial.subtotal === "number" ? oficial.subtotal : dados.subtotal;
+    const frete = typeof oficial.frete === "number" ? oficial.frete : calc.frete;
+    const presente = typeof oficial.presente === "number" ? oficial.presente : calc.presente;
     const cliente = dadosCliente();
     const emDinheiro = metodoPagamento === "dinheiro";
 
@@ -936,7 +830,7 @@
     if (window.Analytics) window.Analytics.compra({
       codigo: codigoPedido,
       total: total,
-      subtotal: dados.subtotal,
+      subtotal: subtotal,
       frete: frete,
       itens: dados.itens
     }, cliente);
@@ -952,7 +846,7 @@
       </div>
       <ul class="conf-itens">${linhas}</ul>
       <dl class="conf-totais">
-        <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(dados.subtotal)}</dd></div>
+        <div><dt>Subtotal</dt><dd>${Precos.formatarBRL(subtotal)}</dd></div>
         ${opcoesFrete.some(o => o.valor > 0) ? `<div><dt>Frete</dt><dd>${frete === 0 ? "Grátis" : Precos.formatarBRL(frete)}</dd></div>` : ""}
         ${presente ? `<div><dt>Embalar para presente</dt><dd>${Precos.formatarBRL(presente)}</dd></div>` : ""}
         <div class="conf-total"><dt>${emDinheiro ? "Total a pagar na entrega" : "Total do Pix"}</dt><dd>${Precos.formatarBRL(total)}</dd></div>

@@ -104,9 +104,12 @@ async function usuarioDoToken(req) {
   const m = String(req.headers.authorization || "").match(/^Bearer\s+(.+)$/i);
   if (!m) return null;
   const key = process.env.FIREBASE_API_KEY || FIREBASE_API_KEY_PADRAO;
+  // Nos testes locais, o login é o do emulador do Firebase.
+  const emulador = String(process.env.FIREBASE_AUTH_EMULATOR_HOST || "").trim();
+  const base = emulador ? "http://" + emulador + "/identitytoolkit.googleapis.com" : "https://identitytoolkit.googleapis.com";
   try {
     const r = await fetch(
-      "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(key),
+      base + "/v1/accounts:lookup?key=" + encodeURIComponent(key),
       {
         method: "POST",
         headers: { "content-type": "application/json" },

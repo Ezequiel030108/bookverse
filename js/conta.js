@@ -501,37 +501,25 @@
     });
   }
 
-  // Verifica no Mercado Pago os pedidos pendentes; se algum foi pago,
-  // atualiza o status e avisa o lojista por e-mail (uma única vez).
+  // Verifica no Mercado Pago os pedidos pendentes e avisa o lojista por
+  // e-mail (uma única vez) sobre os que já foram pagos.
   async function reconciliarPendentes(pedidos) {
-    let mudou = false;
     const key = String((CFG.pedidos && CFG.pedidos.web3formsKey) || "").trim();
     for (const p of pedidos) {
       if (!p) continue;
       // "aprovado" (dinheiro na entrega) conta como fechado para fins de
       // aviso por e-mail — se o envio falhou no checkout, reenvia aqui.
       let pago = p.status === "pago" || p.status === "aprovado";
-      // Ainda pendente: confirma no Mercado Pago.
+      // Ainda pendente: pergunta ao servidor. Se o Pix caiu, é o PRÓPRIO
+      // servidor que marca o pedido como pago, dá baixa no estoque e avisa
+      // o cliente (api/status-pix) — o navegador não grava status. A tela
+      // se atualiza sozinha (onSnapshot).
       if (!pago && p.pagamentoId) {
         try {
           const r = await fetch("/api/status-pix?id=" + encodeURIComponent(p.pagamentoId));
           const d = await r.json();
           pago = !!(d && d.status === "approved");
         } catch (e) {}
-        if (pago) {
-          try { await Auth.atualizarStatusPedido(p.codigo, "pago"); } catch (e) {}
-          const itens = (p.itens || []).filter(i => i && i.id).map(i => ({ id: i.id, qty: i.qty || 1 }));
-          // Dar baixa é ação de admin; para clientes a chamada falha em
-          // silêncio e a RESERVA segura o livro até o admin dar baixa.
-          try { await Auth.marcarVendidos(itens); } catch (e) {}
-          try { await Auth.reservarLivros(itens); } catch (e) {}
-          // Rede de recuperação do aviso ao CLIENTE: se o webhook do
-          // Mercado Pago não chegou (ou o site estava fechado), o aviso
-          // de "pagamento confirmado" sai agora. O servidor guarda o que
-          // já foi enviado, então ninguém recebe duas vezes.
-          if (window.Avisos) window.Avisos.avisar("pago", { codigo: p.codigo });
-          mudou = true;
-        }
       }
       // Avisa o lojista por e-mail, uma única vez por pedido (trava
       // emailEnviado). Vale para TODOS os pedidos pagos, inclusive os do
@@ -553,7 +541,6 @@
           try { dEmail = await rEmail.json(); } catch (e) {}
           if (rEmail.ok && dEmail && dEmail.success === true) {
             await Auth.atualizarPedido(p.codigo, { emailEnviado: true });
-            mudou = true;
           }
         } catch (e) {}
       }

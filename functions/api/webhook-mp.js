@@ -35,11 +35,9 @@
    ============================================================ */
 
 const crypto = require("crypto");
-const MP_API = "https://api.mercadopago.com";
 const { aplicarHeaders } = require("./_seguranca");
-const { dadosLoja } = require("./_loja");
-const { enviarAvisoPedido } = require("./_notificar");
-const dados = require("./_dados");
+const mp = require("./_mercadopago");
+const { processarPagamentoAprovado } = require("./_pedidos");
 
 function lerBody(req) {
   let b = req.body;
@@ -72,90 +70,14 @@ function assinaturaValida(req, secret, dataId) {
   }
 }
 
-/* ------------------------------------------------------------
-   Acha o pedido no banco a partir do pagamento do Mercado Pago.
-   Duas tentativas, da mais barata para a mais cara:
-     1. pelo uid + código guardados no metadata da cobrança
-        (api/criar-pix.js grava os dois);
-     2. procurando o pagamentoId em todos os pedidos — precisa do
-        índice de "collection group" no campo pagamentoId (o
-        README explica; sem ele, esta busca falha em silêncio e a
-        opção 1 já resolve o caso normal).
-   ------------------------------------------------------------ */
-async function acharPedido(pagamento) {
-  const meta = (pagamento && pagamento.metadata) || {};
-  const uid = String(meta.uid_cliente || "").trim();
-  const codigo = String(meta.codigo_pedido || pagamento.external_reference || "").trim();
-
-  if (uid && codigo) {
-    try {
-      const pedido = await dados.lerPedido(uid, codigo);
-      if (pedido) return { uid, codigo, pedido };
-    } catch (e) { /* cai para a busca ampla */ }
-  }
-
-  try {
-    const achado = await dados.acharPedidoPorPagamento(pagamento.id);
-    if (achado && achado._uid) {
-      return { uid: achado._uid, codigo: achado.codigo || codigo, pedido: achado };
-    }
-  } catch (e) {
-    console.warn("[webhook-mp] Busca por pagamentoId falhou (falta o índice de collection group?):", e.message);
-  }
-
-  return null;
-}
-
-/* Marca o pedido como pago e avisa o cliente. Tudo em "melhor
-   esforço": se algo falhar, o webhook ainda responde 200 e o
-   painel da loja continua podendo confirmar na mão. */
-async function confirmarPedido(pagamento, req) {
-  const achado = await acharPedido(pagamento);
-  if (!achado) {
-    console.warn(`[webhook-mp] Pagamento ${pagamento.id} aprovado, mas o pedido não foi encontrado no banco (compra sem conta?).`);
-    return;
-  }
-  const { uid, codigo, pedido } = achado;
-
-  // Pagou menos do que devia? Não confirma sozinho — deixa para a
-  // loja olhar. (O valor esperado é gravado no metadata da cobrança.)
-  const esperado = Number((pagamento.metadata || {}).total_esperado || 0);
-  const pago = Number(pagamento.transaction_amount || 0);
-  if (esperado && pago && pago + 0.01 < esperado) {
-    console.error(`[webhook-mp] Pedido ${codigo}: pagou ${pago} mas o total é ${esperado}. Confirmação automática cancelada.`);
-    await dados.atualizarPedido(uid, codigo, { pagamentoDivergente: true, pagamentoValor: pago }).catch(() => {});
-    return;
-  }
-
-  // Já estava pago/entregue? Então só o aviso interessa (e ele
-  // mesmo se protege de repetir).
-  if (pedido.status !== "pago" && pedido.status !== "entregue" && pedido.status !== "enviado") {
-    await dados.atualizarPedido(uid, codigo, {
-      status: "pago",
-      pagoEm: Date.now(),
-      pagamentoId: String(pagamento.id)
-    }).catch(e => console.error("[webhook-mp] Não deu para marcar o pedido como pago:", e));
-  }
-
-  const aviso = await enviarAvisoPedido({
-    uid, codigo, evento: "pago", loja: dadosLoja(req)
-  });
-  if (aviso && aviso.jaEnviado) return;
-  if (!aviso || !aviso.enviado) {
-    console.warn(`[webhook-mp] Pedido ${codigo} confirmado, mas o aviso ao cliente não saiu:`,
-      JSON.stringify({ email: aviso && aviso.email, whatsapp: aviso && aviso.whatsapp }));
-  }
-}
-
 module.exports = async (req, res) => {
   aplicarHeaders(res);
   // O Mercado Pago às vezes faz um GET de teste.
   if (req.method === "GET") { res.status(200).json({ ok: true }); return; }
   if (req.method !== "POST") { res.status(405).end(); return; }
 
-  const token = process.env.MP_ACCESS_TOKEN;
   // Sempre respondemos 200 para o MP não reenviar infinitamente.
-  if (!token) { res.status(200).json({ ok: true }); return; }
+  if (!mp.configurado()) { res.status(200).json({ ok: true }); return; }
 
   try {
     const body = lerBody(req);
@@ -179,16 +101,14 @@ module.exports = async (req, res) => {
 
     // Fonte da verdade: confirma o pagamento direto no Mercado Pago.
     // Nunca confiamos no corpo da notificação — só no que a API diz.
-    const r = await fetch(`${MP_API}/v1/payments/${encodeURIComponent(paymentId)}`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    if (!r.ok) { res.status(200).json({ ok: true }); return; }
-    const pagamento = await r.json();
+    const pagamento = await mp.consultarPagamento(paymentId);
+    if (!pagamento) { res.status(200).json({ ok: true }); return; }
 
-    // Dinheiro na conta: marca o pedido como pago e avisa o cliente.
-    if (pagamento && pagamento.status === "approved") {
+    // Dinheiro na conta: marca o pedido como pago, dá baixa no estoque
+    // e avisa o cliente (api/_pedidos.js).
+    if (pagamento.status === "approved") {
       try {
-        await confirmarPedido(pagamento, req);
+        await processarPagamentoAprovado(pagamento, req);
       } catch (e) {
         // Melhor esforço: o painel da loja sempre pode confirmar na mão.
         console.error("[webhook-mp] Falha ao confirmar o pedido / avisar o cliente:", e);
