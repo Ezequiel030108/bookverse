@@ -285,6 +285,12 @@ function ultimoDiaPromo() {
               "-" + String(h.getDate()).padStart(2, "0");
   return iso === PROMOCAO.fim;
 }
+/* O desconto cresce levando 2 ou mais? Com o mesmo % nos dois campos
+   a promoção é de desconto único (ex.: 15% em tudo) e nada fala em
+   "levando 2" — nem a faixa, nem o card, nem o modal. */
+function promoTemDupla() {
+  return PROMOCAO.descontoDupla > PROMOCAO.descontoUm;
+}
 /* Preços promocionais (sozinho e na dupla). descontoMaximo limita o teto. */
 function precosPromo(livro) {
   const cheio = Precos.precoNumerico(livro.preco);
@@ -295,6 +301,7 @@ function precosPromo(livro) {
   return {
     um: Precos.arredondarReal(cheio * (1 - pctUm / 100)),
     dupla: Precos.arredondarReal(cheio * (1 - pctDupla / 100)),
+    pctUm,
     limitado: pctDupla < PROMOCAO.descontoDupla
   };
 }
@@ -303,9 +310,9 @@ function precoCardHTML(livro) {
   if (promocaoAtiva()) {
     const p = precosPromo(livro);
     if (p) {
-      const linhaDupla = p.limitado
-        ? `<p class="preco-dupla">preço especial da promoção</p>`
-        : `<p class="preco-dupla">levando 2 livros: ${formatarReal(p.dupla)}</p>`;
+      let linhaDupla = "";
+      if (p.limitado) linhaDupla = `<p class="preco-dupla">preço especial da promoção</p>`;
+      else if (promoTemDupla()) linhaDupla = `<p class="preco-dupla">levando 2 livros: ${formatarReal(p.dupla)}</p>`;
       return `
         <p class="info-preco em-promo">
           <s class="preco-antigo">${esc(livro.preco)}</s>
@@ -912,9 +919,15 @@ function abrirModal(livro) {
       modal.querySelector(".modal-detalhes").insertAdjacentElement("afterend", avisoPromo);
     }
     const estrela = `<svg class="promo-estrela" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.1 6.1 6.3.2-5 3.8 1.8 6.1-5.2-3.6-5.2 3.6 1.8-6.1-5-3.8 6.3-.2z"/></svg>`;
-    avisoPromo.innerHTML = promo.limitado
-      ? `${estrela} <strong>${esc(PROMOCAO.nome)}:</strong> este livro participa com ${PROMOCAO.descontoUm}% de desconto. Promoção válida até ${dataFimPromo()}.`
-      : `${estrela} <strong>${esc(PROMOCAO.nome)}:</strong> levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
+    let textoPromo;
+    if (promo.limitado) {
+      textoPromo = `este livro participa com ${promo.pctUm}% de desconto. Promoção válida até ${dataFimPromo()}.`;
+    } else if (promoTemDupla()) {
+      textoPromo = `levando 2 livros ou mais, este sai por <strong>${formatarReal(promo.dupla)}</strong> (${PROMOCAO.descontoDupla}% off). Válida até ${dataFimPromo()}.`;
+    } else {
+      textoPromo = `${PROMOCAO.descontoUm}% de desconto em todos os livros. Válida até ${dataFimPromo()}.`;
+    }
+    avisoPromo.innerHTML = `${estrela} <strong>${esc(PROMOCAO.nome)}:</strong> ${textoPromo}`;
   } else if (avisoPromo) {
     avisoPromo.remove();
   }
@@ -1097,29 +1110,22 @@ document.addEventListener("keydown", (e) => {
    Só aparece com a promoção ativa e some sozinha quando ela acaba —
    nada fica "sujo" no site fora do período.
 
-   A faixa é desenhada como uma ROTA entre duas estrelas: levando 1
-   livro o desconto é um, levando 2 ou mais ele cresce. Por isso as
-   duas ofertas são uma LISTA ORDENADA (<ol>) — a ordem aqui é a
-   própria informação, e a segunda parada é a estrela mais brilhante. */
+   Com dois descontos, a faixa é desenhada como uma ROTA entre duas
+   estrelas: levando 1 livro o desconto é um, levando 2 ou mais ele
+   cresce. Por isso as duas ofertas são uma LISTA ORDENADA (<ol>) — a
+   ordem aqui é a própria informação, e a segunda parada é a estrela
+   mais brilhante. Com desconto único, fica uma oferta só, grande.
+
+   PROMOCAO.tema troca o visual (ex.: "criancas" = balões e confete)
+   pela classe promo-tema-<tema> no <body>. */
 function ativarModoPromocao() {
   if (!promocaoAtiva()) return;
   document.body.classList.add("modo-promo");
+  const tema = /^[a-z0-9-]+$/.test(PROMOCAO.tema || "") ? PROMOCAO.tema : "";
+  if (tema) document.body.classList.add("promo-tema-" + tema);
 
-  // Faixa de ponta a ponta, logo abaixo do cabeçalho.
-  const vitrine = document.createElement("section");
-  vitrine.className = "vitrine-promo";
-  vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
-  vitrine.innerHTML = `
-    <div class="vitrine-card">
-      <span class="vitrine-aurora" aria-hidden="true"></span>
-      <div class="vitrine-conteudo">
-        <div class="vitrine-head">
-          <span class="vitrine-tag">${esc(PROMOCAO.nome)}</span>
-          <span class="vitrine-prazo${ultimoDiaPromo() ? " urgente" : ""}">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-            ${ultimoDiaPromo() ? "Último dia!" : "Até " + dataFimPromo()}
-          </span>
-        </div>
+  const ofertas = promoTemDupla()
+    ? `
         <ol class="vitrine-rota">
           <li class="vitrine-parada">
             <span class="parada-estrela" aria-hidden="true"></span>
@@ -1132,11 +1138,140 @@ function ativarModoPromocao() {
             <span class="vitrine-pct">${PROMOCAO.descontoDupla}<small>% OFF</small></span>
             <span class="vitrine-oferta-txt">em cada livro, levando 2 ou mais</span>
           </li>
-        </ol>
+        </ol>`
+    : `
+        <p class="vitrine-unica">
+          <span class="vitrine-pct">${PROMOCAO.descontoUm}<small>% OFF</small></span>
+          <span class="vitrine-oferta-txt">em todos os livros da loja</span>
+        </p>`;
+
+  // Faixa de ponta a ponta, logo abaixo do cabeçalho.
+  const vitrine = document.createElement("section");
+  vitrine.className = "vitrine-promo";
+  vitrine.id = "vitrine-promo";
+  vitrine.tabIndex = -1;   // o selo flutuante leva o foco até aqui
+  vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
+  vitrine.innerHTML = `
+    <div class="vitrine-card${promoTemDupla() ? "" : " unica"}">
+      <span class="vitrine-aurora" aria-hidden="true"></span>
+      ${tema === "criancas" ? DECORACAO_CRIANCAS : ""}
+      <div class="vitrine-conteudo">
+        <div class="vitrine-head">
+          <span class="vitrine-tag">${esc(PROMOCAO.nome)}</span>
+          <span class="vitrine-prazo${ultimoDiaPromo() ? " urgente" : ""}">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            ${ultimoDiaPromo() ? "Último dia!" : "Até " + dataFimPromo()}
+          </span>
+        </div>${ofertas}
       </div>
     </div>
   `;
   topbar.insertAdjacentElement("afterend", vitrine);
+  criarSeloPromo(vitrine);
+}
+
+/* Confete e balões da faixa do Dia das Crianças (só decoração).
+   Cada confete fica numa posição em % da faixa, nas bordas e no meio
+   vazio — assim, do celular ao desktop, nenhum cai em cima do texto. */
+const CONFETE_CRIANCAS = [
+  // [esquerda %, topo %, cor, forma, giro]
+  [2.5, 7, "ciano", "tira", 28],
+  [33, 5, "verde", "tira", -24],
+  [68, 6, "lavanda", "bolinha", 0],
+  [60, 40, "rosa", "bolinha", 0],
+  [50, 70, "ouro", "tira", -38],
+  [43, 91, "rosa", "tira", 40],
+  [7, 93, "verde", "bolinha", 0],
+  [72, 90, "ciano", "bolinha", 0]
+];
+const DECORACAO_CRIANCAS = CONFETE_CRIANCAS.map(([x, y, cor, forma, giro]) =>
+  `<i class="confete ${forma} ${cor}" style="left:${x}%;top:${y}%;--giro:${giro}deg" aria-hidden="true"></i>`
+).join("") + `
+  <svg class="vitrine-baloes" viewBox="0 0 120 160" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="rgba(243,237,255,.55)" stroke-width="1.2" stroke-linecap="round">
+      <path d="M37 76c-3 18 10 30 23 42s4 26 2 40"/>
+      <path d="M85 68c4 16-8 26-18 40s-6 30-5 50"/>
+      <path d="M62 98c-5 14 6 26 1 38s-2 16-1 22"/>
+    </g>
+    <path d="M37 75 33 80h8z" fill="#ff7ad9"/>
+    <ellipse cx="37" cy="48" rx="22" ry="27" fill="#ff7ad9"/>
+    <ellipse cx="29" cy="37" rx="5" ry="8" fill="#fff" opacity=".42" transform="rotate(24 29 37)"/>
+    <path d="M85 67 81 72h8z" fill="#7adfff"/>
+    <ellipse cx="85" cy="41" rx="21" ry="26" fill="#7adfff"/>
+    <ellipse cx="77" cy="31" rx="4.6" ry="7.6" fill="#fff" opacity=".45" transform="rotate(24 77 31)"/>
+    <path d="M62 97 58 102h8z" fill="#ffd966"/>
+    <ellipse cx="62" cy="71" rx="20" ry="25" fill="#ffd966"/>
+    <ellipse cx="55" cy="61" rx="4.4" ry="7.2" fill="#fff" opacity=".5" transform="rotate(24 55 61)"/>
+  </svg>`;
+
+/* ---------- Selo flutuante da promoção ----------
+   Um "botton" (broche redondo) no canto da tela, que acompanha a
+   rolagem: a faixa do topo some ao descer a estante, o selo não.
+   Tocar nele volta à faixa; o × esconde o selo até o fim da visita. */
+const CHAVE_SELO_FECHADO = "bookverse_selo_promo_fechado";
+
+function criarSeloPromo(vitrine) {
+  try { if (sessionStorage.getItem(CHAVE_SELO_FECHADO) === PROMOCAO.inicio) return; } catch (e) {}
+
+  const pct = promoTemDupla() ? PROMOCAO.descontoDupla : PROMOCAO.descontoUm;
+  const prazo = ultimoDiaPromo() ? "último dia" : "até " + dataFimPromo();
+
+  // O nome vai escrito na borda do broche: metade em cima, metade embaixo,
+  // quebrado no espaço que deixa as duas metades mais parecidas.
+  const palavras = String(PROMOCAO.nome).toUpperCase().split(/\s+/).filter(Boolean);
+  let corte = palavras.length;
+  let melhor = Infinity;
+  for (let i = 1; i < palavras.length; i++) {
+    const dif = Math.abs(palavras.slice(0, i).join(" ").length - palavras.slice(i).join(" ").length);
+    if (dif < melhor) { melhor = dif; corte = i; }
+  }
+  const cima = palavras.slice(0, corte).join(" ");
+  const baixo = palavras.slice(corte).join(" ");
+  const fonte = Math.min(10, 92 / (Math.max(cima.length, baixo.length, 1) * 0.72)).toFixed(1);
+
+  const selo = document.createElement("div");
+  selo.className = "promo-botton";
+  selo.innerHTML = `
+    <button type="button" class="promo-botton-disco"
+            aria-label="${esc(PROMOCAO.nome)}: ${promoTemDupla() ? "até " : ""}${pct}% de desconto, ${esc(prazo)}. Ver a promoção">
+      <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <path id="botton-arco-cima" d="M14 50a36 36 0 0 1 72 0"/>
+          <path id="botton-arco-baixo" d="M6.6 50a43.4 43.4 0 0 0 86.8 0"/>
+        </defs>
+        <text class="botton-nome" font-size="${fonte}"><textPath href="#botton-arco-cima" startOffset="50%" text-anchor="middle">${esc(cima)}</textPath></text>
+        <text class="botton-nome" font-size="${fonte}"><textPath href="#botton-arco-baixo" startOffset="50%" text-anchor="middle">${esc(baixo)}</textPath></text>
+        <path class="botton-estrelinha" d="M10 45.5l1.2 3.3 3.3 1.2-3.3 1.2L10 54.5l-1.2-3.3-3.3-1.2 3.3-1.2z"/>
+        <path class="botton-estrelinha" d="M90 45.5l1.2 3.3 3.3 1.2-3.3 1.2L90 54.5l-1.2-3.3-3.3-1.2 3.3-1.2z"/>
+        ${promoTemDupla() ? `<text class="botton-ate" x="50" y="35" text-anchor="middle">ATÉ</text>` : ""}
+        <text class="botton-pct" x="50" y="57" text-anchor="middle">${pct}%</text>
+        <text class="botton-off" x="50" y="69" text-anchor="middle">OFF</text>
+      </svg>
+    </button>
+    <button type="button" class="promo-botton-fechar" aria-label="Esconder o selo da promoção">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>`;
+
+  // Toque no selo: sobe até a faixa e dá uma piscadinha nela.
+  selo.querySelector(".promo-botton-disco").addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: semMovimento ? "auto" : "smooth" });
+    vitrine.focus({ preventScroll: true });
+    vitrine.classList.remove("destacar");
+    void vitrine.offsetWidth;   // reinicia a animação se tocar de novo
+    vitrine.classList.add("destacar");
+  });
+  vitrine.addEventListener("animationend", (e) => {
+    if (e.animationName === "vitrine-destaca") vitrine.classList.remove("destacar");
+  });
+
+  selo.querySelector(".promo-botton-fechar").addEventListener("click", () => {
+    selo.remove();
+    document.body.classList.remove("tem-botton");
+    try { sessionStorage.setItem(CHAVE_SELO_FECHADO, PROMOCAO.inicio); } catch (e) {}
+  });
+
+  document.body.appendChild(selo);
+  document.body.classList.add("tem-botton");
 }
 
 /* ---------- Ações de compra no modal ---------- */

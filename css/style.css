@@ -1445,6 +1445,258 @@ main {
   .vitrine-parada.destaque .parada-estrela { animation: none; }
 }
 
+/* ---- Desconto único (ex.: 15% em tudo): uma oferta só, grande ----
+   Sem "levando 2", não há rota: o número é o destaque da faixa. No
+   celular fica embaixo do título; do tablet para cima, na ponta
+   direita, com o título e o prazo à esquerda. */
+.vitrine-card.unica .vitrine-head { margin-bottom: 8px; }
+.vitrine-unica {
+  margin: 0; display: flex; flex-direction: column; align-items: flex-start;
+}
+.vitrine-unica .vitrine-pct {
+  font-size: clamp(2.7rem, 12vw, 3.5rem); color: var(--estrela); gap: 1px;
+  text-shadow: 0 4px 22px rgba(255,217,102,.28);
+}
+.vitrine-unica .vitrine-pct small { font-size: .36em; }
+.vitrine-unica .vitrine-oferta-txt { font-size: .9rem; color: var(--texto-claro); margin-top: 4px; }
+
+@media (min-width: 620px) {
+  .vitrine-card.unica .vitrine-conteudo {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  }
+  .vitrine-card.unica .vitrine-head { flex-direction: column; align-items: flex-start; margin-bottom: 0; }
+  .vitrine-card.unica .vitrine-tag { font-size: clamp(1.55rem, 3.4vw, 2.1rem); }
+  .vitrine-unica { align-items: flex-end; text-align: right; }
+}
+
+/* O selo flutuante leva o cliente até a faixa: ela dá uma piscadinha
+   dourada para o olho achar onde chegou. */
+.vitrine-promo:focus { outline: none; }
+.vitrine-promo:focus-visible .vitrine-card { outline: 2px solid var(--estrela); outline-offset: 3px; }
+.vitrine-promo.destacar .vitrine-card { animation: vitrine-destaca 1s ease-out .25s; }
+@keyframes vitrine-destaca {
+  0% {
+    transform: none;
+    box-shadow: 0 16px 40px rgba(6,2,26,.6), inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 0 rgba(255,217,102,.75);
+  }
+  30% { transform: scale(1.015); }
+  100% {
+    transform: none;
+    box-shadow: 0 16px 40px rgba(6,2,26,.6), inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 18px rgba(255,217,102,0);
+  }
+}
+
+/* ============================================================
+   TEMA "criancas" — DIA DAS CRIANÇAS (PROMOCAO.tema em js/livros.js)
+   O mesmo céu noturno do site, só que em festa: confete e balões nas
+   cores que o site já usa (rosa, ciano, dourado e lavanda) e um verde.
+   Nada de bandeirinhas — no Brasil elas dizem "festa junina".
+   ============================================================ */
+.promo-tema-criancas .vitrine-card {
+  background: linear-gradient(135deg, #1a0b4d 0%, var(--indigo-claro) 58%, #6a2fc4 100%);
+}
+.promo-tema-criancas .vitrine-aurora {
+  background:
+    radial-gradient(56% 120% at 70% -20%, rgba(255,122,217,.32), transparent 62%),
+    radial-gradient(50% 120% at 4% 120%, rgba(122,223,255,.24), transparent 62%);
+}
+/* Título com as cores da festa (o dourado no meio liga com o 15%). */
+.promo-tema-criancas .vitrine-tag {
+  background: linear-gradient(90deg, #ff9ae3 0%, var(--estrela) 52%, var(--aurora-ciano) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+}
+.confete {
+  position: absolute; z-index: -1; pointer-events: none;
+  width: 6px; height: 6px; border-radius: 50%; opacity: .85;
+  transform: rotate(var(--giro, 0deg));
+}
+.confete.tira { width: 11px; height: 4px; border-radius: 2px; }
+.confete.rosa    { background: var(--aurora-rosa); }
+.confete.ciano   { background: var(--aurora-ciano); }
+.confete.ouro    { background: var(--estrela); }
+.confete.lavanda { background: var(--lavanda); }
+.confete.verde   { background: #8ff0b0; }
+/* Os balões ficam no canto direito; o conteúdo abre espaço para eles. */
+.vitrine-baloes {
+  position: absolute; z-index: -1; pointer-events: none;
+  top: 10px; right: 8px; width: 66px; height: auto;
+  transform-origin: 50% 100%;
+  animation: baloes-flutuam 6s ease-in-out infinite;
+}
+@keyframes baloes-flutuam {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-5px) rotate(2deg); }
+}
+.promo-tema-criancas .vitrine-head { padding-right: 64px; }
+@media (min-width: 620px) {
+  .promo-tema-criancas .vitrine-card { padding-right: 132px; }
+  .promo-tema-criancas .vitrine-head { padding-right: 0; }
+  .vitrine-baloes { top: auto; bottom: -18px; right: 20px; width: 98px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vitrine-baloes, .vitrine-promo.destacar .vitrine-card { animation: none; }
+}
+
+/* ---- O fundo do site em festa (discreto) ----
+   O céu continua o mesmo, só que:
+   • parte das estrelas vira confete colorido (mesmas posições do céu
+     normal, um pouco maiores para a cor aparecer);
+   • os meteoros viram serpentinas rosa, ciano e dourada. */
+body.promo-tema-criancas::before {
+  background-image:
+    radial-gradient(3.2px 3.2px at 12% 18%, var(--aurora-rosa), transparent 55%),
+    radial-gradient(2.9px 2.9px at 78% 8%,  var(--estrela), transparent 55%),
+    radial-gradient(3.2px 3.2px at 42% 88%, var(--aurora-ciano), transparent 55%),
+    radial-gradient(2.9px 2.9px at 25% 50%, #8ff0b0, transparent 55%),
+    radial-gradient(1.3px 1.3px at 60% 35%, #fff, transparent 55%),
+    radial-gradient(2.9px 2.9px at 88% 62%, var(--aurora-rosa), transparent 55%),
+    radial-gradient(1.3px 1.3px at 33% 73%, #fff, transparent 55%),
+    radial-gradient(2.9px 2.9px at 7%  82%, var(--lavanda), transparent 55%),
+    radial-gradient(2.9px 2.9px at 95% 28%, var(--aurora-ciano), transparent 55%),
+    radial-gradient(1.3px 1.3px at 53% 60%, #fff, transparent 55%),
+    radial-gradient(2.9px 2.9px at 70% 78%, var(--estrela), transparent 55%),
+    radial-gradient(.8px .8px at 18% 30%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 50% 12%, rgba(255,255,255,.75), transparent 55%),
+    radial-gradient(.8px .8px at 67% 95%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 82% 45%, rgba(255,255,255,.75), transparent 55%),
+    radial-gradient(.8px .8px at 3%  62%, rgba(255,255,255,.85), transparent 55%),
+    radial-gradient(.8px .8px at 38% 5%,  rgba(255,255,255,.75), transparent 55%);
+}
+body.promo-tema-criancas::after {
+  background-image:
+    radial-gradient(1.3px 1.3px at 20% 22%, #fff, transparent 55%),
+    radial-gradient(2.7px 2.7px at 55% 80%, var(--aurora-rosa), transparent 55%),
+    radial-gradient(2.7px 2.7px at 75% 40%, var(--aurora-ciano), transparent 55%),
+    radial-gradient(1px 1px at 40% 60%, #fff, transparent 55%),
+    radial-gradient(2.7px 2.7px at 88% 15%, var(--estrela), transparent 55%),
+    radial-gradient(.8px .8px at 10% 45%, #fff, transparent 55%);
+}
+
+.promo-tema-criancas .meteoro {
+  background: linear-gradient(90deg, #fff 0%, rgb(var(--cor-meteoro) / .8) 22%, rgb(var(--cor-meteoro) / 0) 80%);
+  filter: drop-shadow(0 0 6px rgb(var(--cor-meteoro) / .9));
+}
+.promo-tema-criancas .meteoro::after {
+  box-shadow: 0 0 12px 3px rgb(var(--cor-meteoro) / .9), 0 0 5px 1px #fff;
+}
+.promo-tema-criancas .meteoro-1 { --cor-meteoro: 255 122 217; } /* rosa */
+.promo-tema-criancas .meteoro-2 { --cor-meteoro: 122 223 255; } /* ciano */
+.promo-tema-criancas .meteoro-3 { --cor-meteoro: 255 217 102; } /* dourado */
+
+/* ============================================================
+   SELO FLUTUANTE DA PROMOÇÃO — o "botton" do canto da tela
+   Um broche redondo: aro branco, faixa com o nome da promoção
+   escrito em volta e o desconto no miolo. Fica por baixo do modal
+   e do carrinho (z-index menor), que o cobrem quando abertos.
+   ============================================================ */
+.promo-botton {
+  --botton: 88px;
+  position: fixed; z-index: 60;
+  right: calc(14px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + var(--safe-bottom));
+  width: var(--botton); height: var(--botton);
+  animation: botton-chega .7s cubic-bezier(.2, 1.5, .4, 1) .6s both;
+}
+@keyframes botton-chega {
+  from { opacity: 0; transform: scale(.3) rotate(-30deg); }
+  to   { opacity: 1; transform: none; }
+}
+.promo-botton-disco {
+  position: relative; display: block; width: 100%; height: 100%;
+  padding: 0; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle, var(--violeta) 0%, var(--indigo-claro) 100%);
+  box-shadow:
+    inset 0 0 0 3px #fff,
+    inset 0 0 0 5px rgba(0,0,0,.14),
+    0 10px 24px rgba(6,2,26,.6),
+    0 2px 6px rgba(0,0,0,.35);
+  transition: scale .2s ease;
+  animation: botton-balanca 7s ease-in-out 2.4s infinite;
+}
+/* Miolo do broche. */
+.promo-botton-disco::before {
+  content: ""; position: absolute; inset: 17%; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, var(--indigo), var(--noite-profunda));
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,.85), 0 2px 6px rgba(0,0,0,.3);
+}
+/* Brilho de broche de metal, por cima de tudo. */
+.promo-botton-disco::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: linear-gradient(150deg, rgba(255,255,255,.42) 0%, rgba(255,255,255,.08) 36%, transparent 50%);
+}
+.promo-botton-disco svg { position: relative; display: block; width: 100%; height: 100%; }
+@media (hover: hover) {
+  .promo-botton-disco:hover { scale: 1.07; }
+}
+.promo-botton-disco:focus-visible { outline: 3px solid var(--estrela); outline-offset: 3px; }
+
+.botton-nome {
+  fill: #fff; font-family: 'Inter', system-ui, sans-serif; font-weight: 800;
+  letter-spacing: 1.2px;
+}
+.botton-estrelinha { fill: var(--estrela); }
+.botton-ate {
+  fill: var(--lavanda-clara); font-family: 'Inter', system-ui, sans-serif;
+  font-size: 8px; font-weight: 800; letter-spacing: 1.5px;
+}
+.botton-pct {
+  fill: var(--estrela); font-family: 'Playfair Display', Georgia, serif;
+  font-size: 27px; font-weight: 800;
+}
+.botton-off {
+  fill: var(--texto-claro); font-family: 'Inter', system-ui, sans-serif;
+  font-size: 10.5px; font-weight: 800; letter-spacing: 2.5px;
+}
+
+/* Um balancinho de vez em quando (não o tempo todo, para não cansar). */
+@keyframes botton-balanca {
+  0%, 84%, 100% { transform: rotate(0); }
+  87% { transform: rotate(-10deg); }
+  90% { transform: rotate(8deg); }
+  93% { transform: rotate(-5deg); }
+  96% { transform: rotate(2deg); }
+}
+
+/* × para esconder o selo (até o fim da visita). */
+.promo-botton-fechar {
+  position: absolute; top: -4px; left: -4px; z-index: 1;
+  width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--texto-claro); background: var(--noite);
+  border: 1.5px solid rgba(255,255,255,.6);
+  box-shadow: 0 3px 8px rgba(0,0,0,.45);
+}
+.promo-botton-fechar::before { content: ""; position: absolute; inset: -9px; } /* área de toque maior */
+.promo-botton-fechar:focus-visible { outline: 2px solid var(--estrela); outline-offset: 2px; }
+
+/* Folga no fim da página para o selo não tapar os links do rodapé. */
+body.tem-botton .rodape-site { padding-bottom: calc(120px + var(--safe-bottom)); }
+
+@media (min-width: 620px) {
+  .promo-botton { --botton: 100px; right: 22px; bottom: 22px; }
+}
+
+/* Botton do Dia das Crianças: faixa rosa, miolo de sol dourado. */
+.promo-tema-criancas .promo-botton-disco {
+  background: radial-gradient(circle, #ff9ae3 0%, #ff5fc8 72%, #e0409e 100%);
+}
+.promo-tema-criancas .promo-botton-disco::before {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255,255,255,.45), transparent 62%),
+    repeating-conic-gradient(#ffd966 0deg 10deg, #ffe9a1 10deg 20deg);
+}
+.promo-tema-criancas .botton-estrelinha { fill: #fff; }
+.promo-tema-criancas .botton-ate { fill: #8a2b9e; }
+.promo-tema-criancas .botton-pct { fill: #3a1290; }
+.promo-tema-criancas .botton-off { fill: #c41f86; }
+
+@media (prefers-reduced-motion: reduce) {
+  .promo-botton, .promo-botton-disco { animation: none; }
+}
+
 /* ---- Preços promocionais no card ---- */
 .info-preco.em-promo { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
 .preco-antigo { color: var(--texto-discreto); text-decoration: line-through; font-size: .82rem; font-weight: 500; }

@@ -8,11 +8,11 @@ import kotlin.math.floor
 
 /** Promoção — espelha a constante PROMOCAO de js/livros.js. */
 object Promocao {
-    const val nome = "Festival de Leitura"
-    const val inicio = "2026-08-02"
-    const val fim = "2026-08-31"
-    const val descontoUm = 10       // % off em qualquer livro
-    const val descontoDupla = 20    // % off levando 2 ou mais
+    const val nome = "Dia das Crianças"
+    const val inicio = "2026-10-12"
+    const val fim = "2026-10-31"
+    const val descontoUm = 15       // % off em qualquer livro
+    const val descontoDupla = 15    // igual ao de cima: 15% em tudo, sem "levando 2"
 }
 
 /**
@@ -41,6 +41,10 @@ object Pricing {
         val agora = System.currentTimeMillis()
         return agora in isoParaMs(Promocao.inicio, false)..isoParaMs(Promocao.fim, true)
     }
+
+    /** O desconto cresce levando 2 ou mais? Com o mesmo % nos dois, é um
+     *  desconto único (ex.: 15% em tudo) e nada fala em "levando 2". */
+    fun temDupla(): Boolean = Promocao.descontoDupla > Promocao.descontoUm
 
     /** "R$ 45,00" -> 45.0 (ou null se não der para ler). */
     fun precoNumerico(precoTexto: String): Double? {
@@ -82,7 +86,7 @@ object Pricing {
     }
 
     /** Preços promocionais de um livro (sozinho e na dupla). */
-    data class Promo(val um: Int, val dupla: Int, val limitado: Boolean)
+    data class Promo(val um: Int, val dupla: Int, val pctUm: Int, val limitado: Boolean)
 
     fun precosPromo(livro: Book): Promo? {
         val cheio = precoNumerico(livro.preco) ?: return null
@@ -92,6 +96,7 @@ object Pricing {
         return Promo(
             um = arredondarReal(cheio * (1 - pctUm / 100.0)),
             dupla = arredondarReal(cheio * (1 - pctDupla / 100.0)),
+            pctUm = pctUm,
             limitado = pctDupla < Promocao.descontoDupla,
         )
     }
