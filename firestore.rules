@@ -1,0 +1,83 @@
+rules_version = '2';
+
+// ============================================================
+// BOOKVERSE — REGRAS DO BANCO (Firestore)
+// ------------------------------------------------------------
+// Estas regras valem para quem acessa o banco PELO NAVEGADOR (o
+// site e o painel). O servidor (Firebase Functions) usa a
+// credencial do próprio projeto e não passa por elas.
+//
+// Ficam aqui, no repositório, para terem histórico e serem
+// publicadas junto com o resto (workflow "Deploy Functions").
+// Mudou a lista de administradores? Troque aqui E em js/config.js
+// (admin.emails).
+//
+// O princípio: o NAVEGADOR só escreve o que é do próprio cliente e
+// não vale dinheiro (perfil, carrinho). Pedido, status, valores e
+// estoque são escritos pelo SERVIDOR (api/pedido.js e a confirmação
+// do pagamento) ou pelos administradores no painel.
+// ============================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null;
+    }
+
+    function ehDono(uid) {
+      return logado() && request.auth.uid == uid;
+    }
+
+    // Os mesmos e-mails do bloco admin.emails em js/config.js. Só vale
+    // e-mail verificado (as contas Google sempre são).
+    function ehAdmin() {
+      return logado() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email in [
+          "ezequielfigueiredoaraujobatist@gmail.com",
+          "cauantista@gmail.com",
+          "marialeticinha22@gmail.com",
+          "oficialpaulo6@gmail.com"
+        ];
+    }
+
+    // Perfil e carrinho: cada cliente mexe só no que é dele (e pode
+    // apagar a conta inteira — LGPD).
+    match /users/{uid} {
+      allow read, write: if ehDono(uid);
+
+      // Pedidos: o cliente LÊ os dele. Quem cria e muda status/valores é o
+      // servidor. Do navegador, o cliente só pode marcar que o aviso por
+      // e-mail para a loja já saiu (emailEnviado) e apagar (apagar conta).
+      match /pedidos/{codigo} {
+        allow read: if ehDono(uid);
+        allow update: if ehDono(uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(["emailEnviado"]);
+        allow delete: if ehDono(uid);
+      }
+    }
+
+    // Painel "Pedidos da loja": os administradores leem e atualizam os
+    // pedidos de todos os clientes.
+    match /{caminho=**}/pedidos/{codigo} {
+      allow read, write: if ehAdmin();
+    }
+
+    // Vendidos/reservados: todo mundo LÊ (a vitrine esconde o que saiu).
+    // Reservar é feito pelo servidor ao fechar o pedido (com conferência
+    // de estoque e limite por conta); vender, repor e apagar, pelo painel.
+    match /disponibilidade/{livro} {
+      allow read: if true;
+      allow write: if ehAdmin();
+    }
+
+    // Livros cadastrados pelo painel: todo mundo lê, só admins escrevem.
+    match /catalogo/{livro} {
+      allow read: if true;
+      allow write: if ehAdmin();
+    }
+
+    // Qualquer outra coleção (ex.: "campanhas", escrita pelo servidor):
+    // fechada para o navegador.
+  }
+}

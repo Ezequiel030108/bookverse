@@ -1,0 +1,13 @@
+{
+  "name": "bookverse-testes",
+  "private": true,
+  "description": "Testes automáticos da BookVerse: regras do banco e pedidos no servidor. Rodam no emulador do Firebase (nunca tocam a loja de verdade).",
+  "scripts": {
+    "test": "node --test --test-concurrency=1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.12.2",
+    "firebase-tools": "^13.35.1"
+  }
+}

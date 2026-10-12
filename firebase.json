@@ -9,6 +9,8 @@
       "**/*.md",
       "functions/**",
       "scripts/**",
+      "firestore.rules",
+      "testes/**",
       "api/**",
       "ads/**",
       "android/**",
@@ -65,6 +67,42 @@
             "value": "public, max-age=300"
           }
         ]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/finalizar",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/finalizar/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
       }
     ]
   },
@@ -75,6 +113,7 @@
     }
   ],
   "firestore": {
+    "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
   "emulators": {
@@ -86,6 +125,12 @@
     },
     "ui": {
       "enabled": true
+    },
+    "firestore": {
+      "port": 8085
+    },
+    "auth": {
+      "port": 9099
     }
   }
 }

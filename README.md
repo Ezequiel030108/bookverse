@@ -30,10 +30,13 @@ projeto livros/
 ├── checkout.html      ← a página de finalizar compra (pagamento)
 ├── conta.html         ← a página "Minha conta" (login Google + pedidos)
 ├── finalizar.html     ← recebe o carrinho da Loja do Instagram/Facebook
-├── functions/         ← backend (Firebase) — Pix automático, IA, avisos
+├── functions/         ← backend (Firebase) — pedidos, Pix automático, IA, avisos
 │   └── api/
-│       ├── criar-pix.js   ← cria a cobrança Pix no Mercado Pago
-│       ├── status-pix.js  ← o checkout pergunta "já caiu?"
+│       ├── pedido.js      ← FECHA O PEDIDO: calcula o total, reserva e cobra
+│       ├── _pedidos.js    ← as regras do pedido (preço, estoque, confirmação)
+│       ├── _site.js       ← o servidor lê livros.js/config.js/precos.js do site
+│       ├── _mercadopago.js← conversa com o Mercado Pago (cobrança e consulta)
+│       ├── status-pix.js  ← o checkout pergunta "já caiu?" (e confirma)
 │       ├── webhook-mp.js  ← confirma o Pix e avisa o cliente na hora
 │       ├── avisar.js      ← avisa o cliente (pedido pago, entregue…)
 │       ├── campanha.js    ← 👈 anuncia NOVIDADES para todos os clientes
@@ -44,6 +47,8 @@ projeto livros/
 │       ├── _email.js      ← manda o e-mail (Resend / Brevo)
 │       ├── _whatsapp.js   ← manda pelo WhatsApp Business (API da Meta)
 │       └── feed.js        ← gera /feed.xml (Google) e /feed-meta.xml (Meta)
+├── firestore.rules    ← regras do banco (quem pode ler/gravar o quê)
+├── testes/            ← testes automáticos (rodam sozinhos em cada PR)
 ├── css/
 │   └── style.css      ← o visual do site (cores, estante, etc.)
 ├── js/
@@ -264,69 +269,26 @@ Usamos o **Firebase** (do Google), que tem plano **gratuito** generoso.
    > no console do navegador (tecla F12) aparece o erro `auth/unauthorized-domain`.
 
 5. No menu **Build → Firestore Database**, clique em **Criar banco de dados**
-   (modo de produção). Depois, na aba **Regras (Rules)**, cole as regras abaixo
-   para que **cada cliente só veja os próprios dados**:
+   (modo de produção). As **regras** (quem pode ler e gravar o quê) ficam no
+   arquivo **`firestore.rules`**, na raiz do projeto, e são publicadas
+   sozinhas pelo workflow "Deploy Functions" sempre que o arquivo muda.
 
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
+   O resumo do que elas dizem:
+   - cada cliente só vê e mexe no **próprio perfil e carrinho**;
+   - o cliente **lê** os próprios pedidos, mas quem **cria pedido, muda
+     status, valor ou estoque é o servidor** (ou os administradores no
+     painel). Do navegador, o cliente só marca que o e-mail do pedido já
+     saiu para a loja;
+   - catálogo e disponibilidade: todo mundo lê, só administradores gravam.
 
-       // ⚠️ Troque pelos e-mails REAIS dos administradores (os mesmos
-       // do bloco admin.emails em js/config.js).
-       function ehAdmin() {
-         return request.auth != null &&
-           request.auth.token.email in [
-             "ezequielfigueiredoaraujobatist@gmail.com",
-             "cauantista@gmail.com",
-             "marialeticinha22@gmail.com",
-             "oficialpaulo6@gmail.com"
-           ];
-       }
-
-       // Cada cliente só vê e mexe nos próprios dados.
-       match /users/{uid} {
-         allow read, write: if request.auth != null && request.auth.uid == uid;
-         match /pedidos/{pedido} {
-           allow read, write: if request.auth != null && request.auth.uid == uid;
-         }
-       }
-
-       // Admins enxergam e atualizam os pedidos de TODOS os clientes
-       // (é o que alimenta o painel "Pedidos da loja").
-       match /{path=**}/pedidos/{pedido} {
-         allow read, write: if ehAdmin();
-       }
-
-       // Disponibilidade (reservados/vendidos): qualquer um LÊ (para a
-       // vitrine esconder). Cliente comum só pode RESERVAR — com o
-       // próprio uid e por no máximo 45 minutos. Marcar VENDIDO, repor
-       // ou apagar é só para admins (a baixa é dada em "Pedidos da loja").
-       match /disponibilidade/{livro} {
-         allow read: if true;
-         allow write: if ehAdmin() ||
-           (request.auth != null &&
-            request.resource.data.estado == "reservado" &&
-            request.resource.data.uid == request.auth.uid &&
-            request.resource.data.ate is number &&
-            request.resource.data.ate < request.time.toMillis() + 45 * 60 * 1000);
-         allow delete: if ehAdmin();
-       }
-
-       // Catálogo do admin (livros adicionados/editados pelo site):
-       // qualquer um LÊ (é a vitrine); só admins escrevem. Sem isso,
-       // qualquer pessoa logada conseguiria alterar a sua loja.
-       match /catalogo/{livro} {
-         allow read: if true;
-         allow write: if ehAdmin();
-       }
-     }
-   }
-   ```
-
-   > ⚠️ **Importante:** se você já usava as regras antigas, substitua TUDO
-   > pelas de cima. As antigas deixavam qualquer pessoa logada marcar seus
-   > livros como vendidos e mexer no catálogo da loja.
+   > ⚠️ **Mudou a lista de administradores?** Troque os e-mails nos três
+   > lugares: `firestore.rules`, o bloco `admin.emails` do `js/config.js` e a
+   > lista `ADMINS_PADRAO` de `functions/api/_seguranca.js`.
+   >
+   > Se o passo "Publicar as regras do banco" do workflow falhar por falta de
+   > permissão, dê o papel **Firebase Rules Admin** à conta de serviço do
+   > GitHub (Google Cloud → IAM) — ou copie o conteúdo do `firestore.rules`
+   > e cole na aba **Regras (Rules)** do Firestore, no Firebase Console.
 
 6. **Salve e publique o site.** Agora aparece o botão **"Entrar"** no topo. O
    cliente entra com o Google, salva os dados na página **Minha conta** e os

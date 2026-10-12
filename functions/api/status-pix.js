@@ -5,6 +5,10 @@
    mostrar "Pagamento confirmado!" sozinho assim que o cliente
    paga, sem precisar recarregar a página.
 
+   Quando o pagamento aparece como aprovado, o pedido é confirmado
+   AQUI MESMO (status "pago" + baixa no estoque + aviso ao cliente),
+   igual ao webhook — uma rede de segurança caso o webhook atrase.
+
    E-MAIL DO PEDIDO: NÃO é enviado daqui. O Web3Forms fica atrás
    de um desafio anti-bot do Cloudflare que barra requisições de
    servidor (as Cloud Functions saem por IPs de datacenter e caem
@@ -20,39 +24,44 @@
      - MP_ACCESS_TOKEN  → Access Token do Mercado Pago (secreto)
    ============================================================ */
 
-const MP_API = "https://api.mercadopago.com";
 const { aplicarHeaders } = require("./_seguranca");
+const mp = require("./_mercadopago");
+const { processarPagamentoAprovado } = require("./_pedidos");
 
 module.exports = async (req, res) => {
   aplicarHeaders(res);
   if (req.method !== "GET") { res.status(405).json({ error: "Método não permitido." }); return; }
 
-  const token = process.env.MP_ACCESS_TOKEN;
-  if (!token) {
+  if (!mp.configurado()) {
     res.status(500).json({ error: "Serviço de pagamento indisponível." });
     return;
   }
 
-  const id = (req.query && (req.query.id || req.query["id"])) || "";
-  if (!id) {
-    res.status(400).json({ error: "Parâmetro 'id' ausente." });
+  const id = String((req.query && req.query.id) || "").trim();
+  if (!/^\d{1,20}$/.test(id)) {
+    res.status(400).json({ error: "Parâmetro 'id' ausente ou inválido." });
     return;
   }
 
   try {
-    const r = await fetch(`${MP_API}/v1/payments/${encodeURIComponent(id)}`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    const data = await r.json();
-    if (!r.ok) {
+    const pagamento = await mp.consultarPagamento(id);
+    if (!pagamento) {
       res.status(502).json({ error: "Falha ao consultar o pagamento." });
       return;
     }
 
+    // Caiu? Confirma o pedido AQUI, no servidor (o mesmo que o webhook
+    // faz). Se o webhook do Mercado Pago atrasar ou falhar, o pedido vira
+    // "pago" assim mesmo — e o navegador nunca precisa gravar o status.
+    if (pagamento.status === "approved") {
+      try { await processarPagamentoAprovado(pagamento, req); }
+      catch (e) { console.error("[status-pix] Falha ao confirmar o pedido:", e); }
+    }
+
     res.status(200).json({
-      id: data.id,
-      status: data.status,             // pending | approved | rejected | cancelled ...
-      status_detail: data.status_detail
+      id: pagamento.id,
+      status: pagamento.status,             // pending | approved | rejected | cancelled ...
+      status_detail: pagamento.status_detail
     });
   } catch (e) {
     res.status(500).json({ error: "Erro ao consultar o status." });

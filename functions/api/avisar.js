@@ -15,9 +15,12 @@
      Authorization: Bearer <idToken do Firebase>
      { "evento": "pago", "uid": "...", "codigo": "BV12AB34" }
 
-   QUEM PODE CHAMAR:
-     • o próprio cliente, para os pedidos DELE;
-     • qualquer administrador da loja, para qualquer pedido.
+   QUEM PODE CHAMAR: só os administradores da loja (o painel).
+   Os avisos automáticos ("recebido" e "pago") saem do próprio
+   servidor — api/pedido.js e a confirmação do pagamento. Antes, o
+   cliente também podia chamar aqui para os pedidos dele; como era
+   ele quem escrevia o pedido (inclusive o e-mail de destino), dava
+   para usar o e-mail da loja para escrever para qualquer pessoa.
 
    NÃO MANDA DUAS VEZES: cada aviso enviado fica marcado no
    pedido (campo "avisos"). Chamar de novo não incomoda o cliente
@@ -54,17 +57,15 @@ module.exports = async (req, res) => {
   const codigo = String(body.codigo || "").trim();
   const uid = String(body.uid || usuario.uid).trim();
 
+  if (!admin) { res.status(403).json({ error: "Apenas administradores podem enviar avisos." }); return; }
   if (!EVENTOS[evento]) { res.status(400).json({ error: "Aviso desconhecido." }); return; }
   if (!codigo) { res.status(400).json({ error: "Informe o código do pedido." }); return; }
-  // Cliente comum só avisa sobre os pedidos dele. Reenviar à força
-  // também é coisa de administrador.
-  if (!admin && uid !== usuario.uid) { res.status(403).json({ error: "Este pedido não é seu." }); return; }
 
   try {
     const resultado = await enviarAvisoPedido({
       uid, codigo, evento,
       loja: dadosLoja(req),
-      forcar: admin && body.forcar === true,
+      forcar: body.forcar === true,
       canais: Array.isArray(body.canais) && body.canais.length ? body.canais : null
     });
 

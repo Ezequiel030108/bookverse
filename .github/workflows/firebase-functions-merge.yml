@@ -13,6 +13,7 @@ on:
     paths:
       - "functions/**"
       - "firebase.json"
+      - "firestore.rules"
       - ".github/workflows/firebase-functions-merge.yml"
   # Disparo manual: aba Actions → este workflow → "Run workflow".
   # Útil para tentar o deploy de novo sem precisar de um novo commit
@@ -45,3 +46,12 @@ jobs:
 
       - name: Publicar as Cloud Functions
         run: npx --yes firebase-tools deploy --only functions --project bookverse-69878 --non-interactive --force
+
+      # As regras do banco (firestore.rules) saem DEPOIS das funções: as
+      # regras novas só deixam o servidor criar pedidos, então o servidor
+      # novo precisa estar no ar antes. Se este passo falhar com erro de
+      # permissão, a conta de serviço precisa do papel "Firebase Rules
+      # Admin" no Google Cloud (IAM) — ou cole o conteúdo do arquivo
+      # firestore.rules na aba Regras do Firestore, no Firebase Console.
+      - name: Publicar as regras do banco (Firestore)
+        run: npx --yes firebase-tools deploy --only firestore:rules --project bookverse-69878 --non-interactive
