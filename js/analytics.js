@@ -35,13 +35,40 @@ window.Analytics = (function () {
   function gtag() { window.dataLayer.push(arguments); }
   if (!window.gtag) window.gtag = gtag;
 
+  /* Os scripts do Google e do Meta pesam ~600 KB e travavam o celular por
+     quase 1 segundo bem na hora em que a loja aparece. Agora eles só são
+     BAIXADOS depois: no primeiro toque, rolagem ou tecla do cliente — ou,
+     se ele só olhar, alguns segundos depois de a página carregar.
+     NADA SE PERDE: tudo o que acontece antes (a visita, "adicionou ao
+     carrinho"...) fica na fila do gtag/fbq e é enviado quando o script
+     chega. */
+  const ESPERA_SEM_TOQUE_MS = 6000;   // depois do carregamento da página
+  function quandoLiberado(fn) {
+    let feito = false;
+    const eventos = ["pointerdown", "touchstart", "keydown", "scroll"];
+    const ir = () => {
+      if (feito) return;
+      feito = true;
+      eventos.forEach(ev => window.removeEventListener(ev, ir, true));
+      fn();
+    };
+    eventos.forEach(ev => window.addEventListener(ev, ir, { capture: true, passive: true }));
+    const relogio = () => setTimeout(ir, ESPERA_SEM_TOQUE_MS);
+    if (document.readyState === "complete") relogio();
+    else window.addEventListener("load", relogio, { once: true });
+  }
+  function carregarScript(src, antesDe) {
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = src;
+    if (antesDe && antesDe.parentNode) antesDe.parentNode.insertBefore(s, antesDe);
+    else document.head.appendChild(s);
+  }
+
   if (gtagOn) {
     // Carrega o gtag.js UMA vez (usa o primeiro ID disponível para a tag base).
     const idBase = GA_ID || ADS_ID;
-    const s = document.createElement("script");
-    s.async = true;
-    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(idBase);
-    document.head.appendChild(s);
+    quandoLiberado(() => carregarScript("https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(idBase)));
 
     window.gtag("js", new Date());
     if (GA_ID)  window.gtag("config", GA_ID);   // GA4 (métricas + page_view automático)
@@ -55,8 +82,9 @@ window.Analytics = (function () {
         n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
       };
       if (!f._fbq) f._fbq = n; n.push = n; n.loaded = true; n.version = "2.0";
-      n.queue = []; t = b.createElement(e); t.async = true;
-      t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+      n.queue = [];
+      // O fbevents.js vem depois (veja quandoLiberado): a fila guarda tudo.
+      quandoLiberado(() => carregarScript(v, b.getElementsByTagName(e)[0]));
     })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
     window.fbq("init", PIXEL_ID);
     window.fbq("track", "PageView");

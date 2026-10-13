@@ -218,8 +218,18 @@ window.CatalogoLoja = (function () {
     const mapa = {};
     function pagina(token, n) {
       if (n >= 20) return null;
-      return fetch(url + (token ? "&pageToken=" + encodeURIComponent(token) : ""), opcoes)
-        .then(r => (r.ok ? r.json() : null))
+      let pedido;
+      // A 1ª página já foi pedida no <head> do index.html? Usa essa
+      // resposta (uma vez só) em vez de perguntar de novo.
+      const cedo = window.__dispCedo;
+      if (!token && cedo && cedo.url === url && cedo.resposta) {
+        window.__dispCedo = null;
+        pedido = Promise.race([cedo.resposta, new Promise(ok => setTimeout(ok, msLimite || 6000, null))]);
+      } else {
+        pedido = fetch(url + (token ? "&pageToken=" + encodeURIComponent(token) : ""), opcoes)
+          .then(r => (r.ok ? r.json() : null));
+      }
+      return pedido
         .then(data => {
           if (!data) return null;
           (data.documents || []).forEach(doc => {

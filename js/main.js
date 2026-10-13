@@ -143,10 +143,10 @@ function linkInstagram() {
   return `https://ig.me/m/${INSTAGRAM_USUARIO}`;
 }
 
-function capaHTML(livro, lazy = true) {
+function capaHTML(livro, lazy = true, prioridade = false) {
   const src = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : livro.imagem;
   return src
-    ? `<img src="${esc(src)}" alt="Capa de ${esc(livro.titulo)}"${lazy ? ' loading="lazy"' : ''} />`
+    ? `<img src="${esc(src)}" alt="Capa de ${esc(livro.titulo)}"${lazy ? ' loading="lazy"' : ''}${prioridade ? ' fetchpriority="high"' : ''} />`
     : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${esc((livro.titulo || "?").charAt(0).toUpperCase())}</div>`;
 }
 
@@ -363,9 +363,6 @@ function criarCard(livro, indice, seloNovo) {
   const card = document.createElement("article");
   card.className = "card-livro";
   card.style.setProperty("--atraso", (Math.min(indice, 8) * 0.05) + "s");
-  card.tabIndex = 0;
-  card.setAttribute("role", "button");
-  card.setAttribute("aria-label", `${livro.titulo}, ${livro.autor}`);
 
   // Selo "Novo" só nos livros em destaque (os mais recentes adicionados).
   // Estoque/condição ficam no modal — marcar todo card viraria ruído.
@@ -383,7 +380,10 @@ function criarCard(livro, indice, seloNovo) {
     }
   }
 
+  // Um botão de verdade cobre o card (abre os detalhes): é ele que recebe o
+  // foco do teclado e que o leitor de tela anuncia. O "+ Carrinho" fica por cima.
   card.innerHTML = `
+    <button class="card-abrir" type="button" aria-label="Ver detalhes: ${esc(livro.titulo)}, ${esc(livro.autor)}"></button>
     <div class="capa">
       ${seloHTML}
       ${capaHTML(livro)}
@@ -403,11 +403,8 @@ function criarCard(livro, indice, seloNovo) {
     </div>
   `;
 
-  const abrir = () => abrirModal(livro);
-  card.addEventListener("click", abrir);
-  card.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); }
-  });
+  // Clique em qualquer parte do card (inclusive Enter/Espaço no botão) abre os detalhes.
+  card.addEventListener("click", () => abrirModal(livro));
 
   // Botão "+ Carrinho": adiciona sem abrir o modal.
   const btnAdd = card.querySelector(".card-add");
@@ -632,17 +629,14 @@ function renderizar(termoBusca) {
 
   // Modo normal: carrossel de novidades (topo) + fileiras por gênero.
   document.body.classList.remove("modo-busca");
+  document.documentElement.classList.remove("abre-busca");
   semResultados.hidden = true;
 
   // O carrossel do topo é a ÚNICA seção de novidades.
   const { destaques, temSemana } = calcularDestaques();
   LIVROS_DESTAQUE = new Set(destaques);            // controla o selo "Novo" nos cards
 
-  const ordem = embaralhar(destaques);             // ordem nova a cada carregamento
-  // "O Anticristo" sempre por último (enquanto estiver entre os destaques)
-  const iFixar = ordem.findIndex(l => l.titulo === FIXAR_ULTIMO);
-  if (iFixar !== -1) ordem.push(ordem.splice(iFixar, 1)[0]);
-  montarHero(ordem, temSemana);
+  montarHero(ordemDoHero(destaques), temSemana);
 
   const generos = [...ORDEM_GENEROS];
   vitrine.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
@@ -673,6 +667,38 @@ const heroNav      = document.querySelector(".hero-nav");
 const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const RETOMAR_APOS = 9000;   // inatividade até o auto-play voltar (ms)
 
+/* Ordem do carrossel: embaralhada UMA vez por visita. Nos redesenhos
+   (chegou o catálogo do painel, a lista de vendidos, a busca foi limpa)
+   quem já está no carrossel MANTÉM o lugar e os livros novos entram no
+   fim. Antes, cada redesenho sorteava de novo e trocava a capa grande
+   na frente do cliente (o Google mede isso como lentidão). */
+let ordemHeroIds = [];
+function ordemDoHero(destaques) {
+  const porId = new Map(destaques.map(l => [idLivro(l), l]));
+  const mantidos = ordemHeroIds.filter(id => porId.has(id)).map(id => porId.get(id));
+  const novos = embaralhar(destaques.filter(l => mantidos.indexOf(l) < 0));
+  const ordem = mantidos.concat(novos);
+  // "O Anticristo" sempre por último (enquanto estiver entre os destaques)
+  const iFixar = ordem.findIndex(l => l.titulo === FIXAR_ULTIMO);
+  if (iFixar !== -1 && ordem.length > 1) ordem.push(ordem.splice(iFixar, 1)[0]);
+  ordemHeroIds = ordem.map(l => idLivro(l));
+  return ordem;
+}
+let assinaturaHero = "";   // o que está desenhado no carrossel agora
+
+/* Roda fn quando a 1ª capa do carrossel terminar de aparecer (ou logo,
+   se não houver capa). Serve para deixar o que não é urgente — as outras
+   capas, a busca do catálogo fresco — para depois da imagem principal. */
+function depoisDaPrimeiraCapa(fn) {
+  const img = heroPalco.querySelector(".hero-slide img");
+  let feito = false;
+  const ir = () => { if (feito) return; feito = true; requestAnimationFrame(() => setTimeout(fn, 0)); };
+  if (!img || img.complete || hero.hidden) { ir(); return; }
+  img.addEventListener("load", ir, { once: true });
+  img.addEventListener("error", ir, { once: true });
+  setTimeout(ir, 2500);
+}
+
 let heroIndice  = 0;
 let heroTimer   = null;
 let heroLista   = [];
@@ -681,6 +707,16 @@ let heroTravaTimer;
 let heroRaf     = false;
 
 function montarHero(destaques, temSemana = true) {
+  // Nada mudou desde o último desenho? Não refaz: recriar as capas faria
+  // o navegador desenhar tudo de novo (e a imagem principal "recomeçar").
+  const assinatura = JSON.stringify([temSemana, promocaoAtiva(),
+    destaques.map(l => [idLivro(l), l.titulo, l.autor, l.preco, l.imagem, l.sinopse])]);
+  if (assinatura === assinaturaHero && heroPalco.querySelector(".hero-slide:not(.hero-esqueleto)")) {
+    hero.hidden = destaques.length === 0;
+    return;
+  }
+  assinaturaHero = assinatura;
+
   heroLista = destaques;
   heroPalco.innerHTML = "";
   heroPontosEl.innerHTML = "";
@@ -698,7 +734,7 @@ function montarHero(destaques, temSemana = true) {
     slide.className = "hero-slide";
     slide.innerHTML = `
       <div class="hero-conteudo">
-        <div class="hero-capa-wrap">${capaHTML(livro, false)}</div>
+        <div class="hero-capa-wrap">${capaHTML(livro, i > 0, i === 0)}</div>
         <div class="hero-texto">
           <h2 class="hero-livro-titulo">${esc(livro.titulo)}</h2>
           <p class="hero-livro-autor">${esc(livro.autor)}</p>
@@ -723,12 +759,15 @@ function montarHero(destaques, temSemana = true) {
     heroPontosEl.appendChild(ponto);
   });
 
-  // Com 1 só novidade, não precisa de navegação
-  heroNav.hidden = destaques.length <= 1;
+  // Com 1 só novidade, não precisa de navegação (some sem mudar a altura)
+  heroNav.style.visibility = destaques.length <= 1 ? "hidden" : "";
 
   heroIndice = 0;
   irParaHero(0, false);
   agendarAuto(PRIMEIRO_AUTO);   // primeiro avanço mais rápido (1ª impressão)
+  // As outras capas esperam a primeira aparecer; depois carregam todas
+  // (o carrossel passa sozinho e elas precisam estar prontas).
+  depoisDaPrimeiraCapa(() => heroPalco.querySelectorAll('img[loading="lazy"]').forEach(img => { img.loading = "eager"; }));
 }
 
 function irParaHero(i, animar = true) {
@@ -830,6 +869,7 @@ campoBuscaMob.addEventListener("input", () => sincronizarBusca(campoBuscaMob));
 
 function abrirBuscaMobile(focar) {
   topbarBuscaMob.setAttribute("aria-hidden", "false");
+  topbarBuscaMob.inert = false;
   topbarBuscaMob.classList.add("aberta");
   btnBuscaToggle.setAttribute("aria-expanded", "true");
   if (focar) campoBuscaMob.focus();
@@ -837,6 +877,7 @@ function abrirBuscaMobile(focar) {
 
 function fecharBuscaMobile() {
   topbarBuscaMob.setAttribute("aria-hidden", "true");
+  topbarBuscaMob.inert = true;    // fechada: nada lá dentro recebe foco
   topbarBuscaMob.classList.remove("aberta");
   btnBuscaToggle.setAttribute("aria-expanded", "false");
 }
@@ -1113,104 +1154,6 @@ document.addEventListener("keydown", (e) => {
   }, true);
 })();
 
-/* ---------- Faixa da promoção ----------
-   Só aparece com a promoção ativa e some sozinha quando ela acaba —
-   nada fica "sujo" no site fora do período.
-
-   Com dois descontos, a faixa é desenhada como uma ROTA entre duas
-   estrelas: levando 1 livro o desconto é um, levando 2 ou mais ele
-   cresce. Por isso as duas ofertas são uma LISTA ORDENADA (<ol>) — a
-   ordem aqui é a própria informação, e a segunda parada é a estrela
-   mais brilhante. Com desconto único, fica uma oferta só, grande.
-
-   PROMOCAO.tema troca o visual (ex.: "criancas" = balões e confete)
-   pela classe promo-tema-<tema> no <body>. */
-function ativarModoPromocao() {
-  if (!promocaoAtiva()) return;
-  document.body.classList.add("modo-promo");
-  const tema = /^[a-z0-9-]+$/.test(PROMOCAO.tema || "") ? PROMOCAO.tema : "";
-  if (tema) document.body.classList.add("promo-tema-" + tema);
-
-  const ofertas = promoTemDupla()
-    ? `
-        <ol class="vitrine-rota">
-          <li class="vitrine-parada">
-            <span class="parada-estrela" aria-hidden="true"></span>
-            <span class="vitrine-pct">${PROMOCAO.descontoUm}<small>% OFF</small></span>
-            <span class="vitrine-oferta-txt">levando 1 livro</span>
-          </li>
-          <li class="vitrine-parada destaque">
-            <span class="parada-estrela" aria-hidden="true"></span>
-            <span class="vitrine-selo">Melhor escolha</span>
-            <span class="vitrine-pct">${PROMOCAO.descontoDupla}<small>% OFF</small></span>
-            <span class="vitrine-oferta-txt">em cada livro, levando 2 ou mais</span>
-          </li>
-        </ol>`
-    : `
-        <p class="vitrine-unica">
-          <span class="vitrine-pct">${PROMOCAO.descontoUm}<small>% OFF</small></span>
-          <span class="vitrine-oferta-txt">em todos os livros da loja</span>
-        </p>`;
-
-  // Faixa de ponta a ponta, logo abaixo do cabeçalho.
-  const vitrine = document.createElement("section");
-  vitrine.className = "vitrine-promo";
-  vitrine.id = "vitrine-promo";
-  vitrine.tabIndex = -1;   // o selo flutuante leva o foco até aqui
-  vitrine.setAttribute("aria-label", "Promoção " + PROMOCAO.nome);
-  vitrine.innerHTML = `
-    <div class="vitrine-card${promoTemDupla() ? "" : " unica"}">
-      <span class="vitrine-aurora" aria-hidden="true"></span>
-      ${tema === "criancas" ? DECORACAO_CRIANCAS : ""}
-      <div class="vitrine-conteudo">
-        <div class="vitrine-head">
-          <span class="vitrine-tag">${esc(PROMOCAO.nome)}</span>
-          <span class="vitrine-prazo${ultimoDiaPromo() ? " urgente" : ""}">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-            ${ultimoDiaPromo() ? "Último dia!" : "Até " + dataFimPromo()}
-          </span>
-        </div>${ofertas}
-      </div>
-    </div>
-  `;
-  topbar.insertAdjacentElement("afterend", vitrine);
-  criarSeloPromo(vitrine);
-}
-
-/* Confete e balões da faixa do Dia das Crianças (só decoração).
-   Cada confete fica numa posição em % da faixa, nas bordas e no meio
-   vazio — assim, do celular ao desktop, nenhum cai em cima do texto. */
-const CONFETE_CRIANCAS = [
-  // [esquerda %, topo %, cor, forma, giro]
-  [2.5, 7, "ciano", "tira", 28],
-  [33, 5, "verde", "tira", -24],
-  [68, 6, "lavanda", "bolinha", 0],
-  [60, 40, "rosa", "bolinha", 0],
-  [50, 70, "ouro", "tira", -38],
-  [43, 91, "rosa", "tira", 40],
-  [7, 93, "verde", "bolinha", 0],
-  [72, 90, "ciano", "bolinha", 0]
-];
-const DECORACAO_CRIANCAS = CONFETE_CRIANCAS.map(([x, y, cor, forma, giro]) =>
-  `<i class="confete ${forma} ${cor}" style="left:${x}%;top:${y}%;--giro:${giro}deg" aria-hidden="true"></i>`
-).join("") + `
-  <svg class="vitrine-baloes" viewBox="0 0 120 160" aria-hidden="true" focusable="false">
-    <g fill="none" stroke="rgba(243,237,255,.55)" stroke-width="1.2" stroke-linecap="round">
-      <path d="M37 76c-3 18 10 30 23 42s4 26 2 40"/>
-      <path d="M85 68c4 16-8 26-18 40s-6 30-5 50"/>
-      <path d="M62 98c-5 14 6 26 1 38s-2 16-1 22"/>
-    </g>
-    <path d="M37 75 33 80h8z" fill="#ff7ad9"/>
-    <ellipse cx="37" cy="48" rx="22" ry="27" fill="#ff7ad9"/>
-    <ellipse cx="29" cy="37" rx="5" ry="8" fill="#fff" opacity=".42" transform="rotate(24 29 37)"/>
-    <path d="M85 67 81 72h8z" fill="#7adfff"/>
-    <ellipse cx="85" cy="41" rx="21" ry="26" fill="#7adfff"/>
-    <ellipse cx="77" cy="31" rx="4.6" ry="7.6" fill="#fff" opacity=".45" transform="rotate(24 77 31)"/>
-    <path d="M62 97 58 102h8z" fill="#ffd966"/>
-    <ellipse cx="62" cy="71" rx="20" ry="25" fill="#ffd966"/>
-    <ellipse cx="55" cy="61" rx="4.4" ry="7.2" fill="#fff" opacity=".5" transform="rotate(24 55 61)"/>
-  </svg>`;
-
 /* ---------- Selo flutuante da promoção ----------
    Um "botton" (broche redondo) no canto da tela, que acompanha a
    rolagem: a faixa do topo some ao descer a estante, o selo não.
@@ -1322,6 +1265,9 @@ function carregarCatalogo() {
   window.CatalogoLoja.lerCatalogoLeve().then(extras => {
     if (!Array.isArray(extras)) return;
     const mudou = aplicarCatalogoExtras(extras, true);
+    // Chegou antes de a estante abrir? Só junta: a abertura (que espera
+    // a lista de vendidos) já desenha com estes livros.
+    if (!estreiaFeita) return;
     if (mudou) {
       const termo = (campoBusca && campoBusca.value) || "";
       renderizar(termo);
@@ -1503,7 +1449,12 @@ function abrirLivroDaURL() {
 // Quando a resposta do Firebase chega, ela substitui os dois.
 window.__bloqueados = montarBloqueados(
   lerCacheLoja(CACHE_DISP) || window.VENDIDOS_FOTO || {});
-aplicarCatalogoExtras((window.CatalogoLoja && window.CatalogoLoja.catalogoGuardado()) || []);
+// Livros do painel: o que este navegador guardou na última visita ou, na
+// primeira visita, a foto tirada na publicação (js/catalogo-foto.js). A
+// resposta fresca da /api/catalogo chega depois e manda.
+const catalogoInicial = (window.CatalogoLoja && window.CatalogoLoja.catalogoGuardado()) ||
+  (Array.isArray(window.CATALOGO_FOTO) && window.CATALOGO_FOTO.length ? window.CATALOGO_FOTO : null);
+aplicarCatalogoExtras(catalogoInicial || []);
 
 // Contatos: Instagram (barra no desktop + faixa) e WhatsApp (faixa).
 (function () {
@@ -1528,7 +1479,9 @@ aplicarCatalogoExtras((window.CatalogoLoja && window.CatalogoLoja.catalogoGuarda
   }
 })();
 
-ativarModoPromocao();
+// A faixa da promoção já foi montada no HTML (js/promo.js, logo abaixo do
+// cabeçalho). Aqui só entra o selo flutuante, que não empurra nada.
+if (document.getElementById("vitrine-promo")) criarSeloPromo(document.getElementById("vitrine-promo"));
 // Link direto de busca (?busca=mangás): abre a estante já filtrada.
 // Usado nos sitelinks dos anúncios e em links compartilháveis.
 let buscaInicial = "";
@@ -1557,12 +1510,33 @@ function desenharVitrine(busca) {
   mostrarCarregandoEstante(false);
   renderizar(busca);
   abrirLivroDaURL();         // abre o livro do link compartilhado (?livro=...)
-  carregarCatalogo();        // adiciona os livros cadastrados pelo admin
+  // Catálogo fresco do painel: já tínhamos um ponto de partida (cache ou
+  // foto da publicação)? Então busca depois da capa principal aparecer.
+  if (catalogoInicial) depoisDaPrimeiraCapa(carregarCatalogo);
+  else if (catalogoPedidoCedo) catalogoPedidoCedo.then(redesenharSeMudou);
   carregarDisponibilidade(); // confirma pelo Firebase e mantém o cache quente
+}
+
+/* Sem ponto de partida para os livros do painel (primeira visita e foto
+   da publicação vazia): pede a /api/catalogo JÁ, junto com a lista de
+   vendidos, em vez de esperar a estante abrir. */
+let catalogoPedidoCedo = null;
+function redesenharSeMudou(mudou) {
+  if (mudou) { renderizar((campoBusca && campoBusca.value) || ""); carregarDisponibilidade(); }
+  abrirLivroDaURL();
 }
 
 (function iniciarVitrine(busca) {
   mostrarCarregandoEstante(true);
+  if (!catalogoInicial && window.CatalogoLoja) {
+    catalogoPedidoCedo = window.CatalogoLoja.lerCatalogoLeve()
+      .then(extras => {
+        if (!Array.isArray(extras)) return false;
+        const mudou = aplicarCatalogoExtras(extras, true);
+        return estreiaFeita && mudou;   // antes da abertura, a própria abertura já desenha
+      })
+      .catch(() => false);
+  }
   const leitura = window.CatalogoLoja
     ? window.CatalogoLoja.disponibilidadeRapida(ESPERA_MAX_DISPONIBILIDADE)
     : Promise.resolve(null);

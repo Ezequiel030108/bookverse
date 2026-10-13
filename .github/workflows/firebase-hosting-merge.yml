@@ -6,6 +6,12 @@ on:
   push:
     branches:
       - main
+  # A cada 6 horas: refaz as "fotos" dos vendidos e dos livros do painel
+  # (js/vendidos.js e js/catalogo-foto.js) mesmo sem mudança no código.
+  schedule:
+    - cron: "17 */6 * * *"
+  # Disparo manual: aba Actions → este workflow → "Run workflow".
+  workflow_dispatch:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -21,6 +27,11 @@ jobs:
       # responder, o script mantém o arquivo anterior e a publicação segue.
       - name: Atualizar a lista de livros vendidos
         run: node scripts/gerar-vendidos.js
+      # A "foto" dos livros do painel (js/catalogo-foto.js): a loja já abre
+      # com eles, sem esperar a /api/catalogo. Se a API não responder, o
+      # arquivo anterior é mantido e a publicação segue.
+      - name: Atualizar a foto dos livros do painel
+        run: node scripts/gerar-catalogo-foto.js
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
