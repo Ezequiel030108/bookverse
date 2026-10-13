@@ -1009,32 +1009,28 @@ cadastro continua funcionando normalmente (é só preencher à mão).
 
 ---
 
-## 🌐 Como publicar o site DE GRAÇA na internet
+## 🌐 Como o site é publicado
 
-### Opção 1 — Netlify (mais fácil, recomendado)
+O site se publica **sozinho**. Toda vez que algo muda na branch `main` do
+GitHub, o próprio GitHub publica a nova versão no **Firebase Hosting**. Você
+não precisa arrastar pasta nem rodar nada.
 
-1. Acesse https://app.netlify.com/drop
-2. **Arraste a pasta inteira** `projeto livros` para dentro do quadrado da página.
-3. Pronto! O Netlify gera um link tipo `https://seu-site-123.netlify.app`.
-4. Pode mudar o nome desse link nas configurações ("Site settings" → "Change site name").
-
-> Toda vez que quiser atualizar (adicionar/editar livros), entre no painel do
-> Netlify e arraste a pasta atualizada de novo em **"Deploys"**.
-
-### Opção 2 — GitHub Pages
-
-1. Crie uma conta gratuita em https://github.com
-2. Crie um repositório novo (ex: `livraria`).
-3. Suba os arquivos do site (botão **"uploading an existing file"**).
-4. Vá em **Settings → Pages** e em **"Source"** escolha **"main / root"**.
-5. Em alguns minutos seu site estará em
-   `https://SEU_USUARIO.github.io/livraria`.
+- **Endereço oficial:** https://bookverse.com.br
+- **Para acompanhar:** aba **Actions** do GitHub.
+  - *Deploy to Firebase Hosting on merge* publica as páginas. Também roda
+    sozinho a cada 6 horas, para atualizar a lista de vendidos e a foto dos
+    livros do painel.
+  - *Deploy Functions to Firebase on merge* publica as funções (`functions/`)
+    e as regras do banco (`firestore.rules`) quando elas mudam.
+- **Antes de publicar:** cada pull request ganha uma **prévia** num endereço
+  temporário `...web.app`, para você conferir as mudanças.
+- **Configuração inicial** (só uma vez): veja `MIGRACAO-FIREBASE.md`.
 
 ---
 
 ## 📲 Como colocar o link na bio do Instagram
 
-1. Copie o link do seu site (do Netlify ou GitHub Pages).
+1. Copie o link do site: **https://bookverse.com.br**
 2. No app do Instagram, vá em **Editar perfil**.
 3. No campo **Site** (ou **Link**), cole o endereço.
 4. Salve.
