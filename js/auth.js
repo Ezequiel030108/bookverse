@@ -619,12 +619,12 @@
   if (!semPressa) {
     iniciarLogin();
   } else {
+    // Começa: no 1º toque/tecla; 1,5 s depois de a vitrine avisar que abriu
+    // (js/main.js); ou, no máximo, 6 s depois do carregamento da página.
     ["pointerdown", "keydown"].forEach(ev => window.addEventListener(ev, iniciarLogin, { capture: true, passive: true }));
-    const quandoLivre = () => {
-      if (window.requestIdleCallback) window.requestIdleCallback(iniciarLogin, { timeout: 2500 });
-      else setTimeout(iniciarLogin, 1500);
-    };
-    if (document.readyState === "complete") quandoLivre();
-    else window.addEventListener("load", quandoLivre, { once: true });
+    document.addEventListener("bookverse:vitrine-pronta", () => setTimeout(iniciarLogin, 1500), { once: true });
+    const reserva = () => setTimeout(iniciarLogin, 6000);
+    if (document.readyState === "complete") reserva();
+    else window.addEventListener("load", reserva, { once: true });
   }
 })();

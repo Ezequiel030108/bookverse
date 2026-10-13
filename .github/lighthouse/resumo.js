@@ -5,7 +5,7 @@ const a = r.audits;
 const out = [];
 const p = (...x) => out.push(x.join(" "));
 const kb = b => Math.round((b || 0) / 1024) + "KB";
-p("URL:", r.finalDisplayedUrl, "| Lighthouse", r.lighthouseVersion, "|", r.configSettings.formFactor, r.configSettings.throttlingMethod);
+p("URL:", r.finalDisplayedUrl, "| gerado", r.fetchTime, "| Lighthouse", r.lighthouseVersion, "|", r.configSettings.formFactor, r.configSettings.throttlingMethod);
 p("NOTAS:", Object.values(r.categories).map(c => c.id + "=" + Math.round(c.score * 100)).join(" "));
 for (const id of ["first-contentful-paint", "largest-contentful-paint", "total-blocking-time", "cumulative-layout-shift", "speed-index", "interactive", "max-potential-fid"]) {
   if (a[id]) p("  ", id, a[id].displayValue, "score=" + a[id].score);

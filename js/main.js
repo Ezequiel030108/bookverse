@@ -432,7 +432,8 @@ function criarCard(livro, indice, seloNovo) {
    (a cada tecla na busca) deixaria listeners de resize e ResizeObservers
    órfãos acumulando para sempre. */
 let limparFileiras = [];
-let geracaoFileiras = 0;   // cada renderizar() começa uma "geração"; pedaços antigos são descartados
+let geracaoFileiras = 0;
+let estanteMontada = false;   // a estante já foi montada alguma vez?   // cada renderizar() começa uma "geração"; pedaços antigos são descartados
 function limparFileirasAntigas() {
   limparFileiras.forEach(fn => { try { fn(); } catch (e) {} });
   limparFileiras = [];
@@ -595,7 +596,6 @@ function renderizar(termoBusca) {
   }
 
   limparFileirasAntigas();
-  catalogo.innerHTML = "";
   pararHero();
   const geracao = ++geracaoFileiras;
 
@@ -605,6 +605,7 @@ function renderizar(termoBusca) {
 
   if (buscando) {
     // Modo busca: hero oculto, grade de resultados
+    catalogo.innerHTML = "";
     hero.hidden = true;
     document.body.classList.add("modo-busca");
     const resultados = vitrine.filter(combina);
@@ -665,15 +666,35 @@ function renderizar(termoBusca) {
   // duas por vez. Montar as 14 de uma vez travava o celular por quase
   // meio segundo (o Google mede isso como "tempo de bloqueio").
   const montar = lista => lista.forEach(([genero, livros]) => catalogo.appendChild(criarFileira(genero, livros)));
-  montar(fileiras.slice(0, 2));
-  let pendentes = fileiras.slice(2);
-  const proximas = () => {
-    if (geracao !== geracaoFileiras || !pendentes.length) return;   // a estante foi redesenhada: desiste
-    montar(pendentes.slice(0, 2));
-    pendentes = pendentes.slice(2);
+  const montarEstante = () => {
+    if (geracao !== geracaoFileiras) return;                         // a estante foi redesenhada: desiste
+    catalogo.innerHTML = "";                                         // sai o esqueleto (ou a estante antiga)
+    montar(fileiras.slice(0, 2));
+    let pendentes = fileiras.slice(2);
+    const proximas = () => {
+      if (geracao !== geracaoFileiras || !pendentes.length) return;
+      montar(pendentes.slice(0, 2));
+      pendentes = pendentes.slice(2);
+      if (pendentes.length) setTimeout(proximas, 0);
+      else avisarVitrinePronta();
+    };
     if (pendentes.length) setTimeout(proximas, 0);
+    else avisarVitrinePronta();
   };
-  if (pendentes.length) setTimeout(proximas, 0);
+  // Na ABERTURA, a estante espera a capa grande do carrossel aparecer (o
+  // esqueleto segura o lugar, nada "pula"): assim as dezenas de capas das
+  // fileiras não disputam a internet com a imagem principal da página.
+  if (!estanteMontada) { estanteMontada = true; depoisDaPrimeiraCapa(montarEstante); }
+  else montarEstante();
+}
+
+/* Avisa (uma vez) que a vitrine terminou de abrir: o login (js/auth.js)
+   espera este sinal para começar, sem disputar a abertura da loja. */
+let vitrineProntaAvisada = false;
+function avisarVitrinePronta() {
+  if (vitrineProntaAvisada) return;
+  vitrineProntaAvisada = true;
+  try { document.dispatchEvent(new Event("bookverse:vitrine-pronta")); } catch (e) {}
 }
 
 /* ---------- Carrossel de novidades ----------
@@ -1541,8 +1562,7 @@ let estreiaFeita = false;   // a abertura da estante já aconteceu?
 function desenharVitrine(busca) {
   if (estreiaFeita) return;
   estreiaFeita = true;
-  mostrarCarregandoEstante(false);
-  renderizar(busca);
+  renderizar(busca);   // o esqueleto da estante sai quando as fileiras entram
   abrirLivroDaURL();         // abre o livro do link compartilhado (?livro=...)
   // Catálogo fresco do painel: já tínhamos um ponto de partida (cache ou
   // foto da publicação)? Então busca depois da capa principal aparecer.
