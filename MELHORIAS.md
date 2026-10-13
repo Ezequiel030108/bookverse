@@ -179,8 +179,8 @@ Um link quebrado cai na página padrão da Vercel. Um `404.html` com a cara do
 site e link de volta para a estante resolve.
 
 ### 20. PWA (manifest.json)
-O site é mobile-first e já tem app Android; um `manifest.json` + ícones
-tornaria o site "instalável" também no iPhone, praticamente de graça.
+O site é mobile-first; um `manifest.json` + ícones tornaria o site
+"instalável" no celular, praticamente de graça.
 
 ### 21. Carrinho exige login para tudo (decisão de negócio)
 Exigir conta já para **adicionar ao carrinho** é bastante atrito. Alternativa
@@ -195,11 +195,7 @@ Não há package.json, lint nem CI. Um GitHub Action simples que valide
 `js/livros.js` (sintaxe, capas existentes em `img/`, preços parseáveis)
 evitaria derrubar a loja com um typo numa vírgula.
 
-### 23. Catálogo duplicado no app Android
-`android/.../data/Catalog.kt` repete os livros do site e vai divergir.
-Considerar publicar o catálogo como um JSON único que o site e o app leem.
-
-### 24. Configurações "escondidas" em código
+### 23. Configurações "escondidas" em código
 `FIXAR_ULTIMO = "O Anticristo"` e `ORDEM_GENEROS` vivem em `js/main.js`,
 enquanto o resto da configuração está em `js/config.js`. Mover para lá mantém
 a promessa do README de "não precisa mexer no código".
