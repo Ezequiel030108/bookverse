@@ -427,6 +427,7 @@ function criarCard(livro, indice, seloNovo) {
    (a cada tecla na busca) deixaria listeners de resize e ResizeObservers
    órfãos acumulando para sempre. */
 let limparFileiras = [];
+let geracaoFileiras = 0;   // cada renderizar() começa uma "geração"; pedaços antigos são descartados
 function limparFileirasAntigas() {
   limparFileiras.forEach(fn => { try { fn(); } catch (e) {} });
   limparFileiras = [];
@@ -591,6 +592,7 @@ function renderizar(termoBusca) {
   limparFileirasAntigas();
   catalogo.innerHTML = "";
   pararHero();
+  const geracao = ++geracaoFileiras;
 
   // Um card por livro: se existe a versão nova e a usada, a vitrine
   // mostra a preferencial e o modal oferece a outra.
@@ -641,6 +643,7 @@ function renderizar(termoBusca) {
   const generos = [...ORDEM_GENEROS];
   vitrine.forEach(l => { const g = l.genero || "Outros"; if (!generos.includes(g)) generos.push(g); });
 
+  const fileiras = [];
   generos.forEach(genero => {
     // Fileira estilo Netflix: ordem SEMPRE embaralhada (nova a cada
     // carregamento), mas com os livros em destaque (os mais famosos)
@@ -650,8 +653,22 @@ function renderizar(termoBusca) {
     if (doGenero.length === 0) return;
     const famosos = embaralhar(doGenero.filter(ehFamoso));
     const resto = embaralhar(doGenero.filter(l => !ehFamoso(l)));
-    catalogo.appendChild(criarFileira(genero, famosos.concat(resto)));
+    fileiras.push([genero, famosos.concat(resto)]);
   });
+
+  // As 2 primeiras fileiras saem na hora; as outras vêm logo em seguida,
+  // duas por vez. Montar as 14 de uma vez travava o celular por quase
+  // meio segundo (o Google mede isso como "tempo de bloqueio").
+  const montar = lista => lista.forEach(([genero, livros]) => catalogo.appendChild(criarFileira(genero, livros)));
+  montar(fileiras.slice(0, 2));
+  let pendentes = fileiras.slice(2);
+  const proximas = () => {
+    if (geracao !== geracaoFileiras || !pendentes.length) return;   // a estante foi redesenhada: desiste
+    montar(pendentes.slice(0, 2));
+    pendentes = pendentes.slice(2);
+    if (pendentes.length) setTimeout(proximas, 0);
+  };
+  if (pendentes.length) setTimeout(proximas, 0);
 }
 
 /* ---------- Carrossel de novidades ----------
@@ -713,6 +730,7 @@ function montarHero(destaques, temSemana = true) {
     destaques.map(l => [idLivro(l), l.titulo, l.autor, l.preco, l.imagem, l.sinopse])]);
   if (assinatura === assinaturaHero && heroPalco.querySelector(".hero-slide:not(.hero-esqueleto)")) {
     hero.hidden = destaques.length === 0;
+    if (destaques.length) agendarAuto(INTERVALO_HERO);   // o renderizar() parou o auto-play: religa
     return;
   }
   assinaturaHero = assinatura;

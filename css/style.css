@@ -274,27 +274,13 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   display: block;
   flex-shrink: 0;
   align-self: flex-start;    /* evita esticar dentro do flex column */
-  /* Halo luminoso para destacar o título sobre o fundo do espaço */
+  /* Halo luminoso para destacar o título sobre o fundo do espaço.
+     Fixo (o meio-termo do antigo "pulsar"): animar o filter obrigava o
+     celular a redesenhar o título a cada quadro, sem parar. */
   filter:
-    brightness(1.12)
-    drop-shadow(0 0 10px rgba(184, 158, 255, .55))
-    drop-shadow(0 0 20px rgba(255, 122, 217, .3));
-  animation: marca-brilho 7s ease-in-out infinite;
-}
-@keyframes marca-brilho {
-  0%, 100% {
-    filter: brightness(1.12)
-      drop-shadow(0 0 10px rgba(184, 158, 255, .55))
-      drop-shadow(0 0 20px rgba(255, 122, 217, .3));
-  }
-  50% {
-    filter: brightness(1.22)
-      drop-shadow(0 0 15px rgba(184, 158, 255, .8))
-      drop-shadow(0 0 30px rgba(255, 122, 217, .5));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marca-titulo { animation: none; }
+    brightness(1.16)
+    drop-shadow(0 0 12px rgba(184, 158, 255, .65))
+    drop-shadow(0 0 24px rgba(255, 122, 217, .4));
 }
 /* Localização — discreta, logo abaixo do nome, visível ao abrir o site */
 .marca-local {
