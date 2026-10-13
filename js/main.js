@@ -32,6 +32,11 @@ const MAX_DESTAQUES  = 10;
    estiver entre os destaques). */
 const INTERVALO_HERO = 3500;
 const PRIMEIRO_AUTO  = 2200;
+/* O carrossel só começa a passar sozinho depois que a página terminou de
+   carregar (e mais um respiro). Antes disso, cada capa nova que entrava na
+   tela era medida pelo Google como "a maior imagem" de novo — e a página
+   parecia segundos mais lenta do que é. */
+const PRIMEIRO_AUTO_APOS_CARREGAR = 4000;
 const FIXAR_ULTIMO   = CFG_VITRINE.fixarUltimoDestaque || "";
 
 /* ---------- Referências ---------- */
@@ -810,10 +815,21 @@ function atualizarPontos() {
 
 /* Agenda o próximo avanço automático; ao disparar, agenda o seguinte
    (laço contínuo). */
+let esperandoCarregar = false;
 function agendarAuto(atraso) {
   pararHero();
   if (semMovimento) return;      // respeita "reduzir movimento" do sistema
   if (heroLista.length <= 1) return;
+  if (document.readyState !== "complete") {
+    if (!esperandoCarregar) {
+      esperandoCarregar = true;
+      window.addEventListener("load", () => {
+        esperandoCarregar = false;
+        agendarAuto(Math.max(PRIMEIRO_AUTO, PRIMEIRO_AUTO_APOS_CARREGAR));
+      }, { once: true });
+    }
+    return;
+  }
   heroTimer = setTimeout(() => {
     irParaHero(heroIndice + 1);
     agendarAuto(INTERVALO_HERO);

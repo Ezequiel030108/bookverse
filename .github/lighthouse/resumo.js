@@ -31,6 +31,17 @@ if (lcpEl && lcpEl.details && lcpEl.details.items) {
   p("-- LCP elemento/fases:");
   lcpEl.details.items.forEach(t => (t.items || []).forEach(it => p("     ", JSON.stringify(it).slice(0, 400))));
 }
+// Linha do tempo das imagens e dos pedidos principais (ms desde o início).
+const nr = a["network-requests"] && a["network-requests"].details && a["network-requests"].details.items;
+if (nr) {
+  p("-- linha do tempo (imagens, scripts, api):");
+  nr.filter(x => /Image|Script|Fetch|XHR|Document|Font/.test(x.resourceType || ""))
+    .sort((x, y) => (x.networkRequestTime || 0) - (y.networkRequestTime || 0))
+    .slice(0, 45)
+    .forEach(x => p("     ", Math.round(x.networkRequestTime || 0), "→", Math.round(x.networkEndTime || 0), (x.resourceType || "").padEnd(6), (x.priority || "").padEnd(8), kb(x.transferSize), String(x.url).replace(/^https?:\/\/[^/]+/, "").slice(0, 90)));
+}
+const cands = a["largest-contentful-paint"];
+if (a["screenshot-thumbnails"] && a["screenshot-thumbnails"].details) p("-- quadros:", a["screenshot-thumbnails"].details.items.map(t => t.timing).join(" "));
 itens("lcp-lazy-loaded", ["node"]);
 itens("prioritize-lcp-image", ["node", "url", "wastedMs"]);
 itens("render-blocking-resources", ["url", "totalBytes", "wastedMs"]);
