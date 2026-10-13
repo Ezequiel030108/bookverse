@@ -1,4 +1,34 @@
 /* ============================================================
+   FONTES (servidas pelo próprio site — pasta /fonts)
+   Inter e Playfair Display, só o alfabeto latino (português incluso).
+   Cada arquivo traz todos os pesos usados (fonte "variável").
+   ============================================================ */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url(../fonts/inter-latin-v20.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url(../fonts/playfair-latin-v40.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Playfair Display";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(../fonts/playfair-italico-latin-v40.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ============================================================
    BOOKVERSE — TEMA CÓSMICO ROXO · LAYOUT ESTILO NETFLIX
    MOBILE-FIRST: tudo é desenhado primeiro para o celular,
    e refinado para telas maiores com @media (min-width).
@@ -244,27 +274,13 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
   display: block;
   flex-shrink: 0;
   align-self: flex-start;    /* evita esticar dentro do flex column */
-  /* Halo luminoso para destacar o título sobre o fundo do espaço */
+  /* Halo luminoso para destacar o título sobre o fundo do espaço.
+     Fixo (o meio-termo do antigo "pulsar"): animar o filter obrigava o
+     celular a redesenhar o título a cada quadro, sem parar. */
   filter:
-    brightness(1.12)
-    drop-shadow(0 0 10px rgba(184, 158, 255, .55))
-    drop-shadow(0 0 20px rgba(255, 122, 217, .3));
-  animation: marca-brilho 7s ease-in-out infinite;
-}
-@keyframes marca-brilho {
-  0%, 100% {
-    filter: brightness(1.12)
-      drop-shadow(0 0 10px rgba(184, 158, 255, .55))
-      drop-shadow(0 0 20px rgba(255, 122, 217, .3));
-  }
-  50% {
-    filter: brightness(1.22)
-      drop-shadow(0 0 15px rgba(184, 158, 255, .8))
-      drop-shadow(0 0 30px rgba(255, 122, 217, .5));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marca-titulo { animation: none; }
+    brightness(1.16)
+    drop-shadow(0 0 12px rgba(184, 158, 255, .65))
+    drop-shadow(0 0 24px rgba(255, 122, 217, .4));
 }
 /* Localização — discreta, logo abaixo do nome, visível ao abrir o site */
 .marca-local {
@@ -645,17 +661,34 @@ main { padding-bottom: calc(34px + var(--safe-bottom)); }
 }
 .hero-seta:active { transform: scale(.9); }
 /* Indicador: bolinhas; a ativa vira uma pílula dourada (acompanha o swipe) */
-.hero-pontos { display: flex; gap: 8px; align-items: center; justify-content: center; }
+.hero-pontos { display: flex; gap: 0; align-items: center; justify-content: center; }
+/* Cada bolinha é um botão de 28×24 px (área de toque boa para o dedo); a
+   bolinha visível continua pequena, desenhada no ::before. Todos os
+   botões têm o MESMO tamanho: a pílula dourada da ativa cresce por
+   dentro, sem empurrar as vizinhas a cada troca do carrossel. */
 .hero-ponto {
+  position: relative;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border-radius: 999px;
+}
+.hero-ponto::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 8px;
   height: 8px;
-  padding: 0;
+  margin: -4px 0 0 -4px;
   border-radius: 999px;
   background: rgba(184, 158, 255, .35);
-  transition: width .25s ease, background .25s ease;
+  transition: width .25s ease, margin .25s ease, background .25s ease;
 }
-.hero-ponto.ativo {
+.hero-ponto.ativo::before {
   width: 26px;
+  margin-left: -13px;
   background: var(--estrela);
 }
 
@@ -1807,6 +1840,19 @@ body.tem-botton .rodape-site { padding-bottom: calc(120px + var(--safe-bottom));
 }
 .card-livro:hover .card-add,
 .card-livro:focus-within .card-add { opacity: 1; transform: translateY(0); }
+/* Botão invisível que cobre o card inteiro (abre os detalhes). */
+.card-abrir {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.card-abrir:focus-visible { outline: 2px solid var(--estrela); outline-offset: 3px; }
 .card-add:active { transform: scale(.96); }
 .card-add.adicionado {
   background: linear-gradient(135deg, #8effc0, #34d17f);
@@ -3729,3 +3775,26 @@ body.tem-botton .rodape-site { padding-bottom: calc(120px + var(--safe-bottom));
   background: rgba(255,122,217,.14);
   border: 1px solid rgba(255,122,217,.32);
 }
+
+/* ============================================================
+   ESTABILIDADE NA ABERTURA (sem "pulos" — CLS)
+   ============================================================ */
+/* Esqueleto do carrossel (vem no HTML): mesma altura de um slide de
+   verdade, para a estante não "pular" quando os livros chegam. */
+.hero-esqueleto .hero-capa-wrap {
+  cursor: default;
+  background: linear-gradient(160deg, rgba(46, 31, 138, .5), rgba(20, 9, 58, .5));
+  border: 1px solid var(--vidro-borda);
+  animation: pulsarEsqueleto 1.3s ease-in-out infinite;
+}
+.hero-esqueleto .hero-texto { visibility: hidden; }
+/* Enquanto é esqueleto, o título da seção fica guardado (ocupa o lugar,
+   mas não aparece): evita trocar "Novidades da Semana" por "Livros Novos"
+   na frente do cliente. */
+.hero:has(.hero-esqueleto) .hero-cabecalho { visibility: hidden; }
+/* Link direto de busca (?busca=...): sem carrossel desde o 1º desenho. */
+.abre-busca .hero { display: none; }
+/* Esqueleto da estante com a mesma altura das fileiras de verdade
+   (capa + título/autor/preço ≈ 95px): o rodapé não sobe e desce. */
+.estante-carregando { padding-top: 0; }
+.estante-carregando .ec-cards { padding-bottom: 107px; }

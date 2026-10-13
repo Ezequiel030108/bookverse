@@ -3,6 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- Pergunta ao Firebase, JÁ NO INÍCIO, quem foi vendido/reservado (a
+       estante só abre depois dessa resposta). Antes, a pergunta só saía
+       depois de baixar todos os scripts. O js/catalogo.js usa esta mesma
+       resposta: é uma leitura só. Fica ANTES do CSS de propósito. -->
+  <script>
+    try {
+      window.__dispCedo = { url: "https://firestore.googleapis.com/v1/projects/bookverse-69878/databases/(default)/documents/disponibilidade?pageSize=300" };
+      window.__dispCedo.resposta = fetch(window.__dispCedo.url)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    } catch (e) { window.__dispCedo = null; }
+  </script>
   <meta name="theme-color" content="#0a0524" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -28,10 +40,14 @@
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="img/icone-180.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=leve1" />
+  <!-- Fontes servidas pelo próprio site (antes vinham do Google: dois
+       endereços a mais e um CSS que segurava o primeiro desenho da tela). -->
+  <link rel="preload" href="/fonts/inter-latin-v20.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/playfair-latin-v40.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css?v=rapido2" />
+  <!-- Link direto de busca (?busca=...): a vitrine abre sem o carrossel.
+       Marca isso JÁ, antes do 1º desenho, para nada "pular" na tela. -->
+  <script>try{if((new URLSearchParams(location.search).get("busca")||"").trim())document.documentElement.classList.add("abre-busca")}catch(e){}</script>
 
   <!-- Dados estruturados (Schema.org): dizem ao Google que este site é
        uma livraria local em Juazeirinho/PB — ajuda nos resultados de
@@ -75,7 +91,7 @@
           <img class="marca-logo" src="img/logo-96.png" alt="" onerror="this.classList.add('logo-erro')">
         </span>
         <span class="marca-textos">
-          <img class="marca-titulo" src="img/bookverse-titulo.png" alt="BookVerse" width="924" height="223">
+          <img class="marca-titulo" src="img/bookverse-titulo.webp" alt="BookVerse" width="398" height="96">
           <span class="marca-local">
             <svg viewBox="0 0 24 24" width="10" height="10" aria-hidden="true" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"></path></svg>
             Juazeirinho
@@ -107,7 +123,7 @@
         </button>
 
         <!-- Minha conta (aparece quando o login está configurado) -->
-        <a class="conta-btn" id="btn-conta" href="conta.html" aria-label="Minha conta" hidden>
+        <a class="conta-btn" id="btn-conta" href="conta.html" aria-label="Minha conta">
           <span class="conta-btn-avatar" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
           </span>
@@ -126,7 +142,7 @@
     </div>
 
     <!-- Linha 2: busca expansível no mobile (oculta por padrão) -->
-    <div class="topbar-busca-mobile" id="topbar-busca-mobile" aria-hidden="true">
+    <div class="topbar-busca-mobile" id="topbar-busca-mobile" aria-hidden="true" inert>
       <div class="campo-busca-wrap">
         <svg class="icone-busca" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
           <path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm9 16-4.5-4.5"/>
@@ -137,6 +153,15 @@
     </div>
   </header>
 
+  <!-- ===== FAIXA DA PROMOÇÃO =====
+       Montada AQUI (logo abaixo do cabeçalho), antes do carrossel e da
+       estante: a faixa já nasce no lugar e não empurra a página.
+       NÃO coloque defer/async nestes 4 scripts. -->
+  <script src="js/util.js?v=leve1"></script>
+  <script src="js/livros.js?v=criancas2"></script>
+  <script src="js/precos.js?v=promo2"></script>
+  <script src="js/promo.js?v=1"></script>
+
   <!-- ===== HERO / BILLBOARD ===== -->
   <!--
     IMPORTANTE: a .hero-janela tem overflow-x:auto (scroll-snap),
@@ -144,7 +169,7 @@
     Isso garante que os slides apareçam corretamente e o swipe
     funcione nativamente no mobile.
   -->
-  <section class="hero" id="hero" aria-label="Novidades da semana" hidden>
+  <section class="hero" id="hero" aria-label="Novidades da semana">
     <!-- Título FORA da faixa -->
     <div class="hero-cabecalho">
       <span class="hero-eyebrow">Acabou de chegar</span>
@@ -152,19 +177,32 @@
     </div>
     <!-- A faixa estrelada: só o carrossel dentro dela -->
     <div class="hero-faixa">
+      <div class="hero-vitrine">
+        <div class="hero-janela" id="hero-janela">
+          <div class="hero-palco" id="hero-palco">
+            <!-- Esqueleto: segura a altura do carrossel até o JS trocar
+                 pelos livros de verdade (assim a estante não "pula"). -->
+            <div class="hero-slide hero-esqueleto" aria-hidden="true">
+              <div class="hero-conteudo">
+                <div class="hero-capa-wrap"></div>
+                <div class="hero-texto">
+                  <p class="hero-livro-titulo">Novidades<br>da semana</p>
+                  <p class="hero-livro-autor">BookVerse</p>
+                  <div class="hero-acoes"><span class="hero-preco em-promo"><s>R$ 00,00</s> R$ 00,00</span><span class="hero-btn">Ver detalhes</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Estrelas DEPOIS do carrossel: se a página aparecer pela metade,
+           elas já nascem no lugar certo (não "pulam"). -->
       <div class="hero-ceu" aria-hidden="true">
         <span class="estrela-brilho e1"></span>
         <span class="estrela-brilho e2"></span>
         <span class="estrela-brilho e3"></span>
         <span class="estrela-brilho e4"></span>
         <span class="estrela-brilho e5"></span>
-      </div>
-      <div class="hero-vitrine">
-        <div class="hero-janela" id="hero-janela">
-          <div class="hero-palco" id="hero-palco">
-            <!-- slides gerados pelo JS -->
-          </div>
-        </div>
       </div>
     </div>
     <!-- Navegação FORA da faixa -->
@@ -177,9 +215,15 @@
 
   <!-- ===== CATÁLOGO (fileiras) ===== -->
   <main id="main">
-    <div id="catalogo"></div>
+    <div id="catalogo">
+      <!-- Esqueleto da estante: some quando os livros chegam -->
+      <div id="estante-carregando" class="estante-carregando" aria-hidden="true">
+        <div class="ec-fileira"><span class="ec-titulo"></span><div class="ec-cards"><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span></div></div>
+        <div class="ec-fileira"><span class="ec-titulo"></span><div class="ec-cards"><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span><span class="ec-card"></span></div></div>
+      </div>
+    </div>
     <div id="sem-resultados" class="sem-resultados" hidden>
-      <img src="img/sem-resultados.png" alt="" aria-hidden="true" onerror="this.style.display='none'">
+      <img src="img/sem-resultados.png" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'">
       <p class="fala">Esse a gente não achou…</p>
       <p class="dica">Tente outro título ou autor, ou chame a gente no Instagram.</p>
     </div>
@@ -335,16 +379,14 @@
     <p class="foto-viewer-dica">Toque em qualquer lugar para fechar</p>
   </div>
 
-  <script src="js/util.js?v=leve1"></script>
-  <script src="js/livros.js?v=criancas2"></script>
   <script src="js/vendidos.js?v=vitrine3"></script>
+  <script src="js/catalogo-foto.js?v=1"></script>
   <script src="js/config.js?v=avisos2"></script>
-  <script src="js/analytics.js?v=meta2"></script>
-  <script src="js/auth.js?v=leve1"></script>
-  <script src="js/precos.js?v=promo2"></script>
+  <script src="js/analytics.js?v=rapido1"></script>
+  <script src="js/auth.js?v=rapido2" data-sem-pressa></script>
   <script src="js/cart.js"></script>
-  <script src="js/catalogo.js?v=leve1"></script>
-  <script src="js/main.js?v=leve1"></script>
+  <script src="js/catalogo.js?v=rapido1"></script>
+  <script src="js/main.js?v=rapido4"></script>
   <script src="js/loja.js"></script>
 </body>
 </html>

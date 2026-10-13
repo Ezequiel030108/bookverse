@@ -235,7 +235,14 @@
     });
   }
 
-  (async function init() {
+  /* Na VITRINE (index.html, script com data-sem-pressa) o login espera a
+     loja aparecer: o SDK e o "iframe" do Google (~130 KB e trabalho do
+     processador) só começam quando o navegador fica livre depois do
+     carregamento — ou no primeiro toque do cliente, o que vier antes.
+     Nas outras páginas (checkout, conta) o login começa na hora. */
+  const semPressa = !!(document.currentScript && document.currentScript.hasAttribute("data-sem-pressa"));
+
+  async function init() {
     try {
       await carregarScript(BASE + "firebase-app-compat.js");
       await carregarScript(BASE + "firebase-auth-compat.js");
@@ -600,5 +607,24 @@
     });
 
     resolverPronto();
-  })();
+  }
+
+  let iniciado = false;
+  function iniciarLogin() {
+    if (iniciado) return;
+    iniciado = true;
+    ["pointerdown", "keydown"].forEach(ev => window.removeEventListener(ev, iniciarLogin, true));
+    init();
+  }
+  if (!semPressa) {
+    iniciarLogin();
+  } else {
+    // Começa: no 1º toque/tecla; 1,5 s depois de a vitrine avisar que abriu
+    // (js/main.js); ou, no máximo, 6 s depois do carregamento da página.
+    ["pointerdown", "keydown"].forEach(ev => window.addEventListener(ev, iniciarLogin, { capture: true, passive: true }));
+    document.addEventListener("bookverse:vitrine-pronta", () => setTimeout(iniciarLogin, 1500), { once: true });
+    const reserva = () => setTimeout(iniciarLogin, 6000);
+    if (document.readyState === "complete") reserva();
+    else window.addEventListener("load", reserva, { once: true });
+  }
 })();

@@ -13,6 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # A prévia sai igual ao site de verdade: com as "fotos" dos vendidos e
+      # dos livros do painel (veja firebase-hosting-merge.yml).
+      - name: Atualizar as fotos dos vendidos e dos livros do painel
+        run: |
+          node scripts/gerar-vendidos.js
+          node scripts/gerar-catalogo-foto.js
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

@@ -20,11 +20,22 @@
    ============================================================ */
 
 const crypto = require("crypto");
+const zlib = require("zlib");
 const { aplicarHeaders } = require("./_seguranca");
 const { livrosDoAdmin } = require("./_catalogo");
 
 const TEMPO_CACHE = 60 * 1000;
-let cache = { t: 0, livros: null };
+let cache = { t: 0, livros: null, comprimido: null };
+
+/* A resposta já comprimida (brotli e gzip), feita UMA vez por minuto,
+   junto com o cache — não a cada visita. 62 KB viram ~20 KB. */
+function comprimir(livros) {
+  const json = Buffer.from(JSON.stringify({ livros }));
+  return {
+    br: zlib.brotliCompressSync(json, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 } }),
+    gzip: zlib.gzipSync(json, { level: 9 })
+  };
+}
 
 /* Impressão digital da foto: muda sempre que a foto muda. */
 function impressaoDigital(foto) {
@@ -48,7 +59,10 @@ module.exports = async (req, res) => {
 
   if (!cache.livros || Date.now() - cache.t > TEMPO_CACHE) {
     const lista = await livrosDoAdmin();
-    if (lista) cache = { t: Date.now(), livros: lista.map(semFotoEmbutida) };
+    if (lista) {
+      const livros = lista.map(semFotoEmbutida);
+      cache = { t: Date.now(), livros, comprimido: comprimir(livros) };
+    }
   }
   if (!cache.livros) {
     // Sem resposta do banco: a vitrine cai no caminho antigo sozinha.
@@ -56,7 +70,13 @@ module.exports = async (req, res) => {
     return;
   }
   res.setHeader("Cache-Control", "public, max-age=60, s-maxage=60");
-  res.status(200).json({ livros: cache.livros });
+  res.setHeader("Vary", "Accept-Encoding");
+  const aceita = String((req.headers && req.headers["accept-encoding"]) || "");
+  const tipo = /\bbr\b/.test(aceita) ? "br" : (/\bgzip\b/.test(aceita) ? "gzip" : "");
+  if (!tipo) { res.status(200).json({ livros: cache.livros }); return; }
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Content-Encoding", tipo);
+  res.status(200).end(cache.comprimido[tipo]);
 };
 
 module.exports.impressaoDigital = impressaoDigital;

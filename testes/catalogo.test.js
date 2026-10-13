@@ -89,3 +89,15 @@ test("id esquisito não lê outras partes do banco", async () => {
     assert.equal(r.status, 404, "id " + id + " → " + r.status);
   }
 });
+
+test("catálogo comprimido para quem aceita (brotli ou gzip), igual ao normal", async () => {
+  const zlib = require("zlib");
+  const normal = await T.chamar(catalogo, { metodo: "GET" });
+  for (const [aceita, abrir] of [["gzip, deflate, br", zlib.brotliDecompressSync], ["gzip", zlib.gunzipSync]]) {
+    const r = await T.chamar(catalogo, { metodo: "GET", headers: { "accept-encoding": aceita } });
+    assert.equal(r.status, 200);
+    assert.equal(r.headers["content-encoding"], aceita.includes("br") ? "br" : "gzip");
+    assert.match(r.headers["vary"], /Accept-Encoding/);
+    assert.deepEqual(JSON.parse(abrir(r.corpo)), normal.corpo, "mesmo conteúdo, só menor");
+  }
+});
