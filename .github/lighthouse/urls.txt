@@ -1,0 +1,2 @@
+mobile 4 https://bookverse.com.br/
+mobile 7 https://bookverse.com.br/
