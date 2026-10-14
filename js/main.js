@@ -442,6 +442,9 @@ function limparFileirasAntigas() {
   limparFileiras = [];
 }
 
+/* As setas das fileiras só aparecem a partir de 720px (css/style.css). */
+const SETAS_VISIVEIS = window.matchMedia("(min-width: 720px)");
+
 function criarFileira(titulo, livros, opts = {}) {
   const { seloNovo = false, etiqueta = "" } = opts;
 
@@ -494,7 +497,10 @@ function criarFileira(titulo, livros, opts = {}) {
   sDir.addEventListener("click", () => trilho.scrollBy({ left:  passo(), behavior: "smooth" }));
 
   // Mostra cada seta só quando dá para rolar naquele sentido.
+  // No celular as setas nem aparecem (o CSS só as mostra a partir de 720px):
+  // medir o trilho ali só obrigaria o navegador a recalcular a página toda.
   const atualizarSetas = () => {
+    if (!SETAS_VISIVEIS.matches) return;
     const max = trilho.scrollWidth - trilho.clientWidth - 1;
     sEsq.classList.toggle("oculta", trilho.scrollLeft <= 1);
     sDir.classList.toggle("oculta", max <= 0 || trilho.scrollLeft >= max);
@@ -665,24 +671,64 @@ function renderizar(termoBusca) {
     fileiras.push([genero, famosos.concat(resto)]);
   });
 
-  // As 2 primeiras fileiras saem na hora; as outras vêm logo em seguida,
-  // duas por vez. Montar as 14 de uma vez travava o celular por quase
-  // meio segundo (o Google mede isso como "tempo de bloqueio").
-  const montar = lista => lista.forEach(([genero, livros]) => catalogo.appendChild(criarFileira(genero, livros)));
+  // As 2 primeiras fileiras saem na hora; as outras são montadas quando o
+  // cliente chega a uma tela de distância delas (rolando a página) ou, a
+  // partir da primeira interação (toque, rolagem, tecla, foco), aos poucos,
+  // nas folgas do navegador — assim quem navega pelo teclado ou leitor de
+  // tela também encontra todas. Montar as 14 logo na abertura, mesmo de
+  // duas em duas, travava os celulares mais simples (é o "tempo de
+  // bloqueio" que o Google mede).
+  const pendentes = fileiras.slice();
   const montarEstante = () => {
     if (geracao !== geracaoFileiras) return;                         // a estante foi redesenhada: desiste
     catalogo.innerHTML = "";                                         // sai o esqueleto (ou a estante antiga)
-    montar(fileiras.slice(0, 2));
-    let pendentes = fileiras.slice(2);
-    const proximas = () => {
-      if (geracao !== geracaoFileiras || !pendentes.length) return;
-      montar(pendentes.slice(0, 2));
-      pendentes = pendentes.slice(2);
-      if (pendentes.length) setTimeout(proximas, 0);
-      else avisarVitrinePronta();
+    const marcador = document.createElement("div");                  // fim da estante montada (invisível)
+    marcador.className = "estante-marcador";
+    marcador.style.height = "1px";
+    marcador.setAttribute("aria-hidden", "true");
+    catalogo.appendChild(marcador);
+
+    const EVENTOS = ["pointerdown", "touchstart", "keydown", "wheel", "scroll", "focusin"];
+    const folga = window.requestIdleCallback ? fn => requestIdleCallback(fn, { timeout: 1000 }) : fn => setTimeout(fn, 50);
+    let observador = null, emSegundoPlano = false;
+    const desligar = () => {
+      if (observador) observador.disconnect();
+      EVENTOS.forEach(ev => window.removeEventListener(ev, montarResto, true));
     };
-    if (pendentes.length) setTimeout(proximas, 0);
-    else avisarVitrinePronta();
+    // Monta a próxima fileira (antes do marcador); acabou, avisa que a vitrine está pronta.
+    const montarUma = () => {
+      if (geracao !== geracaoFileiras || !pendentes.length) return false;
+      const [genero, livros] = pendentes.shift();
+      catalogo.insertBefore(criarFileira(genero, livros), marcador);
+      if (pendentes.length) return true;
+      desligar();
+      marcador.remove();
+      avisarVitrinePronta();
+      return false;
+    };
+    function montarResto(e) {
+      // Só a rolagem da PÁGINA conta (o carrossel e as fileiras rolam sozinhos).
+      if (e && e.type === "scroll" && e.target !== document) return;
+      EVENTOS.forEach(ev => window.removeEventListener(ev, montarResto, true));
+      if (emSegundoPlano) return;
+      emSegundoPlano = true;
+      const passo = () => { if (montarUma()) folga(passo); };
+      folga(passo);
+    }
+
+    if (!pendentes.length) { marcador.remove(); avisarVitrinePronta(); return; }
+    for (let i = 0; i < 2; i++) montarUma();
+    if (!pendentes.length) return;
+    limparFileiras.push(desligar);
+    EVENTOS.forEach(ev => window.addEventListener(ev, montarResto, { capture: true, passive: true }));
+    if (!("IntersectionObserver" in window)) { montarResto(); return; }  // navegador antigo: monta o resto aos poucos
+    // Chegou perto do marcador, entra a próxima fileira. Continua perto? O observador avisa de novo.
+    observador = new IntersectionObserver(entradas => {
+      if (!entradas.some(e => e.isIntersecting)) return;
+      observador.unobserve(marcador);
+      if (montarUma()) observador.observe(marcador);
+    }, { rootMargin: "0px 0px 100% 0px" });
+    observador.observe(marcador);
   };
   // Na ABERTURA, a estante espera a capa grande do carrossel aparecer (o
   // esqueleto segura o lugar, nada "pula"): assim as dezenas de capas das
