@@ -470,6 +470,11 @@ const aoInteragir = [];
   EVENTOS.forEach(ev => window.addEventListener(ev, marcar, { capture: true, passive: true }));
 })();
 
+/* Roda fn numa folga do navegador (quando ele não tem nada mais urgente). */
+const folga = window.requestIdleCallback
+  ? fn => requestIdleCallback(fn, { timeout: 2000 })
+  : fn => setTimeout(fn, 50);
+
 /* As setas das fileiras só aparecem a partir de 720px (css/style.css). */
 const SETAS_VISIVEIS = window.matchMedia("(min-width: 720px)");
 
@@ -699,13 +704,15 @@ function renderizar(termoBusca) {
     fileiras.push([genero, famosos.concat(resto)]);
   });
 
-  // As 2 primeiras fileiras saem na hora; as outras são montadas quando o
-  // cliente chega a uma tela de distância delas (rolando a página) ou, a
-  // partir da primeira interação (toque, rolagem, tecla, foco), aos poucos,
-  // nas folgas do navegador — assim quem navega pelo teclado ou leitor de
-  // tela também encontra todas. Montar as 14 logo na abertura, mesmo de
-  // duas em duas, travava os celulares mais simples (é o "tempo de
-  // bloqueio" que o Google mede).
+  // As 2 primeiras fileiras saem na hora. As outras:
+  //  • chegou perto (rolando), a próxima entra inteira na hora;
+  //  • depois que a página termina de carregar (ou na 1ª interação do
+  //    cliente), o resto vai sendo montado sozinho em pedacinhos — alguns
+  //    livros por vez, nas folgas do navegador —, para "localizar na
+  //    página", leitor de tela e impressão encontrarem a estante inteira;
+  //  • ao imprimir, monta tudo na hora.
+  // Montar as 14 de uma vez na abertura travava os celulares mais simples
+  // (é o "tempo de bloqueio" que o Google mede).
   const pendentes = fileiras.slice();
   const montarEstante = () => {
     if (geracao !== geracaoFileiras) return;                         // a estante foi redesenhada: desiste
@@ -716,34 +723,60 @@ function renderizar(termoBusca) {
     marcador.setAttribute("aria-hidden", "true");
     catalogo.appendChild(marcador);
 
-    const folga = window.requestIdleCallback ? fn => requestIdleCallback(fn, { timeout: 1000 }) : fn => setTimeout(fn, 50);
     let observador = null, emSegundoPlano = false;
-    const desligar = () => { if (observador) observador.disconnect(); };
-    // Monta a próxima fileira (antes do marcador); acabou, avisa que a vitrine está pronta.
-    const montarUma = () => {
-      if (geracao !== geracaoFileiras || !pendentes.length) return false;
-      const [genero, livros] = pendentes.shift();
-      catalogo.insertBefore(criarFileira(genero, livros), marcador);
-      if (pendentes.length) return true;
-      desligar();
+    let aMeio = null;   // fileira sendo montada aos pedaços: { trilho, livros, i }
+    const terminou = () => !pendentes.length && !aMeio;
+    const acabar = () => {
+      if (observador) observador.disconnect();
+      window.removeEventListener("beforeprint", montarTudo);
       marcador.remove();
-      avisarVitrinePronta();
-      return false;
     };
-    // Monta as que faltam, uma por vez, nas folgas do navegador.
+    // A próxima fileira inteira, na hora (antes do marcador).
+    const montarUma = () => {
+      if (geracao !== geracaoFileiras) return false;
+      if (aMeio) {                                                   // termina a que estava pela metade
+        while (aMeio.i < aMeio.livros.length) aMeio.trilho.appendChild(criarCard(aMeio.livros[aMeio.i], aMeio.i++));
+        aMeio = null;
+      } else if (pendentes.length) {
+        const [genero, livros] = pendentes.shift();
+        catalogo.insertBefore(criarFileira(genero, livros), marcador);
+      }
+      if (terminou()) { acabar(); return false; }
+      return true;
+    };
+    function montarTudo() { while (montarUma()); }
+    // Alguns livros por vez (no máximo ~4 ms por folga): nenhuma tarefa longa.
+    const pedaco = () => {
+      if (geracao !== geracaoFileiras) return;
+      const ate = performance.now() + 4;
+      do {
+        if (!aMeio) {
+          if (!pendentes.length) break;
+          const [genero, livros] = pendentes.shift();
+          const secao = criarFileira(genero, []);
+          catalogo.insertBefore(secao, marcador);
+          aMeio = { trilho: secao.querySelector(".fileira-trilho"), livros, i: 0 };
+        }
+        aMeio.trilho.appendChild(criarCard(aMeio.livros[aMeio.i], aMeio.i++));
+        if (aMeio.i >= aMeio.livros.length) aMeio = null;
+      } while (performance.now() < ate);
+      if (terminou()) acabar(); else folga(pedaco);
+    };
     const montarResto = () => {
-      if (emSegundoPlano) return;
+      if (emSegundoPlano || geracao !== geracaoFileiras) return;
       emSegundoPlano = true;
-      const passo = () => { if (montarUma()) folga(passo); };
-      folga(passo);
+      folga(pedaco);
     };
 
-    if (!pendentes.length) { marcador.remove(); avisarVitrinePronta(); return; }
-    for (let i = 0; i < 2; i++) montarUma();
-    if (!pendentes.length) return;
-    limparFileiras.push(desligar);
+    for (let i = 0; i < 2 && pendentes.length; i++) montarUma();
+    avisarVitrinePronta();                                           // a vitrine já abriu (libera o login)
+    if (terminou()) { acabar(); return; }
+    limparFileiras.push(() => { if (observador) observador.disconnect(); window.removeEventListener("beforeprint", montarTudo); });
+    window.addEventListener("beforeprint", montarTudo);
     if (clienteInteragiu) montarResto(); else aoInteragir.push(montarResto);
-    if (!("IntersectionObserver" in window)) { montarResto(); return; }  // navegador antigo: monta o resto aos poucos
+    if (document.readyState === "complete") folga(montarResto);
+    else window.addEventListener("load", () => folga(montarResto), { once: true });
+    if (!("IntersectionObserver" in window)) return;
     // Chegou perto do marcador, entra a próxima fileira. Continua perto? O observador avisa de novo.
     observador = new IntersectionObserver(entradas => {
       if (!entradas.some(e => e.isIntersecting)) return;

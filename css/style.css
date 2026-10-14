@@ -742,6 +742,15 @@ main {
   padding: 6px 16px 12px;
 }
 .fileira-trilho::-webkit-scrollbar { display: none; }
+/* No celular, o navegador só calcula e pinta os cards de uma fileira
+   quando ela chega perto da tela (as de baixo são montadas em segundo
+   plano e isso pesava nos aparelhos simples). O trilho já corta o que
+   sai dele (overflow), então nada muda no visual. 330px ≈ altura real
+   do trilho no celular; depois de aparecer, vale a altura medida. Fica
+   de fora no desktop, onde as setas medem o trilho. */
+@media (max-width: 719.98px) {
+  .fileira-trilho { content-visibility: auto; contain-intrinsic-size: auto 330px; }
+}
 
 /* Setas das fileiras — só desktop (no mobile usa-se o swipe).
    Faixa que escurece a borda e some (fica transparente) em direção ao
