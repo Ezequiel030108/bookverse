@@ -11,17 +11,28 @@
 
 window.Precos = (function () {
 
-  /* A promoção está ligada? (mesma regra usada na vitrine) */
+  /* A promoção está ligada? (mesma regra usada na vitrine)
+     É chamada para cada preço da página: o ?promo=teste e as datas são
+     lidos uma vez só (e de novo apenas se mudarem). */
+  let buscaLida = null, promoTeste = false, datasLidas = null;
   function promoAtiva() {
     if (typeof PROMOCAO === "undefined" || !PROMOCAO) return false;
     try {
-      if (new URLSearchParams(location.search).get("promo") === "teste") return true;
-    } catch (e) { /* sem query string */ }
-    const agora = new Date();
-    return (
-      agora >= new Date(PROMOCAO.inicio + "T00:00:00") &&
-      agora <= new Date(PROMOCAO.fim + "T23:59:59")
-    );
+      if (location.search !== buscaLida) {
+        buscaLida = location.search;
+        promoTeste = new URLSearchParams(buscaLida).get("promo") === "teste";
+      }
+      if (promoTeste) return true;
+    } catch (e) { /* sem query string (ex.: no servidor) */ }
+    if (!datasLidas || datasLidas.inicio !== PROMOCAO.inicio || datasLidas.fim !== PROMOCAO.fim) {
+      datasLidas = {
+        inicio: PROMOCAO.inicio, fim: PROMOCAO.fim,
+        de: new Date(PROMOCAO.inicio + "T00:00:00").getTime(),
+        ate: new Date(PROMOCAO.fim + "T23:59:59").getTime()
+      };
+    }
+    const agora = Date.now();
+    return agora >= datasLidas.de && agora <= datasLidas.ate;
   }
 
   /* "R$ 45,00" -> 45 (número). Retorna null se não der para ler. */
@@ -37,13 +48,34 @@ window.Precos = (function () {
      que foi prometido. */
   function arredondarReal(valor) { return Math.floor(valor); }
 
+  /* O mesmo texto que Intl.NumberFormat("pt-BR", 2 casas) daria, sem
+     carregar os dados de idioma do navegador (só isso custava ~75 ms num
+     celular simples, a cada abertura da loja). Arredonda pelos dígitos
+     que o número mostra (0.015 -> "0,02"), como o Intl. Fora da faixa de
+     preços (muito grande, NaN...), devolve null e formatarBRL usa o Intl. */
+  function reaisSemIntl(n) {
+    if (!Number.isFinite(n) || Math.abs(n) >= 1e13) return null;
+    const s = String(Math.abs(n));
+    if (/e/i.test(s)) return null;                       // notação científica (ex.: 1e-7)
+    const partes = s.split(".");
+    const frac = partes[1] || "";
+    let centavos = Number(partes[0]) * 100 + Number((frac + "00").slice(0, 2));
+    if (frac.length > 2 && frac.charCodeAt(2) >= 53) centavos += 1;   // 3ª casa >= 5: sobe
+    const reais = String(Math.floor(centavos / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return (n < 0 || Object.is(n, -0) ? "-" : "") + reais + "," + String(centavos % 100).padStart(2, "0");
+  }
+
   /* Formata um número em Reais no padrão brasileiro: 45 -> "R$ 45,00". */
+  let formatador = null;
   function formatarBRL(valor) {
     const simbolo = (window.LOJA_CONFIG && window.LOJA_CONFIG.moeda && window.LOJA_CONFIG.moeda.simbolo) || "R$";
-    return simbolo + " " + Number(valor).toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    const n = Number(valor);
+    let texto = reaisSemIntl(n);
+    if (texto === null) {
+      if (!formatador) formatador = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      texto = formatador.format(n);
+    }
+    return simbolo + " " + texto;
   }
 
   /* Preço unitário JÁ considerando a promoção.

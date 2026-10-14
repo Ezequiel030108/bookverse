@@ -65,8 +65,18 @@ const esc    = window.esc || (t => String(t == null ? "" : t));
 
 /* ---------- Utilidades ---------- */
 
+/* Texto sem maiúsculas e sem acentos (para comparar e buscar). Guarda as
+   respostas: a vitrine compara título+autor de todos os livros entre si
+   (versões novo/usado) e repetia a mesma conta milhares de vezes. */
+const normalizados = new Map();
 function normalizar(texto) {
-  return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  let r = normalizados.get(texto);
+  if (r === undefined) {
+    r = texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    if (normalizados.size > 5000) normalizados.clear();
+    normalizados.set(texto, r);
+  }
+  return r;
 }
 
 /* Quando o livro foi adicionado (em ms), ou null se não informado. */
@@ -442,6 +452,24 @@ function limparFileirasAntigas() {
   limparFileiras = [];
 }
 
+/* O cliente já mexeu na página (toque, rolagem, tecla, foco)? A partir
+   daí a estante monta as fileiras de baixo nas folgas do navegador (veja
+   renderizar). Fica de olho desde o início: um toque antes de a estante
+   abrir também conta. Só a rolagem da PÁGINA conta — o carrossel e as
+   fileiras rolam sozinhos. */
+let clienteInteragiu = false;
+const aoInteragir = [];
+(function () {
+  const EVENTOS = ["pointerdown", "touchstart", "keydown", "wheel", "scroll", "focusin"];
+  const marcar = e => {
+    if (e.type === "scroll" && e.target !== document) return;
+    clienteInteragiu = true;
+    EVENTOS.forEach(ev => window.removeEventListener(ev, marcar, true));
+    aoInteragir.splice(0).forEach(fn => fn());
+  };
+  EVENTOS.forEach(ev => window.addEventListener(ev, marcar, { capture: true, passive: true }));
+})();
+
 /* As setas das fileiras só aparecem a partir de 720px (css/style.css). */
 const SETAS_VISIVEIS = window.matchMedia("(min-width: 720px)");
 
@@ -688,13 +716,9 @@ function renderizar(termoBusca) {
     marcador.setAttribute("aria-hidden", "true");
     catalogo.appendChild(marcador);
 
-    const EVENTOS = ["pointerdown", "touchstart", "keydown", "wheel", "scroll", "focusin"];
     const folga = window.requestIdleCallback ? fn => requestIdleCallback(fn, { timeout: 1000 }) : fn => setTimeout(fn, 50);
     let observador = null, emSegundoPlano = false;
-    const desligar = () => {
-      if (observador) observador.disconnect();
-      EVENTOS.forEach(ev => window.removeEventListener(ev, montarResto, true));
-    };
+    const desligar = () => { if (observador) observador.disconnect(); };
     // Monta a próxima fileira (antes do marcador); acabou, avisa que a vitrine está pronta.
     const montarUma = () => {
       if (geracao !== geracaoFileiras || !pendentes.length) return false;
@@ -706,21 +730,19 @@ function renderizar(termoBusca) {
       avisarVitrinePronta();
       return false;
     };
-    function montarResto(e) {
-      // Só a rolagem da PÁGINA conta (o carrossel e as fileiras rolam sozinhos).
-      if (e && e.type === "scroll" && e.target !== document) return;
-      EVENTOS.forEach(ev => window.removeEventListener(ev, montarResto, true));
+    // Monta as que faltam, uma por vez, nas folgas do navegador.
+    const montarResto = () => {
       if (emSegundoPlano) return;
       emSegundoPlano = true;
       const passo = () => { if (montarUma()) folga(passo); };
       folga(passo);
-    }
+    };
 
     if (!pendentes.length) { marcador.remove(); avisarVitrinePronta(); return; }
     for (let i = 0; i < 2; i++) montarUma();
     if (!pendentes.length) return;
     limparFileiras.push(desligar);
-    EVENTOS.forEach(ev => window.addEventListener(ev, montarResto, { capture: true, passive: true }));
+    if (clienteInteragiu) montarResto(); else aoInteragir.push(montarResto);
     if (!("IntersectionObserver" in window)) { montarResto(); return; }  // navegador antigo: monta o resto aos poucos
     // Chegou perto do marcador, entra a próxima fileira. Continua perto? O observador avisa de novo.
     observador = new IntersectionObserver(entradas => {
