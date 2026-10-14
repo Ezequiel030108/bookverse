@@ -117,7 +117,12 @@ body {
   position: relative;
 }
 
-/* Estrelas (duas camadas que cintilam) */
+/* Estrelas (duas camadas que cintilam)
+   Cada camada é uma imagenzinha que se repete (img/estrelas-*.webp, em
+   1x/2x/3x para cada tipo de tela). Ela tem exatamente os pixels dos
+   antigos 23 radial-gradient, mas é muito mais leve de pintar: os
+   gradientes travavam a página ao abrir, sobretudo no desktop. Para
+   mudar as estrelas, edite e rode scripts/gerar-estrelas.js. */
 body::before, body::after {
   content: "";
   position: fixed;
@@ -126,36 +131,17 @@ body::before, body::after {
   pointer-events: none;
 }
 body::before {
-  background-image:
-    radial-gradient(1.8px 1.8px at 12% 18%, var(--estrela), transparent 55%),
-    radial-gradient(2.3px 2.3px at 78% 8%,  var(--estrela), transparent 55%),
-    radial-gradient(1.8px 1.8px at 42% 88%, var(--estrela-clara), transparent 55%),
-    radial-gradient(1.3px 1.3px at 25% 50%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 60% 35%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 88% 62%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 33% 73%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 7%  82%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 95% 28%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 53% 60%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 70% 78%, #fff, transparent 55%),
-    radial-gradient(.8px .8px at 18% 30%, rgba(255,255,255,.85), transparent 55%),
-    radial-gradient(.8px .8px at 50% 12%, rgba(255,255,255,.75), transparent 55%),
-    radial-gradient(.8px .8px at 67% 95%, rgba(255,255,255,.85), transparent 55%),
-    radial-gradient(.8px .8px at 82% 45%, rgba(255,255,255,.75), transparent 55%),
-    radial-gradient(.8px .8px at 3%  62%, rgba(255,255,255,.85), transparent 55%),
-    radial-gradient(.8px .8px at 38% 5%,  rgba(255,255,255,.75), transparent 55%);
+  background-image: url(../img/estrelas-1-1x.webp);
+  background-image: -webkit-image-set(url(../img/estrelas-1-1x.webp) 1x, url(../img/estrelas-1-2x.webp) 2x, url(../img/estrelas-1-3x.webp) 3x);
+  background-image: image-set(url(../img/estrelas-1-1x.webp) 1x, url(../img/estrelas-1-2x.webp) 2x, url(../img/estrelas-1-3x.webp) 3x);
   background-size: 440px 440px;
   background-repeat: repeat;
   animation: cintilar 4s ease-in-out infinite alternate;
 }
 body::after {
-  background-image:
-    radial-gradient(1.3px 1.3px at 20% 22%, #fff, transparent 55%),
-    radial-gradient(1.3px 1.3px at 55% 80%, #fff, transparent 55%),
-    radial-gradient(1px 1px at 75% 40%, var(--lavanda-clara), transparent 55%),
-    radial-gradient(1px 1px at 40% 60%, #fff, transparent 55%),
-    radial-gradient(1px 1px at 88% 15%, #fff, transparent 55%),
-    radial-gradient(.8px .8px at 10% 45%, #fff, transparent 55%);
+  background-image: url(../img/estrelas-2-1x.webp);
+  background-image: -webkit-image-set(url(../img/estrelas-2-1x.webp) 1x, url(../img/estrelas-2-2x.webp) 2x, url(../img/estrelas-2-3x.webp) 3x);
+  background-image: image-set(url(../img/estrelas-2-1x.webp) 1x, url(../img/estrelas-2-2x.webp) 2x, url(../img/estrelas-2-3x.webp) 3x);
   background-size: 320px 320px;
   background-repeat: repeat;
   opacity: .85;
@@ -1577,35 +1563,17 @@ main {
    O céu continua o mesmo, só que:
    • parte das estrelas vira confete colorido (mesmas posições do céu
      normal, um pouco maiores para a cor aparecer);
-   • os meteoros viram serpentinas rosa, ciano e dourada. */
+   • os meteoros viram serpentinas rosa, ciano e dourada.
+   O confete também é imagem (img/confete-*.webp, scripts/gerar-estrelas.js). */
 body.promo-tema-criancas::before {
-  background-image:
-    radial-gradient(3.2px 3.2px at 12% 18%, var(--aurora-rosa), transparent 55%),
-    radial-gradient(2.9px 2.9px at 78% 8%,  var(--estrela), transparent 55%),
-    radial-gradient(3.2px 3.2px at 42% 88%, var(--aurora-ciano), transparent 55%),
-    radial-gradient(2.9px 2.9px at 25% 50%, #8ff0b0, transparent 55%),
-    radial-gradient(1.3px 1.3px at 60% 35%, #fff, transparent 55%),
-    radial-gradient(2.9px 2.9px at 88% 62%, var(--aurora-rosa), transparent 55%),
-    radial-gradient(1.3px 1.3px at 33% 73%, #fff, transparent 55%),
-    radial-gradient(2.9px 2.9px at 7%  82%, var(--lavanda), transparent 55%),
-    radial-gradient(2.9px 2.9px at 95% 28%, var(--aurora-ciano), transparent 55%),
-    radial-gradient(1.3px 1.3px at 53% 60%, #fff, transparent 55%),
-    radial-gradient(2.9px 2.9px at 70% 78%, var(--estrela), transparent 55%),
-    radial-gradient(.8px .8px at 18% 30%, rgba(255,255,255,.85), transparent 55%),
-    radial-gradient(.8px .8px at 50% 12%, rgba(255,255,255,.75), transparent 55%),
-    radial-gradient(.8px .8px at 67% 95%, rgba(255,255,255,.85), transparent 55%),
-    radial-gradient(.8px .8px at 82% 45%, rgba(255,255,255,.75), transparent 55%),
-    radial-gradient(.8px .8px at 3%  62%, rgba(255,255,255,.85), transparent 55%),
-    radial-gradient(.8px .8px at 38% 5%,  rgba(255,255,255,.75), transparent 55%);
+  background-image: url(../img/confete-1-1x.webp);
+  background-image: -webkit-image-set(url(../img/confete-1-1x.webp) 1x, url(../img/confete-1-2x.webp) 2x, url(../img/confete-1-3x.webp) 3x);
+  background-image: image-set(url(../img/confete-1-1x.webp) 1x, url(../img/confete-1-2x.webp) 2x, url(../img/confete-1-3x.webp) 3x);
 }
 body.promo-tema-criancas::after {
-  background-image:
-    radial-gradient(1.3px 1.3px at 20% 22%, #fff, transparent 55%),
-    radial-gradient(2.7px 2.7px at 55% 80%, var(--aurora-rosa), transparent 55%),
-    radial-gradient(2.7px 2.7px at 75% 40%, var(--aurora-ciano), transparent 55%),
-    radial-gradient(1px 1px at 40% 60%, #fff, transparent 55%),
-    radial-gradient(2.7px 2.7px at 88% 15%, var(--estrela), transparent 55%),
-    radial-gradient(.8px .8px at 10% 45%, #fff, transparent 55%);
+  background-image: url(../img/confete-2-1x.webp);
+  background-image: -webkit-image-set(url(../img/confete-2-1x.webp) 1x, url(../img/confete-2-2x.webp) 2x, url(../img/confete-2-3x.webp) 3x);
+  background-image: image-set(url(../img/confete-2-1x.webp) 1x, url(../img/confete-2-2x.webp) 2x, url(../img/confete-2-3x.webp) 3x);
 }
 
 .promo-tema-criancas .meteoro {
