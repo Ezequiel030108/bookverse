@@ -1,5 +1,5 @@
 /* ============================================================
-   Gera as imagens do CÉU ESTRELADO do fundo (img/estrelas-*.webp)
+   Gera as imagens do CÉU ESTRELADO do fundo (img/estrelas-*.png)
    ------------------------------------------------------------
    As estrelas eram 23 "radial-gradient" no css/style.css. O navegador
    recalculava todos eles em cada pedaço da tela ao abrir a página, e
@@ -9,9 +9,12 @@
 
    As estrelas são descritas aqui embaixo (CAMADAS), do mesmo jeito
    que estavam no CSS: o céu normal (estrelas-*) e o céu em festa da
-   promoção do Dia das Crianças, com confete colorido (confete-*). Este script pinta cada camada com o Chromium e
-   salva um ladrilho em 1x, 2x e 3x (telas comuns, retina e celulares)
-   em WebP sem perda.
+   promoção do Dia das Crianças, com confete colorido (confete-*). Este
+   script pinta cada camada com o Chromium e salva um ladrilho em 1x, 2x
+   e 3x (telas comuns, retina e celulares) em PNG sem perda. É PNG, e
+   não WebP, porque o Safari dos Macs antigos (macOS 10.14/10.15) não
+   abre WebP, e o céu ficaria vazio. Com paleta de cores, o PNG fica
+   com 1 a 3 KB.
 
    Só precisa rodar se quiser MUDAR as estrelas:
      npm install --no-save playwright sharp
@@ -19,7 +22,9 @@
      node scripts/gerar-estrelas.js
    ============================================================ */
 
+const fs = require("fs");
 const path = require("path");
+const zlib = require("zlib");
 const PASTA = path.join(__dirname, "..", "img");
 
 const ESTRELA = "#ffd966";        // --estrela
@@ -89,6 +94,44 @@ const CAMADAS = [
   ] }
 ];
 
+/* PNG com paleta de cores exata (cada cor da imagem vira uma entrada da
+   paleta, nada é arredondado) quando a imagem tem até 256 cores; senão,
+   PNG completo. Fica com a menor das duas e nunca perde nada. */
+async function menorPngIdentico(sharp, png) {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const completo = await sharp(png).png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
+  const indice = new Map(), cores = [];
+  const linhas = Buffer.alloc(info.height * (info.width + 1));   // 1 byte de filtro por linha
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      const i = (y * info.width + x) * 4;
+      const cor = data.readUInt32BE(i);
+      if (!indice.has(cor)) { if (cores.length === 256) return completo; indice.set(cor, cores.length); cores.push(cor); }
+      linhas[y * (info.width + 1) + 1 + x] = indice.get(cor);
+    }
+  }
+  const pedaco = (tipo, dados) => {
+    const corpo = Buffer.concat([Buffer.from(tipo, "ascii"), dados]);
+    const tam = Buffer.alloc(4); tam.writeUInt32BE(dados.length);
+    const crc = Buffer.alloc(4); crc.writeUInt32BE(zlib.crc32(corpo));
+    return Buffer.concat([tam, corpo, crc]);
+  };
+  const cab = Buffer.alloc(13);
+  cab.writeUInt32BE(info.width, 0); cab.writeUInt32BE(info.height, 4);
+  cab[8] = 8; cab[9] = 3;                                         // 8 bits, cor com paleta
+  const paleta = Buffer.concat(cores.map(c => Buffer.from([c >>> 24, (c >>> 16) & 255, (c >>> 8) & 255])));
+  const alfa = Buffer.from(cores.map(c => c & 255));
+  const comPaleta = Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pedaco("IHDR", cab), pedaco("PLTE", paleta), pedaco("tRNS", alfa),
+    pedaco("IDAT", zlib.deflateSync(linhas, { level: 9 })), pedaco("IEND", Buffer.alloc(0))
+  ]);
+  // Confere: os pixels do PNG com paleta são exatamente os do original.
+  const conferir = await sharp(comPaleta).ensureAlpha().raw().toBuffer();
+  if (Buffer.compare(conferir, data) !== 0) throw new Error("PNG com paleta saiu diferente do original");
+  return comPaleta.length < completo.length ? comPaleta : completo;
+}
+
 (async () => {
   const { chromium } = require("playwright");
   const sharp = require("sharp");
@@ -103,9 +146,9 @@ const CAMADAS = [
               background-size: ${c.lado}px ${c.lado}px; background-repeat: repeat; }
       </style><div></div>`);
       const png = await pagina.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: c.lado, height: c.lado } });
-      const destino = path.join(PASTA, `${c.nome}-${escala}x.webp`);
-      await sharp(png).webp({ lossless: true, exact: true, effort: 6 }).toFile(destino);
-      console.log("ok:", path.relative(path.join(__dirname, ".."), destino));
+      const destino = path.join(PASTA, `${c.nome}-${escala}x.png`);
+      fs.writeFileSync(destino, await menorPngIdentico(sharp, png));
+      console.log("ok:", path.relative(path.join(__dirname, ".."), destino), fs.statSync(destino).size, "bytes");
       await pagina.close();
     }
   }

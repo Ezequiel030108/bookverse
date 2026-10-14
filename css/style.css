@@ -118,7 +118,7 @@ body {
 }
 
 /* Estrelas (duas camadas que cintilam)
-   Cada camada é uma imagenzinha que se repete (img/estrelas-*.webp, em
+   Cada camada é uma imagenzinha que se repete (img/estrelas-*.png, em
    1x/2x/3x para cada tipo de tela). Ela tem exatamente os pixels dos
    antigos 23 radial-gradient, mas é muito mais leve de pintar: os
    gradientes travavam a página ao abrir, sobretudo no desktop. Para
@@ -131,17 +131,17 @@ body::before, body::after {
   pointer-events: none;
 }
 body::before {
-  background-image: url(../img/estrelas-1-1x.webp);
-  background-image: -webkit-image-set(url(../img/estrelas-1-1x.webp) 1x, url(../img/estrelas-1-2x.webp) 2x, url(../img/estrelas-1-3x.webp) 3x);
-  background-image: image-set(url(../img/estrelas-1-1x.webp) 1x, url(../img/estrelas-1-2x.webp) 2x, url(../img/estrelas-1-3x.webp) 3x);
+  background-image: url(../img/estrelas-1-1x.png);
+  background-image: -webkit-image-set(url(../img/estrelas-1-1x.png) 1x, url(../img/estrelas-1-2x.png) 2x, url(../img/estrelas-1-3x.png) 3x);
+  background-image: image-set(url(../img/estrelas-1-1x.png) 1x, url(../img/estrelas-1-2x.png) 2x, url(../img/estrelas-1-3x.png) 3x);
   background-size: 440px 440px;
   background-repeat: repeat;
   animation: cintilar 4s ease-in-out infinite alternate;
 }
 body::after {
-  background-image: url(../img/estrelas-2-1x.webp);
-  background-image: -webkit-image-set(url(../img/estrelas-2-1x.webp) 1x, url(../img/estrelas-2-2x.webp) 2x, url(../img/estrelas-2-3x.webp) 3x);
-  background-image: image-set(url(../img/estrelas-2-1x.webp) 1x, url(../img/estrelas-2-2x.webp) 2x, url(../img/estrelas-2-3x.webp) 3x);
+  background-image: url(../img/estrelas-2-1x.png);
+  background-image: -webkit-image-set(url(../img/estrelas-2-1x.png) 1x, url(../img/estrelas-2-2x.png) 2x, url(../img/estrelas-2-3x.png) 3x);
+  background-image: image-set(url(../img/estrelas-2-1x.png) 1x, url(../img/estrelas-2-2x.png) 2x, url(../img/estrelas-2-3x.png) 3x);
   background-size: 320px 320px;
   background-repeat: repeat;
   opacity: .85;
@@ -1564,16 +1564,16 @@ main {
    • parte das estrelas vira confete colorido (mesmas posições do céu
      normal, um pouco maiores para a cor aparecer);
    • os meteoros viram serpentinas rosa, ciano e dourada.
-   O confete também é imagem (img/confete-*.webp, scripts/gerar-estrelas.js). */
+   O confete também é imagem (img/confete-*.png, scripts/gerar-estrelas.js). */
 body.promo-tema-criancas::before {
-  background-image: url(../img/confete-1-1x.webp);
-  background-image: -webkit-image-set(url(../img/confete-1-1x.webp) 1x, url(../img/confete-1-2x.webp) 2x, url(../img/confete-1-3x.webp) 3x);
-  background-image: image-set(url(../img/confete-1-1x.webp) 1x, url(../img/confete-1-2x.webp) 2x, url(../img/confete-1-3x.webp) 3x);
+  background-image: url(../img/confete-1-1x.png);
+  background-image: -webkit-image-set(url(../img/confete-1-1x.png) 1x, url(../img/confete-1-2x.png) 2x, url(../img/confete-1-3x.png) 3x);
+  background-image: image-set(url(../img/confete-1-1x.png) 1x, url(../img/confete-1-2x.png) 2x, url(../img/confete-1-3x.png) 3x);
 }
 body.promo-tema-criancas::after {
-  background-image: url(../img/confete-2-1x.webp);
-  background-image: -webkit-image-set(url(../img/confete-2-1x.webp) 1x, url(../img/confete-2-2x.webp) 2x, url(../img/confete-2-3x.webp) 3x);
-  background-image: image-set(url(../img/confete-2-1x.webp) 1x, url(../img/confete-2-2x.webp) 2x, url(../img/confete-2-3x.webp) 3x);
+  background-image: url(../img/confete-2-1x.png);
+  background-image: -webkit-image-set(url(../img/confete-2-1x.png) 1x, url(../img/confete-2-2x.png) 2x, url(../img/confete-2-3x.png) 3x);
+  background-image: image-set(url(../img/confete-2-1x.png) 1x, url(../img/confete-2-2x.png) 2x, url(../img/confete-2-3x.png) 3x);
 }
 
 .promo-tema-criancas .meteoro {
