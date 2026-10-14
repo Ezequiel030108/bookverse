@@ -724,7 +724,9 @@ function renderizar(termoBusca) {
     catalogo.appendChild(marcador);
 
     let observador = null, emSegundoPlano = false;
-    let aMeio = null;   // fileira sendo montada aos pedaços: { trilho, livros, i }
+    // Fileira sendo montada FORA da página, aos pedaços: { secao, trilho, livros, i }.
+    // Só entra na página inteira, de uma vez (um único recálculo de layout).
+    let aMeio = null;
     const terminou = () => !pendentes.length && !aMeio;
     const acabar = () => {
       if (observador) observador.disconnect();
@@ -734,8 +736,9 @@ function renderizar(termoBusca) {
     // A próxima fileira inteira, na hora (antes do marcador).
     const montarUma = () => {
       if (geracao !== geracaoFileiras) return false;
-      if (aMeio) {                                                   // termina a que estava pela metade
+      if (aMeio) {                                                   // termina a que estava sendo montada
         while (aMeio.i < aMeio.livros.length) aMeio.trilho.appendChild(criarCard(aMeio.livros[aMeio.i], aMeio.i++));
+        catalogo.insertBefore(aMeio.secao, marcador);
         aMeio = null;
       } else if (pendentes.length) {
         const [genero, livros] = pendentes.shift();
@@ -746,6 +749,8 @@ function renderizar(termoBusca) {
     };
     function montarTudo() { while (montarUma()); }
     // Alguns livros por vez (no máximo ~4 ms por folga): nenhuma tarefa longa.
+    // Montadas fora da tela, as fileiras entram sem a animação de chegada
+    // dos cards (ninguém a veria) — é ela que pesava no celular.
     const pedaco = () => {
       if (geracao !== geracaoFileiras) return;
       const ate = performance.now() + 4;
@@ -754,11 +759,15 @@ function renderizar(termoBusca) {
           if (!pendentes.length) break;
           const [genero, livros] = pendentes.shift();
           const secao = criarFileira(genero, []);
-          catalogo.insertBefore(secao, marcador);
-          aMeio = { trilho: secao.querySelector(".fileira-trilho"), livros, i: 0 };
+          secao.classList.add("fileira-sem-chegada");
+          aMeio = { secao, trilho: secao.querySelector(".fileira-trilho"), livros, i: 0 };
         }
-        aMeio.trilho.appendChild(criarCard(aMeio.livros[aMeio.i], aMeio.i++));
-        if (aMeio.i >= aMeio.livros.length) aMeio = null;
+        if (aMeio.i < aMeio.livros.length) aMeio.trilho.appendChild(criarCard(aMeio.livros[aMeio.i], aMeio.i++));
+        if (aMeio.i >= aMeio.livros.length) {                      // pronta: entra na página
+          catalogo.insertBefore(aMeio.secao, marcador);
+          aMeio = null;
+          break;                                                     // um recálculo de layout por folga
+        }
       } while (performance.now() < ate);
       if (terminou()) acabar(); else folga(pedaco);
     };
