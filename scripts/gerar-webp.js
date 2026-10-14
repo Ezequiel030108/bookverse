@@ -47,11 +47,14 @@ const IGNORAR = new Set([
   "logo.png",             // manifest, prévia de link e Google
   "bookverse-titulo.png"  // e-mails; o WebP do site já existe (menor, 398×96)
 ]);
+/* Céu do fundo (scripts/gerar-estrelas.js): fica em PNG de propósito,
+   porque o Safari dos Macs antigos não abre WebP. */
+const CEU = /^(estrelas|confete)-\d-\dx\.png$/;
 
 async function main() {
   const sharp = carregarSharp();
   const arquivos = fs.readdirSync(PASTA)
-    .filter(n => /\.(jpe?g|png)$/i.test(n) && !IGNORAR.has(n))
+    .filter(n => /\.(jpe?g|png)$/i.test(n) && !IGNORAR.has(n) && !CEU.test(n))
     .sort();
 
   let criados = 0, antes = 0, depois = 0;
