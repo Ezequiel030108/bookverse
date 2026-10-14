@@ -42,6 +42,9 @@
    sinopse -> Um resumo curto do livro
    imagem  -> Caminho da capa dentro da pasta /img/
               Ex: "img/oliver-twist.jpg"
+              (A loja mostra a versão WebP, mais leve — img/oliver-twist.webp
+              — criada sozinha na publicação. Trocou a foto mantendo o
+              nome? Apague o .webp antigo.)
               Se não tiver capa, deixe assim: ""
    destaque -> (opcional) true para o livro aparecer entre os PRIMEIROS
               da sua categoria (os principais e mais famosos). Sem isso,

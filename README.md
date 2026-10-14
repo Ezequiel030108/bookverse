@@ -37,7 +37,7 @@ projeto livros/
 │       ├── _site.js       ← o servidor lê livros.js/config.js/precos.js do site
 │       ├── _mercadopago.js← conversa com o Mercado Pago (cobrar, consultar, cancelar)
 │       ├── catalogo.js    ← livros do painel para a vitrine, SEM as fotos dentro (leve)
-│       ├── img-livro.js   ← a foto de um livro do painel (fica guardada no CDN)
+│       ├── img-livro.js   ← a foto de um livro do painel (em WebP para a vitrine; fica no CDN)
 │       ├── status-pix.js  ← o checkout pergunta "já caiu?" (e confirma)
 │       ├── webhook-mp.js  ← confirma o Pix e avisa o cliente na hora
 │       ├── avisar.js      ← avisa o cliente (pedido pago, entregue…)
@@ -68,7 +68,9 @@ projeto livros/
 │   ├── finalizar.js   ← carrinho vindo do catálogo do Meta (não precisa mexer)
 │   └── vendor/
 │       └── qrcode.js  ← biblioteca que desenha o QR Code (não precisa mexer)
-├── img/               ← coloque aqui as fotos das capas
+├── img/               ← coloque aqui as fotos das capas (.jpg); a loja mostra
+│                         a versão .webp, criada sozinha na publicação
+│                         (scripts/gerar-webp.js)
 └── README.md          ← este guia
 ```
 

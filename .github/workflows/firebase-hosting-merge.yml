@@ -32,6 +32,12 @@ jobs:
       # arquivo anterior é mantido e a publicação segue.
       - name: Atualizar a foto dos livros do painel
         run: node scripts/gerar-catalogo-foto.js
+      # O site mostra as imagens em WebP: cria o .webp de qualquer capa
+      # nova da pasta img/ que ainda não tenha (scripts/gerar-webp.js).
+      - name: Gerar as imagens WebP que faltam
+        run: |
+          npm install --no-save --no-audit --no-fund sharp@0.34.5
+          node scripts/gerar-webp.js
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

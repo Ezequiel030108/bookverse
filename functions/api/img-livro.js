@@ -15,13 +15,26 @@
    aponta para cá e a foto é aceita normalmente. A VITRINE também
    mostra as fotos por aqui (veja api/catalogo.js): o navegador só
    baixa a foto do livro que aparece na tela, e ela fica no CDN.
+
+   Com &f=webp (é o que a vitrine pede — js/util.js), a foto sai
+   convertida para WebP, bem mais leve. Sem ele (feed do Google e
+   da Meta, links antigos), sai no formato original.
    ============================================================ */
 
 const { acharLivro, livroDoAdmin } = require("./_catalogo");
 const { impressaoDigital } = require("./catalogo");
 
+/* Converte para WebP. A biblioteca só é carregada quando alguém pede
+   WebP (o resto da API não paga o tempo de carregá-la). */
+let sharp = null;
+async function paraWebp(buf) {
+  if (!sharp) sharp = require("sharp");
+  return sharp(buf).rotate().webp({ quality: 80, effort: 4 }).toBuffer();
+}
+
 module.exports = async (req, res) => {
   const id = String((req.query && req.query.id) || "").slice(0, 150);
+  const querWebp = String((req.query && req.query.f) || "").toLowerCase() === "webp";
   if (!id) {
     res.status(400).json({ error: "id é obrigatório." });
     return;
@@ -49,8 +62,13 @@ module.exports = async (req, res) => {
       res.status(404).json({ error: "Imagem inválida." });
       return;
     }
+    let tipo = m[1];
+    if (querWebp && !/^image\/(webp|gif|svg)/i.test(tipo)) {
+      try { buf = await paraWebp(buf); tipo = "image/webp"; }
+      catch (e) { /* foto que o conversor não entende: vai a original */ }
+    }
     res.statusCode = 200;
-    res.setHeader("Content-Type", m[1]);
+    res.setHeader("Content-Type", tipo);
     // Endereço com a impressão digital da foto ATUAL (?v=, vindo de
     // /api/catalogo): esta foto nunca muda neste endereço — o navegador e
     // o CDN guardam por 1 ano. Sem ela (o feed do Google, links antigos),
@@ -66,7 +84,12 @@ module.exports = async (req, res) => {
   // Já é um endereço/arquivo: apenas redireciona para a foto de verdade.
   // Arquivo do próprio site vira caminho relativo (/img/...): o navegador
   // fica no mesmo domínio em que já está.
-  const destino = /^https?:\/\//i.test(src) ? src : "/" + src.replace(/^\/+/, "");
+  // Pediram WebP e a foto é uma capa do site (img/x.jpg)? Vai o img/x.webp
+  // gerado na publicação (scripts/gerar-webp.js).
+  let destino = /^https?:\/\//i.test(src) ? src : "/" + src.replace(/^\/+/, "");
+  if (querWebp && /^\/img\/[a-z0-9_\-./]+\.(jpe?g|png)$/i.test(destino)) {
+    destino = destino.replace(/\.(jpe?g|png)$/i, ".webp");
+  }
   res.statusCode = 302;
   res.setHeader("Cache-Control", "public, max-age=86400");
   res.setHeader("Location", destino);

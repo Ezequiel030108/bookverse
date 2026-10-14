@@ -33,6 +33,32 @@
     return "";
   }
 
+  /* A mesma foto, em WebP (bem mais leve): é ela que a loja MOSTRA.
+     - Capa do site (img/x.jpg|png) → img/x.webp, gerada na publicação
+       por scripts/gerar-webp.js.
+     - Foto do painel (/api/img-livro) → o servidor converte (&f=webp).
+     - Endereço externo ou data:image: fica como está.
+     O original continua valendo para quem está fora do site (feed do
+     Google, compartilhar no WhatsApp…). Use sempre depois de
+     imagemSrcSegura(). */
+  function imagemWebp(src) {
+    const u = String(src || "");
+    if (/^\/?img\/[a-z0-9_\-./]+\.(jpe?g|png)$/i.test(u)) return u.replace(/\.(jpe?g|png)$/i, ".webp");
+    if (/^\/api\/img-livro\?/i.test(u) && !/[?&]f=/i.test(u)) return u + "&f=webp";
+    return u;
+  }
+
+  /* Rede de segurança: se o WebP faltar (capa nova ainda sem .webp) ou o
+     navegador for antigo demais, a <img> volta para o original guardado
+     em data-orig. */
+  document.addEventListener("error", function (e) {
+    const img = e.target;
+    if (!img || img.tagName !== "IMG" || !img.dataset || !img.dataset.orig || !img.getAttribute("src")) return;
+    const orig = img.dataset.orig;
+    delete img.dataset.orig;
+    if (orig && img.getAttribute("src") !== orig) img.src = orig;
+  }, true);
+
   /* Adia a execução até parar de chamar por `ms` (ex.: busca). */
   function debounce(fn, ms) {
     let t;
@@ -72,7 +98,7 @@
     };
   }
 
-  window.Util = { esc, imagemSrcSegura, debounce, prenderFoco };
+  window.Util = { esc, imagemSrcSegura, imagemWebp, debounce, prenderFoco };
   window.esc = esc;   // atalho usado nos templates
 
 })();
