@@ -148,10 +148,13 @@ function linkInstagram() {
   return `https://ig.me/m/${INSTAGRAM_USUARIO}`;
 }
 
+/* A capa aparece sempre em WebP (mais leve); data-orig guarda o original
+   para o caso raro de o WebP faltar (veja js/util.js). */
 function capaHTML(livro, lazy = true, prioridade = false) {
   const src = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : livro.imagem;
+  const webp = window.Util ? window.Util.imagemWebp(src) : src;
   return src
-    ? `<img src="${esc(src)}" alt="Capa de ${esc(livro.titulo)}"${lazy ? ' loading="lazy"' : ''}${prioridade ? ' fetchpriority="high"' : ''} />`
+    ? `<img src="${esc(webp)}"${webp !== src ? ` data-orig="${esc(src)}"` : ''} alt="Capa de ${esc(livro.titulo)}"${lazy ? ' loading="lazy"' : ''}${prioridade ? ' fetchpriority="high"' : ''} />`
     : `<div class="capa-fallback ${varianteFallback(livro.titulo)}" aria-hidden="true">${esc((livro.titulo || "?").charAt(0).toUpperCase())}</div>`;
 }
 
@@ -1117,7 +1120,9 @@ const fotoViewerImg = document.getElementById("foto-viewer-img");
 function abrirFoto(livro) {
   const src = window.Util ? window.Util.imagemSrcSegura(livro.imagem) : livro.imagem;
   if (!src || !fotoViewer) return;
-  fotoViewerImg.src = src;
+  const webp = window.Util ? window.Util.imagemWebp(src) : src;
+  if (webp !== src) fotoViewerImg.dataset.orig = src; else delete fotoViewerImg.dataset.orig;
+  fotoViewerImg.src = webp;
   fotoViewerImg.alt = "Foto de " + (livro.titulo || "livro");
   fotoViewer.hidden = false;
   travarScrollFundo(true);
@@ -1125,6 +1130,7 @@ function abrirFoto(livro) {
 function fecharFoto() {
   if (!fotoViewer || fotoViewer.hidden) return;
   fotoViewer.hidden = true;
+  delete fotoViewerImg.dataset.orig;   // src vazio dispara "error": não é para voltar ao original
   fotoViewerImg.src = "";
   // o modal continua aberto atrás: mantém a página de fundo travada
   travarScrollFundo(!modal.hidden);

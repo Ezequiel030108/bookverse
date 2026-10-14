@@ -5,6 +5,7 @@
      vira um endereço com a impressão digital dela (?v=...).
    • A foto nesse endereço fica 1 ano no cache (nunca muda ali);
      sem a impressão certa, só 1 dia (o feed do Google, links velhos).
+   • Com &f=webp (o que a vitrine pede), a foto sai em WebP.
    • Um id esquisito não abre caminho para outras partes do banco.
    ============================================================ */
 
@@ -80,6 +81,38 @@ test("livro dos arquivos do site: redireciona para a capa, no mesmo domínio", a
   const r = await T.chamar(imgLivro, { metodo: "GET", query: { id: "livro-com-link" } });
   assert.equal(r.status, 302);
   assert.equal(r.headers.location, "/img/1984.jpg");
+});
+
+test("vitrine pede WebP (&f=webp): a foto do painel sai convertida", async () => {
+  const jpg = require("fs").readFileSync(require("path").join(__dirname, "..", "img", "1984.jpg"));
+  const fotoJpg = "data:image/jpeg;base64," + jpg.toString("base64");
+  await T.banco().collection("catalogo").doc("livro-do-painel").update({ imagem: fotoJpg });
+  const v = catalogo.impressaoDigital(fotoJpg);
+  const r = await T.chamar(imgLivro, { metodo: "GET", query: { id: "livro-do-painel", v, f: "webp" } });
+  assert.equal(r.status, 200);
+  assert.equal(r.headers["content-type"], "image/webp");
+  assert.equal(r.corpo.subarray(0, 4).toString(), "RIFF");
+  assert.equal(r.corpo.subarray(8, 12).toString(), "WEBP");
+  assert.ok(r.corpo.length < jpg.length, "WebP menor que o JPG");
+  assert.match(r.headers["cache-control"], /max-age=31536000.*immutable/);
+
+  // Sem &f=webp (feed do Google/Meta): continua o JPG original.
+  const orig = await T.chamar(imgLivro, { metodo: "GET", query: { id: "livro-do-painel", v } });
+  assert.equal(orig.headers["content-type"], "image/jpeg");
+  assert.ok(Buffer.compare(orig.corpo, jpg) === 0);
+});
+
+test("WebP de uma foto que não dá para converter: vai a original", async () => {
+  const r = await T.chamar(imgLivro, { metodo: "GET", query: { id: "livro-do-painel", f: "webp" } });
+  assert.equal(r.status, 200);
+  assert.equal(r.headers["content-type"], "image/png");
+  assert.ok(Buffer.compare(r.corpo, BYTES) === 0);
+});
+
+test("WebP de um livro dos arquivos do site: redireciona para o .webp", async () => {
+  const r = await T.chamar(imgLivro, { metodo: "GET", query: { id: "livro-com-link", f: "webp" } });
+  assert.equal(r.status, 302);
+  assert.equal(r.headers.location, "/img/1984.webp");
 });
 
 test("id esquisito não lê outras partes do banco", async () => {

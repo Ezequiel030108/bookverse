@@ -119,8 +119,9 @@
       const base = Precos.precoNumerico(item.livro.preco);
       const emPromo = Precos.promoAtiva() && item.precoUnit < base;
       const src = window.Util ? window.Util.imagemSrcSegura(item.livro.imagem) : item.livro.imagem;
+      const webp = window.Util ? window.Util.imagemWebp(src) : src;
       const capa = src
-        ? `<img src="${esc(src)}" alt="" loading="lazy">`
+        ? `<img src="${esc(webp)}"${webp !== src ? ` data-orig="${esc(src)}"` : ""} alt="" loading="lazy">`
         : `<span class="resumo-capa-fallback">${esc((item.livro.titulo || "?").charAt(0))}</span>`;
       const condicao = item.livro.condicao
         ? ` <span class="ci-condicao">${item.livro.condicao === "novo" ? "Novo" : "Usado"}</span>` : "";
